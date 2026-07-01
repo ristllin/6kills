@@ -1,0 +1,17 @@
+{
+  "name": "prism",
+  "version": "0.1.0",
+  "description": "Mode-aware code orchestrator. Refracts code through four lenses — roast-with-docs, simplify, peer-review, and a fan-out security-audit — auto-detecting whether you're planning, starting from scratch, improving an existing project, or preparing a PR, and reusing the right lenses accordingly.",
+  "author": {
+    "name": "Roy Darnell",
+    "url": "https://github.com/ristllin"
+  },
+  "keywords": [
+    "code-review",
+    "refactor",
+    "security",
+    "peer-review",
+    "pr",
+    "orchestrator"
+  ]
+}

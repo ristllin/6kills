@@ -1,48 +1,67 @@
 # 6kills
 
-A public collection of [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) skills.
+A public [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) **plugin marketplace**.
 
-Skills are self-contained folders that teach Claude how to do a specific task. Each one lives in `skills/<name>/` with a `SKILL.md` at its root. When installed, Claude reads the `description` in the frontmatter to decide when a skill applies, then loads the full instructions on demand.
+Two plugins:
 
-## Structure
+| Plugin | What it is |
+|--------|------------|
+| 🔺 [**prism**](plugins/prism) | Mode-aware code orchestrator. Refracts code (or a plan) through four lenses — 🔥 roast-with-docs, 🧹 simplify, 🧑‍⚖️ peer-review, 🛡️ security-audit — auto-detecting whether you're planning, starting fresh, improving an existing project, or preparing a PR, and reusing the right lenses accordingly. |
+| 🔎 [**deep-research**](plugins/deep-research) | Plans queries, fans out [Tavily](https://tavily.com) searches, extracts sources, and writes a cited report. Exposes `/research`. |
+
+## Install
 
 ```
-skills/
-  <skill-name>/
-    SKILL.md        # required: frontmatter + instructions
-    ...             # optional: scripts, templates, reference files
+/plugin marketplace add ristllin/6kills
+/plugin install prism@6kills
+/plugin install deep-research@6kills
 ```
 
-## Using these skills
+Or point at a local clone during development:
 
-Clone into your Claude Code skills directory, or add individual skills:
-
-```bash
-# personal (all projects)
-git clone https://github.com/ristllin/6kills.git ~/.claude/skills/6kills
-
-# or copy a single skill
-cp -r 6kills/skills/<skill-name> ~/.claude/skills/
+```
+/plugin marketplace add /path/to/6kills
 ```
 
-Restart Claude Code (or start a new session) to pick up newly added skills.
+## prism — quick start
 
-## Authoring a skill
-
-Every `SKILL.md` starts with YAML frontmatter:
-
-```markdown
----
-name: my-skill
-description: One or two sentences describing what the skill does and when Claude should use it. This is what Claude matches against, so be specific about the triggers.
----
-
-# My Skill
-
-Instructions for the task...
+```
+prism            # auto-detects mode: reviews the diff, or offers a whole-codebase pass
+prism pr         # review + harden the pending changes only, prep for PR
+prism audit      # security audit only (fan-out subagents → triage → severity-ranked report)
+prism roast      # a cited, brutal-but-fair roast
+prism simplify   # maintainability pass (guard clauses, low nesting, lower complexity)
+prism peer       # independent second opinion from a different AI provider
 ```
 
-Keep the body focused and actionable. Put large references, scripts, or templates in sibling files and point to them from `SKILL.md` so they load only when needed.
+Prism is **considerate**: read-only in plan mode, confirms before whole-codebase sweeps and
+before any credit-spending cross-provider call, scopes `pr` to the diff, and validates
+(tests/build) after every auto-fix. See [plugins/prism](plugins/prism) for the full mode matrix.
+
+## deep-research — requirements
+
+deep-research uses the **Tavily MCP server** and needs a `TAVILY_API_KEY` in your environment
+(the plugin's `.mcp.json` reads `${TAVILY_API_KEY}`). With that set:
+
+```
+/research "your topic"  [--breadth N] [--depth N] [--out path]
+```
+
+## Repo layout
+
+```
+6kills/
+├── .claude-plugin/marketplace.json   # marketplace manifest (lists both plugins)
+└── plugins/
+    ├── prism/                        # orchestrator command + skill, 4 lens skills, 6 sec agents
+    └── deep-research/                # /research command + deep-researcher agent + Tavily MCP
+```
+
+## Authoring notes
+
+Each plugin has its own `.claude-plugin/plugin.json`. Skills live under `plugins/<plugin>/skills/
+<name>/SKILL.md`; commands under `commands/`; subagents under `agents/`. Skill descriptions are
+what Claude matches against to decide when to trigger — keep them specific and trigger-phrase-rich.
 
 ## License
 

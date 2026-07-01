@@ -1,0 +1,6 @@
+{
+  "name": "deep-research",
+  "version": "0.1.0",
+  "description": "Deep research agent — plans queries, fans out Tavily searches, extracts sources, writes a cited report.",
+  "author": { "name": "Roy Darnell" }
+}
