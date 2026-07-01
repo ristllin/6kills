@@ -31,7 +31,7 @@ prism pr         # review + harden the pending changes only, prep for PR
 prism audit      # security audit only (fan-out subagents → triage → severity-ranked report)
 prism roast      # a cited, brutal-but-fair roast
 prism simplify   # maintainability pass (guard clauses, low nesting, lower complexity)
-prism peer       # independent second opinion from a different AI provider
+prism peer       # independent second opinion from a different provider (codex/cursor-agent/...)
 ```
 
 Prism is **considerate**: read-only in plan mode, confirms before whole-codebase sweeps and

@@ -104,7 +104,7 @@ Lenses run: 🧹 simplify · 🛡️ security · 🔥 roast · 🧑‍⚖️ pee
 ### 🔥 Roast
 - api/handler.js:12 — "<cited jab>" — per <official doc/rule link>
 
-### 🧑‍⚖️ Peer review (reviewer: <cursor-agent gpt-5 | ollama:mistral | claude-skeptic>)
+### 🧑‍⚖️ Peer review (reviewer: <codex gpt-5-codex | cursor-agent | ollama:mistral | claude-skeptic>)
 - <cross-provider critique> — prism's take: agree/disagree because <reason>
 
 ### Summary

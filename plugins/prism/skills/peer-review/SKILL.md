@@ -4,9 +4,9 @@ description: >-
   Get an independent, critical second opinion from a DIFFERENT AI provider. Use when the user
   says "peer review", "prism peer", "get a second opinion", "have another model check this",
   or wants an adversarial review of a plan, a diff, or completed work. Detects the current
-  agent/model, routes the critique to a comparable model from another provider (via
-  cursor-agent), and gracefully falls back (local ollama, then a fresh Claude skeptic) when
-  no external provider is available. Announces before spending credits.
+  agent/model, routes the critique to a comparable model from another provider via a
+  cross-provider CLI (codex / cursor-agent), and gracefully falls back (local ollama, then a
+  fresh Claude skeptic) when none is available. Announces before spending credits.
 ---
 
 # Peer Review (cross-provider)
@@ -25,27 +25,38 @@ competitor.
 
 ## Step 2 — Pick a different-provider reviewer (best available)
 
-Probe, in order, and use the first that works. **Announce before calling** — external calls may
-spend the user's credits.
+Probe, in order, and use the first that works (`command -v <cli>`). **Announce before calling** —
+external calls may spend the user's credits. Prefer a frontier competitor comparable to the
+current Claude tier.
 
-1. **`cursor-agent` (primary, cross-provider).** Routes to GPT / Gemini via the user's Cursor
+1. **`codex` — OpenAI Codex CLI (preferred cross-provider).** OpenAI's own frontier (GPT-5-codex),
+   a genuinely different lineage. Run headless and read-only so it can't touch files:
+   ```bash
+   codex exec --sandbox read-only "<critique prompt>"
+   # add -m <model> to pick a tier; --json for structured output
+   ```
+   Auth is via the user's ChatGPT login or `OPENAI_API_KEY`. If not installed, it can be added
+   with `npm i -g @openai/codex` (or `brew install codex`) — mention this if the user wants it.
+2. **`cursor-agent` — Cursor CLI (cross-provider).** Routes to GPT / Gemini via the user's Cursor
    account. Non-interactive:
    ```bash
    cursor-agent -p --output-format json "<critique prompt>"
    ```
-   Pick a frontier competitor model comparable to the current Claude tier when the CLI allows
-   model selection. This is the preferred path — genuinely different lineage.
-2. **`ollama` (offline fallback).** If `cursor-agent` is unavailable/unauthenticated:
+   Pick a frontier competitor model when the CLI allows model selection.
+3. **`ollama` (offline fallback).** If no cloud cross-provider CLI is available/authenticated:
    ```bash
    ollama list          # see what's local
    ollama run <model> "<critique prompt>"
    ```
    Use the strongest local non-Anthropic model (e.g. `mistral:7b`). **Flag it as low-tier** —
    a 7B local model is not a peer of a frontier model; treat its critique as a sanity check.
-3. **Fresh Claude skeptic (ultimate fallback).** If no external provider is reachable, spawn a
+4. **Fresh Claude skeptic (ultimate fallback).** If no external provider is reachable, spawn a
    fresh Claude subagent (Task tool) with an adversarial, skeptical persona and, if possible, a
    different model tier. **Flag clearly that this is same-provider** and therefore a weaker form
    of independence.
+
+Other cross-provider CLIs (e.g. `gemini`, `llm`, `aider`) are fine substitutes at tier 1/2 if
+present — the rule is simply: a different provider, run headless and read-only, frontier if possible.
 
 Always state which reviewer was actually used and why (so the user can weigh the independence).
 
