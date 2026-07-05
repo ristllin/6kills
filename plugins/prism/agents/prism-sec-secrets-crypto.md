@@ -35,8 +35,10 @@ Return findings in exactly this format:
 - file: <path:line>
   class: <hardcoded-secret | weak-hash | weak-cipher | bad-kdf | weak-random | key-mgmt>
   evidence: <the offending code / literal (redact the actual secret value)>
+  taint: <where the secret/weak primitive is exposed or how it's reachable>
+  exploit_scenario: <what an attacker does with it + what it unlocks>
   why: <impact>
-  confidence: <0-100>
+  confidence: <70-100>   # below ~70, don't report
   severity: <Critical|High|Medium|Low>
 ```
 Redact any real secret value you find (show only enough to locate it). If nothing credible,

@@ -31,9 +31,11 @@ Return findings in exactly this format (one block per finding), nothing else:
 ```
 - file: <path:line>
   class: <sql-injection | command-injection | ssti | xxe | unsafe-deser | ...>
-  evidence: <the offending code and the source→sink path>
+  evidence: <the offending code>
+  taint: <untrusted source → propagation → sink → missing sanitizer>
+  exploit_scenario: <literal attacker input value + exact call path to the sink>
   why: <why exploitable, concrete attacker input>
-  confidence: <0-100>
+  confidence: <70-100>   # below ~70, don't report
   severity: <Critical|High|Medium|Low>
 ```
 If you find nothing credible in scope, return `no injection findings`.

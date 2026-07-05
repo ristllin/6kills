@@ -32,6 +32,20 @@ citation is not.
 5. **Stay in scope.** Roast the diff in `pr` mode, the whole codebase in `improve`, the
    *approach* in `plan`/`new` mode. Read-only: this lens never edits.
 
+## Cite-check before you ship it
+
+Freeform "code quality" judgment is exactly where LLM reviewers diverge most from real
+developer preference — grounding in an external authority is the mitigation, so it has to be
+real grounding. Before emitting the roast, run a quick pass over your own findings:
+
+- **Verify each citation actually supports the claim.** When in doubt, WebFetch the page and
+  confirm the rule/line says what you say it does. Drop any finding whose citation doesn't hold
+  (or downgrade it to a clearly-labelled uncited opinion).
+- **Skip nits the project already governs.** If a lint/format rule you'd cite is already
+  configured in the repo (`.eslintrc`, `ruff.toml`, `.prettierrc`, etc.) and the code passes
+  it, don't roast it — that's noise, not insight.
+- **Report what you suppressed**, so the filtering is visible (see the output line below).
+
 ## Output
 
 ```
@@ -47,7 +61,8 @@ citation is not.
 
 ...
 
-_Verdict:_ <one-line overall temperature check> — <N> cited burns, <M> merely opinionated.
+_Verdict:_ <one-line overall temperature check> — <N> cited burns shown · <M> uncited
+opinions suppressed · <K> nits skipped (already caught by the project's own linter).
 ```
 
 Keep it tight. A good roast is 5–12 lines, each a real, cited issue. If there's genuinely

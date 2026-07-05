@@ -31,7 +31,7 @@ prism pr         # review + harden the pending changes only, prep for PR
 prism audit      # security audit only (fan-out subagents → triage → severity-ranked report)
 prism roast      # a cited, brutal-but-fair roast
 prism simplify   # maintainability pass (guard clauses, low nesting, lower complexity)
-prism peer       # independent second opinion from a different provider (codex/cursor-agent/...)
+prism peer       # independent second opinion from a different model family (auto-discovers whatever AI CLI is installed)
 ```
 
 Prism is **considerate**: read-only in plan mode, confirms before whole-codebase sweeps and
@@ -53,7 +53,7 @@ deep-research uses the **Tavily MCP server** and needs a `TAVILY_API_KEY` in you
 6kills/
 ├── .claude-plugin/marketplace.json   # marketplace manifest (lists both plugins)
 └── plugins/
-    ├── prism/                        # orchestrator command + skill, 4 lens skills, 6 sec agents
+    ├── prism/                        # orchestrator command + skill, 4 lens skills, 7 sec agents
     └── deep-research/                # /research command + deep-researcher agent + Tavily MCP
 ```
 

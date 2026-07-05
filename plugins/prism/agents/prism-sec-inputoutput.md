@@ -26,16 +26,21 @@ For the provided scope:
 4. **Path traversal:** user input in file paths without containment (`../`, absolute paths).
 5. **Unsafe deserialization, open redirects, header/CRLF injection, unsafe file uploads.**
    See §4 of `references/threat-lenses.md`.
+6. **If the caller flags the app as LLM-integrated** (§7): treat model output as untrusted
+   input — prompt injection (untrusted content reaching the model's instructions), unsanitized
+   model output flowing into a shell/SQL/HTML/eval sink, and excessive agent tool permissions.
 
 Trace source → sink and confirm the input is attacker-controlled and reaches the sink unsafely.
 
 Return findings in exactly this format:
 ```
 - file: <path:line>
-  class: <xss | ssrf | path-traversal | input-validation | unsafe-deser | open-redirect | ...>
-  evidence: <offending code and source→sink path>
+  class: <xss | ssrf | path-traversal | input-validation | unsafe-deser | open-redirect | prompt-injection | unsafe-model-output | ...>
+  evidence: <offending code>
+  taint: <untrusted source (incl. model output) → propagation → sink → missing sanitizer>
+  exploit_scenario: <literal attacker input value + exact call path to the sink>
   why: <attacker path and impact>
-  confidence: <0-100>
+  confidence: <70-100>   # below ~70, don't report
   severity: <Critical|High|Medium|Low>
 ```
 If nothing credible in scope, return `no input/output findings`.

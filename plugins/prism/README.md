@@ -10,7 +10,7 @@ but it only runs the lenses that fit the situation it detects.
 |------|--------------|
 | 🔥 **roast-with-docs** | Witty, brutal-but-fair critique — every jab cited to a real doc or linter rule. |
 | 🧹 **simplify** | Maintainability pass: guard clauses, low nesting, lower complexity, better names — behavior preserved. |
-| 🧑‍⚖️ **peer-review** | Independent second opinion from a *different provider* (via `codex` / `cursor-agent`), with graceful fallback. |
+| 🧑‍⚖️ **peer-review** | Independent second opinion from a *different model family* — discovers whatever headless AI CLI/endpoint is available at runtime, with graceful fallback. |
 | 🛡️ **security-audit** | Fan-out subagents (one per threat class) → triage & re-verify → severity-ranked, root-cause fixes. |
 
 Each lens is also usable on its own (`prism roast`, `prism simplify`, `prism peer`, `prism audit`).
@@ -47,21 +47,26 @@ Or the slash command: `/prism [pr|audit|review|roast|simplify|peer|new|all]`.
 - **Scopes `pr` to the diff** — no drive-by refactors of untouched code.
 - **Root-cause, blast-radius-aware fixes**, and it **validates** (tests/build) after every auto-fix.
 
-## Peer review — cross-provider
+## Peer review — provider-agnostic
 
-`peer-review` routes an adversarial critique to a **different** AI provider so you get genuine
-independence:
+`peer-review` routes an adversarial critique to a **different model family** so you get genuine
+independence — LLM judges measurably favor their own family, so a different lineage is the
+mitigation. It is vendor-neutral: no single product is required. Selection is layered:
 
-1. `codex exec --sandbox read-only` (OpenAI Codex, GPT-5-codex) — preferred.
-2. `cursor-agent -p` (GPT/Gemini via your Cursor account).
-3. `ollama` local model — offline fallback (flagged low-tier).
-4. Fresh Claude skeptic subagent — ultimate fallback (flagged same-provider).
+1. **Your override wins** — set `PRISM_PEER_REVIEWER` to a command template (e.g.
+   `PRISM_PEER_REVIEWER='llm -m gemini-2.5-pro'`) or name a reviewer in CLAUDE.md.
+2. **Otherwise it probes** whatever headless AI CLI/endpoint is installed and authenticated —
+   `codex exec`, `gemini -p`, `opencode run`, `qwen -p`, `llm -m`, `goose run`, `aider`, or any
+   OpenAI-compatible endpoint. The list is examples, not an allow-list; anything that runs a
+   one-shot read-only prompt qualifies. A pure completion tool like `llm` is a first-class
+   judge (a critique needs reasoning, not agentic tool use).
+3. **Fallbacks:** a local `ollama` model (flagged low-tier), then a fresh Claude skeptic
+   subagent (flagged same-provider).
 
-Any other cross-provider CLI (`gemini`, `llm`, `aider`) works too; prism uses whichever is
-installed. Not installed? `npm i -g @openai/codex` adds Codex.
-
-It reads the current model from Claude Code's runtime context (models can't introspect their own
-id) and always tells you which reviewer actually ran.
+If two or more different-family backends are available, it can run an **opt-in jury** (2–3
+judges reconciled together — panels beat a single judge on bias and cost), announcing the extra
+cost first. It reads the current model from Claude Code's runtime context (models can't
+introspect their own id) and always tells you which reviewer actually ran.
 
 ## Layout
 
@@ -81,6 +86,7 @@ prism/
     ├── prism-sec-authz.md
     ├── prism-sec-secrets-crypto.md
     ├── prism-sec-inputoutput.md
-    ├── prism-sec-logic-deps.md
+    ├── prism-sec-logic.md
+    ├── prism-sec-supplychain-config.md
     └── prism-sec-triage.md
 ```

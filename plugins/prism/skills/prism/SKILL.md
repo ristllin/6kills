@@ -25,7 +25,7 @@ The four lenses are separate skills you invoke as sub-steps:
 |------|-------|--------------|
 | 🔥 Roast | `roast-with-docs` | Witty but technically-defensible critique, every jab cited to an authoritative doc/linter rule. |
 | 🧹 Simplify | `simplify` | Maintainability pass — low nesting, guard clauses, lower complexity, better names — behavior preserved. |
-| 🧑‍⚖️ Peer review | `peer-review` | Independent second opinion from a *different provider* (via `cursor-agent`), with graceful fallback. |
+| 🧑‍⚖️ Peer review | `peer-review` | Independent second opinion from a *different model family* — discovers whatever AI CLI/endpoint is available at runtime, with graceful fallback. |
 | 🛡️ Security | `security-audit` | Fan-out subagents, one per threat lens; triage + validate; severity-ranked, root-cause fixes. |
 
 ## Step 1 — Detect the mode (in this order)
@@ -43,6 +43,11 @@ Do not ask the user which mode to use unless detection is genuinely ambiguous. D
    git diff --stat; git diff --staged --stat
    git log --oneline -1 2>/dev/null
    ```
+   Also read the **textual context** before running any lens — the commit message(s), PR
+   description, and any linked issue. Intent context measurably beats extra code context; it's
+   the cheapest precision win available (ContextCRBench). On a large diff (> ~150 changed
+   lines) precision collapses if you review it all at once — review chunk-by-logical-change.
+
    - **Pending changes** (working tree, staged, or unpushed commits vs the base branch) → **`pr`** mode, scoped to the diff.
    - **Clean tree in a non-empty existing codebase** → **`improve`** mode (whole codebase). Confirm intent first.
    - **Empty / near-empty repo** (no source files, or only scaffolding) → **`new`** mode.
@@ -61,7 +66,9 @@ Do not ask the user which mode to use unless detection is genuinely ambiguous. D
 
 When multiple lenses run, prefer to run the **read-only analysis lenses in parallel**
 (spawn them as concurrent subagents), then apply fixes **sequentially** (simplify before
-security fixes, re-validating between) so edits never race each other.
+security fixes, re-validating between) so edits never race each other. The agent that wrote a
+fix never signs off on it — validation is the project's tests/build, or a different lens/agent
+(models silently endorse their own behavior-breaking changes; use an external check).
 
 ## Step 3 — Be considerate (non-negotiable rules)
 
@@ -70,8 +77,9 @@ security fixes, re-validating between) so edits never race each other.
 - **Validate before improving on a clean repo.** Before `improve` mode touches a whole
   codebase, confirm: *"No pending changes detected — run prism across the entire codebase to
   review and improve it? This may take a while."* Only proceed on yes.
-- **Announce credit-spending / external calls.** `peer-review` may invoke `cursor-agent`
-  (spends the user's Cursor credits) or a local model. Say so first and let the user skip.
+- **Announce credit-spending / external calls.** `peer-review` may invoke an external AI CLI
+  or API (spends the user's credits) or a local model. Say so first — and, for jury mode, name
+  the extra cost — and let the user skip.
 - **Scope `pr` to the diff.** In `pr` mode, only reason about and modify lines within the
   diff (and their immediate blast radius). Do not opportunistically refactor untouched code.
 - **Fixes are root-cause and blast-radius-aware.** Before applying any fix, check callers and
@@ -104,8 +112,8 @@ Lenses run: 🧹 simplify · 🛡️ security · 🔥 roast · 🧑‍⚖️ pee
 ### 🔥 Roast
 - api/handler.js:12 — "<cited jab>" — per <official doc/rule link>
 
-### 🧑‍⚖️ Peer review (reviewer: <codex gpt-5-codex | cursor-agent | ollama:mistral | claude-skeptic>)
-- <cross-provider critique> — prism's take: agree/disagree because <reason>
+### 🧑‍⚖️ Peer review (reviewer: <CLI/endpoint → model, detected at runtime>)
+- <cross-family critique> — prism's take: agree/disagree because <reason>
 
 ### Summary
 <counts by severity> · <N low-severity suppressed> · <validation status>

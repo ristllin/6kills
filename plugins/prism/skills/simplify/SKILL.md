@@ -41,12 +41,20 @@ follow or loses an edge case, don't do it.
 ## Process
 
 1. **Scope.** `pr` → only changed code (`git diff`). `improve` → whole codebase, file by file.
-   `new`/`plan` → offer conventions/guidance rather than edits.
+   `new`/`plan` → offer conventions/guidance rather than edits. Read the commit message / PR
+   description first to understand *intent* before touching anything.
 2. **Analyze** each target: nesting depth, complexity, function length, naming, duplication.
+   Before refactoring a function, pull in its **callers/usages** — the same "precise +
+   complete context" rule the security lens uses; a refactor is only safe against the code
+   that actually depends on it.
 3. **Refactor** one concern at a time, smallest correct change first.
 4. **Preserve behavior** — reason through inputs/outputs and edge cases before/after; do not
    change signatures used elsewhere without checking callers.
-5. **Validate.** Run the project's tests / typecheck / build after the pass. If anything
+5. **Validate — externally, never by self-certification.** Run the project's tests / typecheck
+   / build after the pass; those are the arbiter of "behavior preserved," not your own
+   reasoning. (Models silently endorse ~32% of their own behavior-breaking refactors even when
+   they can name the pitfall.) If a change touches a path with thin or no test coverage, **say
+   so explicitly** in the report rather than asserting behavior is preserved. If anything
    fails, revert that change and report it.
 6. **Prep for PR.** Summarize what changed and why; suggest a Conventional-Commits message
    (e.g. `refactor(auth): flatten token-validation with guard clauses`).

@@ -27,15 +27,19 @@ For the provided scope:
 3. Inspect **JWT** (`alg:none`, unverified signature, missing expiry/audience) and **session
    cookies** (missing `HttpOnly`/`Secure`/`SameSite` where it matters). See §2 of
    `references/threat-lenses.md`.
-4. Report only real, reachable issues — not "add rate limiting" boilerplate.
+4. Check **field/resolver-level authz** (GraphQL resolvers or API fields authorized only at the
+   endpoint level, not per-object) — a common blind spot for route-level reviewers.
+5. Report only real, reachable issues — not "add rate limiting" boilerplate.
 
 Return findings in exactly this format:
 ```
 - file: <path:line>
   class: <idor | missing-authz | privilege-escalation | broken-auth | jwt | session>
   evidence: <the offending code / missing check>
+  taint: <request-controlled id/role → access decision → missing ownership/role check>
+  exploit_scenario: <literal request an attacker sends + what it grants>
   why: <attacker path and impact>
-  confidence: <0-100>
+  confidence: <70-100>   # below ~70, don't report
   severity: <Critical|High|Medium|Low>
 ```
 If nothing credible in scope, return `no authz findings`.
