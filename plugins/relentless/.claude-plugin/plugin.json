@@ -1,0 +1,20 @@
+{
+  "name": "relentless",
+  "version": "0.1.0",
+  "description": "Operating charter for long, unattended, autonomous build-and-ship tasks. Sets a definition of done, works in an isolated worktree, arms a self-continuing loop, fans work across parallel agents/devices, guards every surface against regressions with a full test pyramid, runs autonomous end-to-end QA (real paid API calls, browser + screenshots, LLM-as-judge), hardens with a review pass, and does not stop until the product is truly shippable.",
+  "author": {
+    "name": "Roy Darnell",
+    "url": "https://github.com/ristllin"
+  },
+  "keywords": [
+    "autonomous",
+    "long-running",
+    "definition-of-done",
+    "regression",
+    "e2e",
+    "qa",
+    "worktree",
+    "self-continuation",
+    "ship"
+  ]
+}

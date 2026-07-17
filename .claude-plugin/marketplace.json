@@ -5,7 +5,7 @@
     "url": "https://github.com/ristllin"
   },
   "metadata": {
-    "description": "Public collection of Claude Code plugins: prism (mode-aware code review/hardening orchestrator) and deep-research.",
+    "description": "Public collection of Claude Code plugins: prism (mode-aware code review/hardening orchestrator), deep-research, and relentless (autonomous long-task ship charter).",
     "version": "0.1.0"
   },
   "plugins": [
@@ -18,6 +18,11 @@
       "name": "deep-research",
       "source": "./plugins/deep-research",
       "description": "Deep research agent — plans queries, fans out Tavily searches, extracts sources, writes a cited report. Requires the Tavily MCP and TAVILY_API_KEY."
+    },
+    {
+      "name": "relentless",
+      "source": "./plugins/relentless",
+      "description": "Operating charter for long, unattended, autonomous build-and-ship tasks. Sets a Definition of Done, isolates work in a git worktree, arms a self-continuing loop, fans work across parallel agents/devices, guards every surface against regressions with a full test pyramid, runs autonomous end-to-end QA (real paid API calls, browser + screenshots, LLM-as-judge), hardens with a review pass, and doesn't stop until it's genuinely shippable."
     }
   ]
 }
