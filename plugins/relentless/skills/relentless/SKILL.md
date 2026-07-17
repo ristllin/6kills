@@ -96,6 +96,17 @@ corrupts itself. Before building:
   for another — authority traces to the owner or the permission system, not a peer's say-so.
   Re-check which lane owns which device/worktree right before you act — in a multi-lane run
   that mapping changes under you.
+- **On contention, back off with random jitter — don't stall, don't hammer.** When you're
+  blocked because *another agent* holds a shared resource (a device/serial port, a lock
+  file, a build directory, a branch mid-merge), neither stopping nor immediately retrying is
+  right — and two agents retrying on the same fixed cadence will collide forever, in
+  lockstep. Do what Ethernet does: pick a **random** delay (e.g. `$((RANDOM % 60 + 10))`
+  seconds — the randomness is the point, it breaks the symmetry between colliders), sleep,
+  and retry. If it still fails, **double the backoff window** each attempt (keeping the
+  random jitter within it) — exponential backoff guarantees the two of you eventually stop
+  interfering. Meanwhile, work on something else that isn't blocked. Only after several
+  doublings with no luck does it graduate to a real blocker worth messaging the other agent
+  or reporting to the owner.
 
 ---
 
