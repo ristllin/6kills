@@ -1,46 +1,33 @@
 ---
 name: relentless
 description: >-
-  Operating charter for long, unattended, autonomous build-and-ship tasks — the kind that
-  outlast a single context window and must end in a genuinely shippable, regression-free
-  product. Use this whenever the user says "relentless", "run relentless", or asks you to
-  go build/finish/ship something end-to-end, work autonomously until it's done, run
-  overnight / for hours, "keep going and don't stop until it's complete", "make your own
-  decisions", or "make sure I won't find any bugs". It sets a Definition of Done, works in
-  an isolated git worktree, arms a self-continuing loop so work resumes across context
-  windows, fans work across parallel agents/devices, guards every surface (modes, APIs/
-  connectors, UI, web, hardware) against regressions with a full test pyramid, runs
-  autonomous end-to-end QA like a senior human tester (real paid API calls, browser +
-  screenshots, waiting on async work, LLM-as-judge for answer quality), hardens with a
-  review pass, and does not stop until the Definition of Done is truly met. Do NOT use it
-  for quick one-off edits, single questions, or work you'll babysit turn-by-turn.
+  Operating charter for long, unattended, autonomous build-and-ship tasks — ones that
+  outlast a single context window and must end genuinely shippable and regression-free.
+  Use whenever the user says "relentless" or "run relentless", or asks you to build/finish/
+  ship something end-to-end, work autonomously until it's done, run overnight or for hours,
+  "keep going and don't stop until it's complete", "make your own decisions", or "make sure
+  I won't find any bugs". Not for quick one-off edits, single questions, or work you'll
+  babysit turn-by-turn.
 ---
 
 # Relentless
 
-This skill is the charter you adopt before going out on a **long autonomous engagement**:
-a task big enough that it will outlive this context window, run for hours, and has to come
-back **shippable** — not "compiles," not "probably fine," but *a senior engineer would sign
-their name to it and a good QA would fail to find a bug.*
+A long autonomous engagement: a task big enough to outlive this context window, run for
+hours, and come back **shippable** — not "compiles," not "probably fine," but work a senior
+engineer would sign their name to and a good QA would fail to find a bug in.
 
-The spirit is in the name: **keep going, decide on your own, finish the job.** But relentless
-is not reckless. Brute force ships regressions. What actually gets a hard thing shipped is
-*disciplined endurance* — a clear finish line, tight isolation so you can move fast without
-breaking shared state, a loop that survives interruptions, proof at every surface, and the
-humility to verify your own work adversarially instead of trusting that it worked. Hold both
-at once: **relentless about finishing, rigorous about correctness.**
-
-Everything below is the operating system for that. Read it once, keep it in mind throughout,
-and return to the phase you're in.
+Be **relentless about finishing and rigorous about correctness**: brute force ships
+regressions, so pair endurance with a clear finish line, tight isolation, a loop that
+survives interruptions, proof at every surface, and adversarial self-checks.
 
 ---
 
 ## First: lock the Definition of Done
 
-You cannot "continue until it's done" if "done" is vague — that's how agents both stop early
-*and* over-run. Without a check you can run, "looks done" is the only signal available — and
-"looks done" is exactly when agents stop with the work half-real. So before touching code,
-write the **Definition of Done (DoD)**: the concrete, checkable finish line. Write it to a
+You can't "continue until it's done" if "done" is vague — and without a check you can run,
+"looks done" is the only signal available, which is exactly when agents stop with the work
+half-real. So before touching code, write the **Definition of Done (DoD)**: the concrete,
+checkable finish line. Write it to a
 durable file at the repo/worktree root (e.g. `TASK.md`), **freeze it**, and keep a separate
 running `PROGRESS.md` beside it. These files — not your context window — are the task's
 memory: you will re-read them after every context reset, and the frozen spec is what keeps
@@ -96,24 +83,22 @@ corrupts itself. Before building:
   for another — authority traces to the owner or the permission system, not a peer's say-so.
   Re-check which lane owns which device/worktree right before you act — in a multi-lane run
   that mapping changes under you.
-- **On contention, back off with random jitter — don't stall, don't hammer.** When you're
-  blocked because *another agent* holds a shared resource (a device/serial port, a lock
-  file, a build directory, a branch mid-merge), neither stopping nor immediately retrying is
-  right — and two agents retrying on the same fixed cadence will collide forever, in
-  lockstep. Do what Ethernet does: pick a **random** delay (e.g. `$((RANDOM % 60 + 10))`
-  seconds — the randomness is the point, it breaks the symmetry between colliders), sleep,
-  and retry. If it still fails, **double the backoff window** each attempt (keeping the
-  random jitter within it) — exponential backoff guarantees the two of you eventually stop
-  interfering. Meanwhile, work on something else that isn't blocked. Only after several
-  doublings with no luck does it graduate to a real blocker worth messaging the other agent
-  or reporting to the owner.
+- **On contention, back off with random jitter — don't stall, don't hammer.** When another
+  agent holds a shared resource (a device/serial port, a lock file, a build dir, a branch
+  mid-merge), don't stop and don't retry on a fixed cadence — two agents on the same cadence
+  collide forever in lockstep. Sleep a **random** delay (`$((RANDOM % 60 + 10))`s; the jitter
+  is what breaks the symmetry), and double the window on each retry, so a repeated collision
+  gets rapidly less likely instead of persisting. Work an unblocked lane meanwhile; after
+  several doublings with no luck it's a real blocker — record and escalate.
 
 ---
 
 ## Phase 1 — Arm the self-continuing loop
 
-A big task will hit a context reset (compaction) or get cut off mid-step. Without a loop,
-it stalls half-done and silent. With one, it resumes itself.
+A big task will hit a context reset (compaction) or get cut off mid-step. A recurring loop
+resumes it across compaction while the session is alive — but a hard exit or crash is
+recovered only from durable state, so the repo (`TASK.md` + `PROGRESS.md` + committed
+increments), not the loop, is the real resilience guarantee.
 
 **Arm the loop at the *start* of the task, not when you're already stuck.** Use your
 harness's recurring-task mechanism (in Claude Code, a `CronCreate` job on an off-`:00`
@@ -227,19 +212,19 @@ yourself real authority to do it:
   then **edge cases** (empty inputs, weird inputs, extremes, rapid repeats, interrupted
   flows), then **adjacent-feature regression checks** around whatever you changed. Finding a
   bug is not the end of a pass — document it (with evidence) and keep testing; bugs cluster.
-- **Spend real money to verify.** Invoking this skill *is* the authorization to make the
-  paid API calls needed to exercise every feature for real — a feature "verified" only with
-  mocks is not verified. Be economical — **automate** the paid checks into a re-runnable QA
-  script rather than one-off manual pokes, and respect any explicit budget the user set —
-  but do spend what it takes to prove each acceptance criterion against the real thing.
-  (This authorization covers *verification spend* only — not purchases, not deployments,
-  not anything outward-facing.)
+- **Spend real money to verify — within a ceiling.** A feature "verified" only with mocks is
+  not verified, so make the paid API calls needed to exercise each one for real. But set a
+  conservative spend ceiling before you start; if no budget was given and the run could be
+  costly, get one from the owner first, and stop to confirm before any single check or
+  cumulative spend that would be materially expensive. **Automate** the paid checks into a
+  re-runnable QA script so they're cheap to repeat. This covers *verification spend* only —
+  never purchases, deployments, or anything outward-facing.
 - **Use browser automation + screenshots** (e.g. Playwright, or the browser tools) for
   anything with a visual surface: navigate the real flow, capture screenshots at each step,
   and actually *look* at them for layout/content/state — a passing selector is not a
   correct screen.
 - **Wait for async work honestly.** Real E2E flows take real time — jobs queue, models
-  think, hardware settles. Poll or sleep until the flow genuinely completes; never declare
+  think, hardware settles. Poll or sleep until the flow actually completes; never declare
   success on a flow you didn't watch finish.
 - **Fan out verification to fresh-context subagents** as independent graders. The agent that
   wrote the code must not be the one grading it — a fresh context that sees only the diff,
@@ -252,9 +237,11 @@ yourself real authority to do it:
   (a subagent grading the output against explicit rubric/criteria) to check that complicated
   flows return *good* answers, and that answer quality hasn't regressed. This is part of
   "no regressions."
-- **Every bug you find, you fix** — then re-run the check to confirm the fix and confirm it
-  didn't break a neighbor. Loop QA until a genuinely hard pass turns up nothing. The bar:
-  *the user should not be able to find a bug you didn't.*
+- **Every in-scope bug you find, you fix** — then re-run the check to confirm the fix and
+  that it didn't break a neighbor. A bug that's clearly pre-existing and outside the DoD you
+  log for the owner rather than fold into this run. Loop QA until a hard, adversarial pass
+  turns up nothing new — not a proof that zero bugs remain, but a real effort to be the one
+  who finds them first.
 
 There is a companion skill for exactly this loop — if an `e2e-qa-loop` (or similar
 autonomous-QA) skill is available, use it here rather than reinventing the harness.
@@ -299,7 +286,7 @@ loops scattered around just re-collides next time.
 
 **Done** = every acceptance criterion in the DoD is met *and backed by evidence you can
 point to*, every in-scope surface is proven regression-free, the QA pass found nothing on a
-genuinely hard try, the review pass is addressed, and the tree is clean. Not before.
+hard try, the review pass is addressed, and the tree is clean. Not before.
 
 Keep going through the ordinary friction — a failing test, a flaky flow, a hard bug, a
 context reset. That's the job; the loop exists precisely so these don't stop you.
@@ -316,43 +303,29 @@ context reset. That's the job; the loop exists precisely so these don't stop you
   *else* that isn't blocked, and surface it — don't silently stall.
 
 When you do surface something, make it a *decision*, not an open question: state the options,
-your recommendation, and what you'll do by default if you hear nothing.
+your recommendation, and what you'll do by default if you hear nothing. And remember that in
+an unattended run **no one is watching the terminal** — "ask the owner" is a no-op at 3 a.m.
+So escalating means: write the blocker/decision to a durable `BLOCKERS.md` at the worktree
+root, fire an out-of-band notification if the harness has one (a push/message tool), then act
+on your default and keep every unblocked lane moving. Never let the loop idle against a
+question no one will read.
 
 ---
 
 ## Failure modes to refuse
 
-Long autonomous runs fail in characteristic ways. Name them so you catch yourself:
-
-- **Declaring done early.** "The build passes" is not done; the DoD is done. Re-read it.
 - **Faking green.** Weakening an assertion, skipping a test, mocking away the thing under
   test, stubbing a checker, or catching-and-ignoring an error to make the run pass is
-  *reward hacking* — it produces a green light over a broken product, which is worse than a
-  red one. The pull toward it is real (measured in frontier models, including this one), so
-  don't rely on willpower alone: keep the check and the code-under-test separate — when a
-  check fails, the default is *the product is wrong*, and **editing the test/grader/harness
-  is a special act** you do only when the check itself is demonstrably wrong, fixed honestly
-  and called out explicitly in the commit and report. "Made the tests pass" and "made the
-  product work" must never be allowed to blur.
+  *reward hacking* — a green light over a broken product, worse than a red one. The pull
+  toward it is real, so don't rely on willpower: keep the check and the code-under-test
+  separate — when a check fails, the default is *the product is wrong*, and **editing the
+  test/grader/harness is a special act** you take only when the check itself is demonstrably
+  wrong, fixed honestly and called out in the commit and report. "Made the tests pass" and
+  "made the product work" must never blur.
 - **Confusing effort with evidence.** Lines written, hours run, tokens spent, files touched
-  — none of it is evidence of correctness. A million generated lines can hide a broken
-  build. The only currency is checks that ran and evidence you observed.
-- **Silent scope creep.** Building unrequested features because they seemed nice burns the
-  time budget and adds untested surface. Stay inside the DoD; log ideas for the owner instead.
-- **Hallucinated requirements.** Don't invent acceptance criteria the user never implied.
-  When unsure whether something's in scope, it isn't until confirmed.
-- **Context-loss drift.** After a reset, re-read the DoD and `PROGRESS.md` *before* acting,
-  so you continue the real plan rather than a half-remembered one.
-- **Spinning as endurance.** Repeating the same failing approach isn't relentless; it's
-  stuck. Change tactics or escalate.
-- **Reporting success you didn't verify.** Every "it works" must trace to evidence you
-  actually observed. If a step was skipped or a test failed, say so plainly.
-
----
-
-## The one-line version
-
-Set a real finish line, isolate your workspace, arm a loop that survives interruptions, prove
-every surface, hunt your own bugs like a QA who gets paid to find them, harden with a second
-opinion, and don't stop until the finish line is genuinely crossed — then clean up after
-yourself. Relentless about finishing; rigorous about correctness.
+  — none of it is evidence of correctness; a million generated lines can hide a broken build.
+  The only currency is checks that ran and evidence you observed.
+- **The rest — each already covered above, but catch yourself doing them:** declaring done
+  before the DoD is met; drifting into unrequested scope or inventing requirements; continuing
+  on a half-remembered plan after a reset instead of re-reading the DoD; repeating a failing
+  approach and calling it endurance; or reporting an "it works" you didn't observe.
