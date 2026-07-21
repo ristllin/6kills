@@ -6,18 +6,18 @@
   },
   "metadata": {
     "description": "Public collection of Claude Code plugins: prism (mode-aware code review/hardening orchestrator), deep-research, and relentless (autonomous long-task ship charter).",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "plugins": [
     {
       "name": "prism",
       "source": "./plugins/prism",
-      "description": "Mode-aware code orchestrator. Splits your code through four lenses — roast-with-docs, simplify, peer-review, security-audit — and adapts which run and how, based on context (plan mode, from-scratch, existing project, or PR diff)."
+      "description": "Mode-aware code orchestrator. Refracts your code through five lenses (roast-with-docs, simplify, peer-review, security-audit, docs-align) and adapts which run and how, based on context (plan mode, from-scratch, existing project, or PR diff)."
     },
     {
       "name": "deep-research",
       "source": "./plugins/deep-research",
-      "description": "Deep research agent — plans queries, fans out Tavily searches, extracts sources, writes a cited report. Requires the Tavily MCP and TAVILY_API_KEY."
+      "description": "Deep research agent: plans queries, fans out Tavily searches, extracts sources, writes a cited report. Requires the Tavily MCP and TAVILY_API_KEY."
     },
     {
       "name": "relentless",

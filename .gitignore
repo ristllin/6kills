@@ -1,3 +1,17 @@
+# AI agent artifacts (root-anchored: plugins/ ships content, never ignore inside it).
+# Durable contributor guidance belongs in AGENTS.md; roadmap items in ROADMAP.md.
+/PLAN.md
+/*.plan.md
+/plan-*.md
+/plans/
+/.planning/
+/.scratch/
+/.claude/plans/
+/.claude/scratch/
+/.claude/settings.local.json
+/*.local.md
+/.aider*
+
 # OS
 .DS_Store
 

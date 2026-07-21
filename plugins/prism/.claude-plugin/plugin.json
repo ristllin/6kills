@@ -1,7 +1,7 @@
 {
   "name": "prism",
-  "version": "0.1.0",
-  "description": "Mode-aware code orchestrator. Refracts code through four lenses — roast-with-docs, simplify, peer-review, and a fan-out security-audit — auto-detecting whether you're planning, starting from scratch, improving an existing project, or preparing a PR, and reusing the right lenses accordingly.",
+  "version": "0.2.0",
+  "description": "Mode-aware code orchestrator. Refracts code through five lenses (roast-with-docs, simplify, peer-review, a fan-out security-audit, and docs-align) while auto-detecting whether you're planning, starting from scratch, improving an existing project, or preparing a PR, and runs the right lenses for that mode.",
   "author": {
     "name": "Roy Darnell",
     "url": "https://github.com/ristllin"

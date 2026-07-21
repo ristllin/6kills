@@ -1,7 +1,7 @@
 ---
 name: roast-with-docs
 description: >-
-  Roast code — a witty, brutal-but-fair critique where every jab is backed by an
+  Roast code: a witty, brutal-but-fair critique where every jab is backed by an
   authoritative source (language docs, framework guides, linter/lint-rule pages, style
   guides). Use when the user says "roast my code", "roast this", "prism roast", or wants a
   funny-but-useful review that doesn't make things up. Humor is the delivery; the underlying
@@ -12,7 +12,7 @@ description: >-
 
 A roast is only funny if it's *true*. This lens finds real problems, grounds each one in an
 authoritative reference, and *then* delivers it with humor. The comedy layer is optional; the
-citation is not.
+citation is mandatory.
 
 ## Rules
 
@@ -25,17 +25,17 @@ citation is not.
    - Lint/style: the specific rule page (ESLint `no-await-in-loop`, Ruff/Flake8 code, `clippy`,
      Google/PEP 8/Airbnb style-guide section).
    - Prefer fetching the page (WebFetch) to quote the relevant line accurately. Never invent a
-     citation — if you can't find a real source, downgrade it to an uncited "opinion" and say so.
+     citation: if you can't find a real source, downgrade it to an uncited "opinion" and say so.
 3. **Tie it to the code.** Every line references `file:line` so the target is unambiguous.
 4. **Respect the tone flag.** Default is *witty-useful*. `--harsh` = savage stand-up energy;
-   `--kind` = gentle ribbing. Never punch at the person — only at the code.
+   `--kind` = gentle ribbing. Never punch at the person, only at the code.
 5. **Stay in scope.** Roast the diff in `pr` mode, the whole codebase in `improve`, the
    *approach* in `plan`/`new` mode. Read-only: this lens never edits.
 
 ## Cite-check before you ship it
 
 Freeform "code quality" judgment is exactly where LLM reviewers diverge most from real
-developer preference — grounding in an external authority is the mitigation, so it has to be
+developer preference. Grounding in an external authority is the mitigation, so it has to be
 real grounding. Before emitting the roast, run a quick pass over your own findings:
 
 - **Verify each citation actually supports the claim.** When in doubt, WebFetch the page and
@@ -43,25 +43,25 @@ real grounding. Before emitting the roast, run a quick pass over your own findin
   (or downgrade it to a clearly-labelled uncited opinion).
 - **Skip nits the project already governs.** If a lint/format rule you'd cite is already
   configured in the repo (`.eslintrc`, `ruff.toml`, `.prettierrc`, etc.) and the code passes
-  it, don't roast it — that's noise, not insight.
+  it, don't roast it: that's noise.
 - **Report what you suppressed**, so the filtering is visible (see the output line below).
 
 ## Output
 
 ```
-## 🔥 Roast — <scope>  (tone: witty)
+## 🔥 Roast: <scope>  (tone: witty)
 
-1. `api/handler.js:12` — Awaiting inside a `for` loop like it's 2015. This serializes every
+1. `api/handler.js:12`: Awaiting inside a `for` loop like it's 2015. This serializes every
    request; your event loop is filing a complaint.
    → ESLint `no-await-in-loop`: https://eslint.org/docs/latest/rules/no-await-in-loop
 
-2. `utils/date.py:30` — Hand-rolling timezone math. The `datetime` docs wrote 4 paragraphs
+2. `utils/date.py:30`: Hand-rolling timezone math. The `datetime` docs wrote 4 paragraphs
    begging you not to.
    → https://docs.python.org/3/library/datetime.html#aware-and-naive-objects
 
 ...
 
-_Verdict:_ <one-line overall temperature check> — <N> cited burns shown · <M> uncited
+_Verdict:_ <one-line overall temperature check> · <N> cited burns shown · <M> uncited
 opinions suppressed · <K> nits skipped (already caught by the project's own linter).
 ```
 
