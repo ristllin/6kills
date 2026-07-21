@@ -66,6 +66,13 @@ below is illustrative; any CLI that can run a one-shot, read-only prompt qualifi
 | `goose` | `goose run -t "<prompt>"` | provider via `GOOSE_PROVIDER`/`GOOSE_MODEL` |
 | `aider` | `aider --message "<prompt>" --dry-run --yes` | any provider via env keys |
 
+**Never interpolate untrusted content into a shell argument.** The quoted `"<prompt>"` forms
+above are safe only for the trivial probe string. A real review prompt embeds the diff, plan,
+or other repo-derived text, and inside a double-quoted argument any `$(...)` or backtick
+sequence that content carries will execute as shell. Write the full prompt to a temp file and
+feed it via stdin (`cli ... < prompt.txt`; most of these CLIs read stdin when the prompt
+argument is omitted or passed as `-`) or via a quoted heredoc (`<<'EOF'`).
+
 For reviewing a diff with codex, prefer the purpose-built
 `codex exec --sandbox read-only review --uncommitted` (the sandbox flag composes with the
 `review` subcommand). The CLI collects the payload itself,
