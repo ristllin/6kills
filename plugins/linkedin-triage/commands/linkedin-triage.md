@@ -9,6 +9,17 @@ The triage does **not** run in this session. It runs Claude inside a locked-down
 container (only the Beeper tools + the user's rules file are visible; Bash, writes, and web
 access are denied). Your job here is only to launch it and relay the outcome.
 
+**First, check whether onboarding has been done.** If the rules file still contains template
+placeholders, the user has not personalized it yet - triaging now would send generic replies.
+Run:
+
+```bash
+grep -q "{{" "${CLAUDE_PLUGIN_ROOT}/sandbox/memory/linkedin_triage_rules.md" && echo NEEDS_INIT || echo READY
+```
+
+If it prints `NEEDS_INIT`, do **not** run the triage. Tell the user their rules aren't set up yet
+and to run `/linkedin-triage-init` (the interactive onboarding), then stop. Otherwise continue.
+
 Execute:
 
 ```bash

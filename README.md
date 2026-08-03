@@ -74,15 +74,16 @@ deep-research uses the **Tavily MCP server** and needs a `TAVILY_API_KEY` in you
 ## linkedin-triage: quick start
 
 Runs a sandboxed Docker container that triages your unread LinkedIn DMs via the Beeper Desktop
-app. One-time setup (Docker + Beeper + `/mcp` auth + API access) is checked automatically; run
-`/linkedin-triage` and it points you at anything missing. Auth works two ways: a direct
-`ANTHROPIC_API_KEY`, or a shared Foundry/gateway proxy (`CLAUDE_CODE_USE_FOUNDRY=1` +
-`ANTHROPIC_FOUNDRY_BASE_URL`). Customize your reply templates in
-`plugins/linkedin-triage/sandbox/memory/linkedin_triage_rules.md` before the first run. Full guide:
+app. After the prerequisites (Docker + Beeper + `/mcp` auth + API access, checked by `setup.sh`),
+run **`/linkedin-triage-init`** - an interactive interview that builds your rules (categories,
+reply templates, red lines, what to leave unread, referral policy, calls policy, model, schedule).
+Then `/linkedin-triage` runs it. Auth works two ways: a direct `ANTHROPIC_API_KEY`, or a shared
+Foundry/gateway proxy (`CLAUDE_CODE_USE_FOUNDRY=1` + `ANTHROPIC_FOUNDRY_BASE_URL`). Full guide:
 [plugins/linkedin-triage/sandbox/SETUP.md](plugins/linkedin-triage/sandbox/SETUP.md).
 
 ```
-/linkedin-triage
+/linkedin-triage-init   # interactive onboarding (first time)
+/linkedin-triage        # run the triage
 ```
 
 ## Repo layout

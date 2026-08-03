@@ -234,10 +234,15 @@ The `beeper` entry should show **✔ Connected**. If it does, Claude Code can ta
 
    Fix anything it flags, then re-run until all checks pass.
 
-3. **Customize your rules.** This is the most important step - the quality of the replies
-   depends entirely on it. Open `memory/linkedin_triage_rules.md` and replace every
-   `{{PLACEHOLDER}}` (your name, company, careers URL, optional referral link) and edit the
-   categories/templates to match how *you* want to respond.
+3. **Build your rules.** This is the most important step - the quality of the replies depends
+   entirely on it. Two ways:
+   - **Interactive (recommended):** from Claude Code run `/linkedin-triage-init`. It interviews
+     you about the messages you get, how you want to answer each, your red lines, referral policy,
+     what to leave unread (and just be notified about), your calls policy, model, and schedule,
+     then writes `memory/linkedin_triage_rules.md` and `config.env` for you.
+   - **By hand:** open `memory/linkedin_triage_rules.md` and replace every `{{PLACEHOLDER}}` (your
+     name, company, careers URL, optional referral link), then edit the categories/templates and
+     the "leave unread / notify-only triggers" to match how *you* want to respond.
 
 4. Make sure your API auth is set (Mode A or Mode B above) and the Beeper app is running, then triage:
 

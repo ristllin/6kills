@@ -94,6 +94,23 @@ personal or in another language with a known contact.
 
 ---
 
+## Leave unread / notify-only triggers
+
+These override every category above: if any apply, do NOT reply. Leave the chat unread and just
+include it in the end-of-run summary so the user can handle it. **When in doubt, leave unread.**
+
+- **Human already engaged:** if the user (you) has already sent at least one message in the thread,
+  hand it back - do not take over an active conversation.
+- **Language:** if the conversation is in `{{LEAVE_UNREAD_LANGUAGES}}` (e.g. a personal language),
+  leave it unread.  <!-- delete if not applicable -->
+- **Personal / known contact:** anyone the user knows personally.
+- **Ongoing / strategic:** deals, partnerships, or recruiting-for-my-team threads.
+- **Low confidence:** anything you cannot categorize with confidence.
+- **No-new-substance loops:** if the latest message is just an emoji, a reaction, or "thanks!"
+  with no new question, leave it unread and do not report it.
+
+---
+
 ## Calls rule (applies across categories)
 Calls are costly. Only agree to a call if the person is (a) exceptional/very senior talent OR
 (b) specifically relevant to a priority area for you. Otherwise decline the call and redirect

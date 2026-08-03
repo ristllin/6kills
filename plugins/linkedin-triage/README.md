@@ -22,34 +22,38 @@ never committed.
 /plugin install linkedin-triage@6kills
 ```
 
+## Two commands
+
+| Command | What it does |
+|---------|--------------|
+| `/linkedin-triage-init` | **Interactive onboarding.** Interviews you about your inbox and writes your personalized rules + model choice. Run this first. |
+| `/linkedin-triage` | Runs the triage. If you haven't onboarded yet, it stops and points you to `-init`. |
+
 ## One-time setup (fresh machine)
 
-`/linkedin-triage` detects an unconfigured machine and points you here. You need:
+You need these prerequisites in place first:
 
-1. **Docker/OrbStack** installed and running.
+1. **Docker** (Docker Desktop, Docker Engine, or OrbStack) installed and running.
 2. **Beeper Desktop** installed, signed in, **LinkedIn connected**, local API enabled.
 3. **Claude Code** with the `beeper` MCP server added and authenticated via `/mcp`.
 4. **API access** - either your own `ANTHROPIC_API_KEY`, or a shared Foundry/gateway proxy
    (see "API access" below).
 
-Run the checker (it verifies all of the above and builds the image):
+The checker verifies all of the above and builds the container image:
 
 ```bash
-bash "$(dirname "$(command -v claude)")"   # not this - see note
 bash <plugin>/sandbox/setup.sh
 ```
 
-> The plugin files live under `${CLAUDE_PLUGIN_ROOT}` once installed. From Claude Code you can
-> just run `/linkedin-triage`; it will run `setup.sh` for you and relay any missing steps.
+Then run **`/linkedin-triage-init`** - an interactive interview that asks about the messages you
+get, how you want to answer each, your red lines, referral policy, what to leave unread (and just
+be notified about), your calls policy, which model to run, and your schedule. It writes:
 
-Then **customize your reply templates** - this is the most important step:
+- `sandbox/memory/linkedin_triage_rules.md` - your categories, templates, and leave-unread rules.
+- `sandbox/config.env` - your model choice (git-ignored).
 
-```
-<plugin>/sandbox/memory/linkedin_triage_rules.md
-```
-
-Replace every `{{PLACEHOLDER}}` (your name, company, careers URL, optional referral link) and
-tune the categories/templates to how you actually want to respond.
+Prefer to hand-edit instead? Copy the placeholders in
+[`sandbox/memory/linkedin_triage_rules.md`](sandbox/memory/linkedin_triage_rules.md) yourself.
 
 **Full step-by-step from a clean machine:** [`sandbox/SETUP.md`](sandbox/SETUP.md).
 
@@ -64,6 +68,11 @@ The runner auto-detects which to use:
 
 The proxy mode also pins the proxy's hostname into the container's `/etc/hosts` (resolved on
 the host) so private DNS such as Tailscale MagicDNS works from inside Docker.
+
+**Model.** Triage is mostly classification plus short templated replies, so a fast model (Haiku)
+is usually plenty; use Sonnet if you want more nuanced personalization. `/linkedin-triage-init`
+asks and saves your choice to `config.env` (`TRIAGE_MODEL` in key mode, or
+`ANTHROPIC_DEFAULT_SONNET_MODEL` in proxy mode). A shell export always overrides the saved value.
 
 ## Run
 
@@ -88,8 +97,10 @@ whichever auth vars you have set at that moment. The removal command is printed 
 
 | Path | Purpose |
 |------|---------|
+| `commands/linkedin-triage-init.md` | The `/linkedin-triage-init` onboarding interview. |
 | `commands/linkedin-triage.md` | The `/linkedin-triage` slash command (launches the sandbox). |
 | `sandbox/run.sh` | Runs the triage in a container (reads your Beeper token, mounts the skill). |
+| `sandbox/config.env` | Your saved model choice (written by `-init`; git-ignored). |
 | `sandbox/setup.sh` | Verifies prerequisites and builds the image. |
 | `sandbox/Dockerfile` | Minimal Node image with Claude Code installed. |
 | `sandbox/settings.json` | Container permissions (only Beeper tools + Read; Bash/Write/Web denied). |

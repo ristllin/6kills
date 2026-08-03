@@ -1,3 +1,6 @@
 # Runtime file - contains your live Beeper token. Never commit.
 .claude.runtime.json
 .settings.runtime.json
+
+# Personal config written by /linkedin-triage-init (may contain an API key + model choice).
+config.env

@@ -23,6 +23,14 @@ SANDBOX="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 IMAGE="linkedin-triage-runner"
 BEEPER_URL="http://host.docker.internal:23373/v0/mcp"
 
+# Optional persisted config written by `/linkedin-triage-init` (git-ignored). It may set the
+# model (TRIAGE_MODEL or ANTHROPIC_DEFAULT_* for a proxy) and/or auth. The file uses
+# `export VAR="${VAR:-value}"` lines, so anything already set in your shell wins over it.
+if [ -f "$SANDBOX/config.env" ]; then
+  # shellcheck disable=SC1091
+  . "$SANDBOX/config.env"
+fi
+
 # --- 1. Docker must be installed and running ------------------------------------
 if ! command -v docker >/dev/null 2>&1; then
   echo "[linkedin-triage] ERROR: 'docker' not found. Install OrbStack (macOS) or Docker Desktop." >&2

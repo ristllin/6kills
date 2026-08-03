@@ -40,8 +40,14 @@ For each unread chat, use `mcp__beeper__list_messages` to read the conversation 
 
 Classify each chat using the categories defined in the rules file, then respond with the
 matching template via `mcp__beeper__send_message`. Personalize where the person's background
-is especially relevant to the user. If a chat is personal, strategic, or ambiguous, LEAVE IT
-UNREAD - do not reply.
+is especially relevant to the user.
+
+**First check the rules file's "leave unread / notify-only triggers" for every chat.** If any
+apply, do NOT reply - leave it unread and surface it in the summary. In particular, from the
+conversation history you fetched in Step 2, check whether **the user has already sent a message
+in this thread**; if so, a human is engaged, so leave it unread. Also leave unread anything
+personal, strategic, in a language the rules flag, or that you cannot categorize with confidence.
+When in doubt, leave unread.
 
 **NEVER use em dashes (—) in any message.** Use a regular hyphen (-) or rewrite the sentence.
 Em dashes are a giveaway that the message was written by an AI.
