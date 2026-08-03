@@ -1,0 +1,3 @@
+# Runtime file - contains your live Beeper token. Never commit.
+.claude.runtime.json
+.settings.runtime.json
