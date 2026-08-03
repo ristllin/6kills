@@ -5,8 +5,8 @@
     "url": "https://github.com/ristllin"
   },
   "metadata": {
-    "description": "Public collection of Claude Code plugins: prism (mode-aware code review/hardening orchestrator), deep-research, and relentless (autonomous long-task ship charter).",
-    "version": "0.2.0"
+    "description": "Public collection of Claude Code plugins: prism (mode-aware code review/hardening orchestrator), deep-research, relentless (autonomous long-task ship charter), and linkedin-triage (sandboxed LinkedIn DM triage via Beeper).",
+    "version": "0.3.0"
   },
   "plugins": [
     {
@@ -23,6 +23,11 @@
       "name": "relentless",
       "source": "./plugins/relentless",
       "description": "Operating charter for long, unattended, autonomous build-and-ship tasks. Sets a Definition of Done, isolates work in a git worktree, arms a self-continuing loop, fans work across parallel agents/devices, guards every surface against regressions with a full test pyramid, runs autonomous end-to-end QA (real paid API calls, browser + screenshots, LLM-as-judge), hardens with a review pass, and doesn't stop until it's genuinely shippable."
+    },
+    {
+      "name": "linkedin-triage",
+      "source": "./plugins/linkedin-triage",
+      "description": "Auto-triage your unread LinkedIn DMs with Claude, sandboxed in a throwaway Docker container. Reads DMs through the Beeper Desktop app, categorizes each one (job seeker, vendor, recruiter, networking, personal), replies from templates you control, and leaves personal/strategic chats unread. The AI can only see the Beeper tools and your rules file - Bash, writes, and web access are denied. Supports a direct ANTHROPIC_API_KEY or a shared Foundry/gateway proxy. Exposes /linkedin-triage."
     }
   ]
 }

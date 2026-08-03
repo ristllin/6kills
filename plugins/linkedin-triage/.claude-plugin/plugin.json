@@ -1,0 +1,19 @@
+{
+  "name": "linkedin-triage",
+  "version": "0.1.0",
+  "description": "Auto-triage your unread LinkedIn DMs with Claude, sandboxed in a throwaway Docker container. Reads DMs through the Beeper Desktop app, categorizes each one (job seeker, vendor, recruiter, networking, personal), replies from templates you control, and leaves anything personal or strategic unread for you. The AI can only see the Beeper tools and your rules file - Bash, file writes, and web access are denied. Exposes /linkedin-triage.",
+  "author": {
+    "name": "Roy Darnell",
+    "url": "https://github.com/ristllin"
+  },
+  "keywords": [
+    "linkedin",
+    "beeper",
+    "triage",
+    "inbox",
+    "sandbox",
+    "docker",
+    "mcp",
+    "automation"
+  ]
+}
