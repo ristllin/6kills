@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__beeper__*",
+      "Read(*)"
+    ],
+    "deny": [
+      "Bash(*)",
+      "Write(*)",
+      "Edit(*)",
+      "WebSearch(*)",
+      "WebFetch(*)"
+    ]
+  }
+}

@@ -2,13 +2,14 @@
 
 A public [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) **plugin marketplace**.
 
-Three plugins:
+Four plugins:
 
 | Plugin | What it is |
 |--------|------------|
 | 🔺 [**prism**](plugins/prism) | Mode-aware code orchestrator. Refracts code (or a plan) through five lenses: 🔥 roast-with-docs, 🧹 simplify, 🧑‍⚖️ peer-review, 🛡️ security-audit, 📚 docs-align. Auto-detects whether you're planning, starting fresh, improving an existing project, or preparing a PR, and runs the right lenses for that mode. |
 | 🔎 [**deep-research**](plugins/deep-research) | Plans queries, fans out [Tavily](https://tavily.com) searches, extracts sources, and writes a cited report. Exposes `/research`. |
 | 🏁 [**relentless**](plugins/relentless) | Operating charter for long, unattended build-and-ship tasks: pins a Definition of Done, works in an isolated git worktree, self-continues across context resets, fans work across parallel agents, guards every surface with a full test pyramid, runs autonomous end-to-end QA, hardens with a review pass, and stops only when the result is shippable. Exposes `/relentless`. |
+| 📥 [**linkedin-triage**](plugins/linkedin-triage) | Auto-triage your unread LinkedIn DMs, sandboxed in a throwaway Docker container. Reads DMs through the [Beeper](https://beeper.com) Desktop app, categorizes each one, replies from templates you control, and leaves personal/strategic chats unread. The AI sees only the Beeper tools and your rules file. Exposes `/linkedin-triage`. |
 
 ## Install
 
@@ -17,6 +18,7 @@ Three plugins:
 /plugin install prism@6kills
 /plugin install deep-research@6kills
 /plugin install relentless@6kills
+/plugin install linkedin-triage@6kills
 ```
 
 Or point at a local clone during development:
@@ -69,15 +71,31 @@ deep-research uses the **Tavily MCP server** and needs a `TAVILY_API_KEY` in you
 /research "your topic"  [--breadth N] [--depth N] [--out path]
 ```
 
+## linkedin-triage: quick start
+
+Runs a sandboxed Docker container that triages your unread LinkedIn DMs via the Beeper Desktop
+app. After the prerequisites (Docker + Beeper + `/mcp` auth + API access, checked by `setup.sh`),
+run **`/linkedin-triage-init`** - an interactive interview that builds your rules (categories,
+reply templates, red lines, what to leave unread, referral policy, calls policy, model, schedule).
+Then `/linkedin-triage` runs it. Auth works two ways: a direct `ANTHROPIC_API_KEY`, or a shared
+Foundry/gateway proxy (`CLAUDE_CODE_USE_FOUNDRY=1` + `ANTHROPIC_FOUNDRY_BASE_URL`). Full guide:
+[plugins/linkedin-triage/sandbox/SETUP.md](plugins/linkedin-triage/sandbox/SETUP.md).
+
+```
+/linkedin-triage-init   # interactive onboarding (first time)
+/linkedin-triage        # run the triage
+```
+
 ## Repo layout
 
 ```
 6kills/
-├── .claude-plugin/marketplace.json   # marketplace manifest (lists all three plugins)
+├── .claude-plugin/marketplace.json   # marketplace manifest (lists all four plugins)
 └── plugins/
     ├── prism/                        # orchestrator command + skill, 5 lens skills, 7 sec agents
     ├── deep-research/                # /research command + deep-researcher agent + Tavily MCP
-    └── relentless/                   # /relentless command + relentless charter skill
+    ├── relentless/                   # /relentless command + relentless charter skill
+    └── linkedin-triage/              # /linkedin-triage command + Docker sandbox (Beeper DM triage)
 ```
 
 ## Authoring notes
