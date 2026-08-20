@@ -2,13 +2,14 @@
 
 A public [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) **plugin marketplace**.
 
-Four plugins:
+Five plugins:
 
 | Plugin | What it is |
 |--------|------------|
 | 🔺 [**prism**](plugins/prism) | Mode-aware code orchestrator. Refracts code (or a plan) through five lenses: 🔥 roast-with-docs, 🧹 simplify, 🧑‍⚖️ peer-review, 🛡️ security-audit, 📚 docs-align. Auto-detects whether you're planning, starting fresh, improving an existing project, or preparing a PR, and runs the right lenses for that mode. |
 | 🔎 [**deep-research**](plugins/deep-research) | Plans queries, fans out [Tavily](https://tavily.com) searches, extracts sources, and writes a cited report. Exposes `/research`. |
 | 🏁 [**relentless**](plugins/relentless) | Operating charter for long, unattended build-and-ship tasks: pins a Definition of Done, works in an isolated git worktree, self-continues across context resets, fans work across parallel agents, guards every surface with a full test pyramid, runs autonomous end-to-end QA, hardens with a review pass, and stops only when the result is shippable. Exposes `/relentless`. |
+| 🌀 [**collapse**](plugins/collapse) | Closing bracket to a fan-out of autonomous work. Converges many parallel lanes (worktrees, branches, sessions) into one clean `main`: waits out lanes that are still moving, excludes stalled ones, merges every finished lane with a green check after each merge, refracts the combined diff through prism, then either holds with a decision report or ships a staged clean-slate release and QAs the live deployment. Exposes `/collapse`. |
 | 📥 [**linkedin-triage**](plugins/linkedin-triage) | Auto-triage your unread LinkedIn DMs, sandboxed in a throwaway Docker container. Reads DMs through the [Beeper](https://beeper.com) Desktop app, categorizes each one, replies from templates you control, and leaves personal/strategic chats unread. The AI sees only the Beeper tools and your rules file. Exposes `/linkedin-triage`. |
 
 ## Install
@@ -18,6 +19,7 @@ Four plugins:
 /plugin install prism@6kills
 /plugin install deep-research@6kills
 /plugin install relentless@6kills
+/plugin install collapse@6kills
 /plugin install linkedin-triage@6kills
 ```
 
@@ -62,6 +64,40 @@ Definition of Done is met with evidence. Discipline is built in: no scope creep,
 faked-green tests, confirmation before anything hard to reverse or outward-facing, and it
 cleans up its branches, worktrees, and loops when done.
 
+## collapse: quick start
+
+Use it when several agents, worktrees, or branches have been building in parallel and you want
+one clean `main` out of them:
+
+```
+collapse                          # converge the lanes in play, review, hold for a go
+/collapse --auto-deploy           # ...and ship a staged release, then QA production
+```
+
+It starts as a relentless run on its own lane, because half-built work cannot be collapsed.
+Then it maps the fleet (worktrees, unmerged branches, other live sessions), and includes a lane
+only when that lane carries a **completion marker**: a met Definition of Done, a green final
+build, an opened PR, an explicit `DONE`. Lanes that are still advancing get waited on with a
+recurring check scaled to their size (roughly 10 minutes for a small fix, an hour for a
+subsystem). Lanes with no marker and no progress are excluded from this round and recorded, so
+one stuck agent cannot hold the release hostage.
+
+The included set is then frozen and merged one lane at a time, re-verifying green after **every**
+merge rather than once at the end, and conflicts get resolved by reading both sides instead of
+`-X theirs`. The combined diff goes through prism, because cross-lane integration bugs are
+exactly what no single lane's own review ever saw.
+
+By default it stops there and hands you a decision report through a durable file plus an
+out-of-band notification, then waits for a go. With `--auto-deploy` it ships: dependency order,
+one stage at a time, expand migrations before the app and destructive ones after, fail-closed
+parts that could brick a single point of failure deferred to their own verified follow-up, and a
+defined halt-and-escalate if a stage fails mid-deploy. Then it QAs the live deployment with
+fresh-context grader subagents that check content rather than status codes, sends the final
+report, and flushes the fleet so `main` really is the clean slate.
+
+Flags: `--auto-deploy`, `--include-stuck`, `--wait-timeout=<dur>`, `--qa-spend=<amount>`,
+`--target=<branch>`. Full charter: [plugins/collapse](plugins/collapse).
+
 ## deep-research: requirements
 
 deep-research uses the **Tavily MCP server** and needs a `TAVILY_API_KEY` in your environment
@@ -90,11 +126,12 @@ Foundry/gateway proxy (`CLAUDE_CODE_USE_FOUNDRY=1` + `ANTHROPIC_FOUNDRY_BASE_URL
 
 ```
 6kills/
-├── .claude-plugin/marketplace.json   # marketplace manifest (lists all four plugins)
+├── .claude-plugin/marketplace.json   # marketplace manifest (lists all five plugins)
 └── plugins/
     ├── prism/                        # orchestrator command + skill, 5 lens skills, 7 sec agents
     ├── deep-research/                # /research command + deep-researcher agent + Tavily MCP
     ├── relentless/                   # /relentless command + relentless charter skill
+    ├── collapse/                     # /collapse command + collapse convergence/release skill
     └── linkedin-triage/              # /linkedin-triage command + Docker sandbox (Beeper DM triage)
 ```
 
