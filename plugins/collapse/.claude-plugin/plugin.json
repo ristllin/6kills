@@ -1,0 +1,21 @@
+{
+  "name": "collapse",
+  "version": "0.1.0",
+  "description": "Closing bracket to a fan-out of autonomous work. Converges many parallel lanes (worktrees, branches, sessions) into one clean main: is relentless on its own lane first, maps the fleet, waits out progressing siblings on a size-scaled recurring check and excludes stalled ones, merges every finished lane with green verification after each merge and honest conflict resolution, refracts the combined diff through prism and fixes every confirmed finding, then either holds with a decision report or ships a staged clean-slate release (dependency order, irreversible steps out-of-band and reversible, bricking parts deferred to a verified follow-up), QAs the live deployment with fresh-context graders, and reports.",
+  "author": {
+    "name": "Roy Darnell",
+    "url": "https://github.com/ristllin"
+  },
+  "keywords": [
+    "collapse",
+    "converge",
+    "worktree",
+    "merge",
+    "release",
+    "deploy",
+    "clean-slate",
+    "autonomous",
+    "orchestrator",
+    "prism"
+  ]
+}

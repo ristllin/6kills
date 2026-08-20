@@ -5,8 +5,8 @@
     "url": "https://github.com/ristllin"
   },
   "metadata": {
-    "description": "Public collection of Claude Code plugins: prism (mode-aware code review/hardening orchestrator), deep-research, relentless (autonomous long-task ship charter), and linkedin-triage (sandboxed LinkedIn DM triage via Beeper).",
-    "version": "0.3.0"
+    "description": "Public collection of Claude Code plugins: prism (mode-aware code review/hardening orchestrator), deep-research, relentless (autonomous long-task ship charter), linkedin-triage (sandboxed LinkedIn DM triage via Beeper), and collapse (converge parallel lanes into one clean, reviewed, deployed main).",
+    "version": "0.4.0"
   },
   "plugins": [
     {
@@ -28,6 +28,11 @@
       "name": "linkedin-triage",
       "source": "./plugins/linkedin-triage",
       "description": "Auto-triage your unread LinkedIn DMs with Claude, sandboxed in a throwaway Docker container. Reads DMs through the Beeper Desktop app, categorizes each one (job seeker, vendor, recruiter, networking, personal), replies from templates you control, and leaves personal/strategic chats unread. The AI can only see the Beeper tools and your rules file - Bash, writes, and web access are denied. Supports a direct ANTHROPIC_API_KEY or a shared Foundry/gateway proxy. Exposes /linkedin-triage."
+    },
+    {
+      "name": "collapse",
+      "source": "./plugins/collapse",
+      "description": "Closing bracket to a fan-out of autonomous work. Converges many parallel lanes (worktrees, branches, sessions) into one clean main: relentless on its own lane first, then maps the fleet, waits out progressing siblings on a size-scaled recurring check and excludes stalled ones, merges every finished lane with green verification after each merge and honest conflict resolution, refracts the combined diff through prism, then either holds with a decision report or ships a staged clean-slate release and QAs the live deployment with fresh-context graders before reporting."
     }
   ]
 }
