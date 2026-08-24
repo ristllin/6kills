@@ -5,8 +5,8 @@
     "url": "https://github.com/ristllin"
   },
   "metadata": {
-    "description": "Public collection of Claude Code plugins: prism (mode-aware code review/hardening orchestrator), deep-research, relentless (autonomous long-task ship charter), linkedin-triage (sandboxed LinkedIn DM triage via Beeper), and collapse (converge parallel lanes into one clean, reviewed, deployed main).",
-    "version": "0.4.0"
+    "description": "Public collection of Claude Code plugins: prism (mode-aware code review/hardening orchestrator), deep-research, relentless (autonomous long-task ship charter), linkedin-triage (sandboxed LinkedIn DM triage via Beeper), collapse (converge parallel lanes into one clean, reviewed, deployed main), and orchestrate (plan and launch a multi-lane autonomous program from a raw requirements list).",
+    "version": "0.5.0"
   },
   "plugins": [
     {
@@ -33,6 +33,11 @@
       "name": "collapse",
       "source": "./plugins/collapse",
       "description": "Closing bracket to a fan-out of autonomous work. Converges many parallel lanes (worktrees, branches, sessions) into one clean main: relentless on its own lane first, then maps the fleet, waits out progressing siblings on a size-scaled recurring check and excludes stalled ones, merges every finished lane with green verification after each merge and honest conflict resolution, refracts the combined diff through prism, then either holds with a decision report or ships a staged clean-slate release and QAs the live deployment with fresh-context graders before reporting."
+    },
+    {
+      "name": "orchestrate",
+      "source": "./plugins/orchestrate",
+      "description": "Opening bracket to a fleet of autonomous work. Turns a raw requirements list into a running multi-lane program: interrogates the owner on every ambiguity before planning, writes a thorough PRD, converts it into a dependency-ordered tracker split into waves of parallel non-conflicting lanes with frozen Definitions of Done and evidence requirements (plan approval as the only default human gate), launches each lane as a detached headless claude -p process with a pinned model and recorded session id running relentless to its DoD, supervises on a recurring loop with evidence-based lane state (logs and progress files, never pid-liveness), merges finished lanes within one window, validates with per-lane prism plus personal visual QA and a program-level prism gate, and ships pre-authorized releases between waves with fresh-context post-deploy QA."
     }
   ]
 }

@@ -1,0 +1,23 @@
+{
+  "name": "orchestrate",
+  "version": "0.1.0",
+  "description": "Opening bracket to a fleet of autonomous work. Turns a raw requirements list into a running multi-lane program: interrogates the owner on every ambiguity before planning, writes a thorough PRD, converts it into a dependency-ordered tracker split into waves of parallel non-conflicting lanes with frozen Definitions of Done and evidence requirements (plan approval as the only default human gate), sets up each lane (worktree, TASK.md charter, file-ownership contracts, battery definition, resource locks), launches lanes as detached headless claude -p processes with pinned models and recorded session ids each running relentless to its DoD, supervises on a recurring loop with evidence-based lane state (logs and progress files, never pid-liveness), merges finished lanes within one window, validates with per-lane prism plus personal visual QA and a program-level prism gate, and ships pre-authorized releases between waves with fresh-context post-deploy QA.",
+  "author": {
+    "name": "Roy Darnell",
+    "url": "https://github.com/ristllin"
+  },
+  "keywords": [
+    "orchestrate",
+    "fleet",
+    "program",
+    "prd",
+    "waves",
+    "lanes",
+    "headless",
+    "supervision",
+    "autonomous",
+    "tracker",
+    "relentless",
+    "collapse"
+  ]
+}
