@@ -2,13 +2,14 @@
 
 A public [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) **plugin marketplace**.
 
-Five plugins:
+Six plugins:
 
 | Plugin | What it is |
 |--------|------------|
 | 🔺 [**prism**](plugins/prism) | Mode-aware code orchestrator. Refracts code (or a plan) through five lenses: 🔥 roast-with-docs, 🧹 simplify, 🧑‍⚖️ peer-review, 🛡️ security-audit, 📚 docs-align. Auto-detects whether you're planning, starting fresh, improving an existing project, or preparing a PR, and runs the right lenses for that mode. |
 | 🔎 [**deep-research**](plugins/deep-research) | Plans queries, fans out [Tavily](https://tavily.com) searches, extracts sources, and writes a cited report. Exposes `/research`. |
 | 🏁 [**relentless**](plugins/relentless) | Operating charter for long, unattended build-and-ship tasks: pins a Definition of Done, works in an isolated git worktree, self-continues across context resets, fans work across parallel agents, guards every surface with a full test pyramid, runs autonomous end-to-end QA, hardens with a review pass, and stops only when the result is shippable. Exposes `/relentless`. |
+| 🎼 [**orchestrate**](plugins/orchestrate) | Opening bracket to a fleet of autonomous work. Turns a raw requirements list into a running multi-lane program: interrogates the owner on every ambiguity, writes a PRD, splits it into waves of parallel non-conflicting lanes with frozen Definitions of Done, launches each lane as a detached headless `claude -p` worker running relentless, supervises on a loop with evidence-based lane state, merges finished lanes within the window, gates with per-lane and program-level prism, and ships pre-authorized releases between waves. Exposes `/orchestrate`. |
 | 🌀 [**collapse**](plugins/collapse) | Closing bracket to a fan-out of autonomous work. Converges many parallel lanes (worktrees, branches, sessions) into one clean `main`: waits out lanes that are still moving, excludes stalled ones, merges every finished lane with a green check after each merge, refracts the combined diff through prism, then either holds with a decision report or ships a staged clean-slate release and QAs the live deployment. Exposes `/collapse`. |
 | 📥 [**linkedin-triage**](plugins/linkedin-triage) | Auto-triage your unread LinkedIn DMs, sandboxed in a throwaway Docker container. Reads DMs through the [Beeper](https://beeper.com) Desktop app, categorizes each one, replies from templates you control, and leaves personal/strategic chats unread. The AI sees only the Beeper tools and your rules file. Exposes `/linkedin-triage`. |
 
@@ -19,6 +20,7 @@ Five plugins:
 /plugin install prism@6kills
 /plugin install deep-research@6kills
 /plugin install relentless@6kills
+/plugin install orchestrate@6kills
 /plugin install collapse@6kills
 /plugin install linkedin-triage@6kills
 ```
@@ -63,6 +65,29 @@ quality), hardens with a review pass (pairs well with prism), and stops when the
 Definition of Done is met with evidence. Discipline is built in: no scope creep, no
 faked-green tests, confirmation before anything hard to reverse or outward-facing, and it
 cleans up its branches, worktrees, and loops when done.
+
+## orchestrate: quick start
+
+Hand it a raw requirements list and it plans and launches the whole program:
+
+```
+orchestrate                                  # plan and launch the program in context
+/orchestrate "path/to/requirements.md"
+/orchestrate --tracker=markdown --cadence=30m --max-lanes=8
+```
+
+It runs eight phases: **interrogate** the owner on every ambiguity (the one place it stops),
+write a thorough **PRD**, derive a dependency-ordered **tracker** split into waves of parallel
+non-conflicting lanes with frozen Definitions of Done, **set up** each lane (worktree, TASK.md
+charter, file-ownership contract), **launch** them as detached headless `claude -p` workers
+each running relentless to its DoD, **supervise** on a recurring loop where lane state comes
+from logs and progress files (never pid-liveness) and finished lanes merge within one window,
+**validate** with per-lane prism plus a program-level prism gate and your own eyes on UI
+screenshots, and **release** pre-authorized staged deploys between waves with fresh-context
+post-deploy QA. Plan approval is the only default human gate.
+
+Flags: `--tracker=<linear|markdown>`, `--max-lanes=<n>`, `--cadence=<dur>`, `--model=<id>`,
+`--gates=<n>`. Full charter: [plugins/orchestrate](plugins/orchestrate).
 
 ## collapse: quick start
 
@@ -126,12 +151,13 @@ Foundry/gateway proxy (`CLAUDE_CODE_USE_FOUNDRY=1` + `ANTHROPIC_FOUNDRY_BASE_URL
 
 ```
 6kills/
-├── .claude-plugin/marketplace.json   # marketplace manifest (lists all five plugins)
+├── .claude-plugin/marketplace.json   # marketplace manifest (lists all six plugins)
 └── plugins/
     ├── prism/                        # orchestrator command + skill, 5 lens skills, 7 sec agents
     ├── deep-research/                # /research command + deep-researcher agent + Tavily MCP
     ├── relentless/                   # /relentless command + relentless charter skill
-    ├── collapse/                     # /collapse command + collapse convergence/release skill
+    ├── orchestrate/                  # /orchestrate command + orchestrate program skill (opening bracket)
+    ├── collapse/                     # /collapse command + collapse convergence/release skill (closing bracket)
     └── linkedin-triage/              # /linkedin-triage command + Docker sandbox (Beeper DM triage)
 ```
 
