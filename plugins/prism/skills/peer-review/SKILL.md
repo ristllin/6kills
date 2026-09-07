@@ -5,9 +5,10 @@ description: >-
   says "peer review", "prism peer", "get a second opinion", "have another model check this",
   or wants an adversarial review of a plan, a diff, or completed work. Provider-agnostic:
   discovers whatever headless AI CLIs or endpoints are available at runtime, picks a reviewer
-  from a different model family, and gracefully falls back (local model, then a fresh Claude
-  skeptic). Offers an opt-in multi-judge jury when several providers are available. Announces
-  before spending credits.
+  ranked by capability tier first, then provider, then harness, and gracefully falls back down
+  that ladder (a different model from your own provider, then self-review, then a much weaker
+  model only as a poor last resort). Offers an opt-in multi-judge jury when several providers
+  are available. Announces before spending credits.
 ---
 
 # Peer Review (cross-provider)
@@ -33,8 +34,10 @@ calling**. This step does two sensitive things: it **spends the user's credits**
 on it. Announcing is not the same as consent: name the reviewer, say what data leaves the
 machine, and let the user decline. Redact obvious secrets from the payload before sending, and
 if the artifact looks sensitive (keys, proprietary code, a private repo), ask first rather than
-assume. A local `ollama` reviewer keeps data on the machine; prefer it when egress is a
-concern.
+assume. A local model keeps data on the machine, so when the artifact is too sensitive to send
+off-machine a strong local model is the ceiling on the independence you can get: you are trading
+reviewer quality for data control, and a small local model (a 7B) is a poor reviewer regardless
+of privacy.
 
 ### 2a. User override wins
 
@@ -88,10 +91,49 @@ The reply is the final block after the session preamble.
 key via `curl`). A critique needs only reasoning over text, and these avoid all
 sandbox/approval complexity. Always prefer each CLI's most read-only/sandboxed mode.
 
-**Selection criteria** (in priority order): a **different model family** than the current
-session model (not merely a different vendor account); a comparable (ideally frontier) tier;
-headless + read-only invocation. If a probe fails, **fail soft**: note the one-line reason
-(`gemini: no API key`) and move on. Never abort the lens because one backend is broken.
+**Rank the candidates: capability first, then provider, then harness.** Independence only
+helps if the reviewer is strong enough to catch what the author missed, so sort the reachable
+reviewers by three keys, in order:
+
+1. **Capability tier, judged by current performance and not size alone.** Match the author
+   model's tier, or reach one notch above it. A model that is large but a generation behind is a
+   weak reviewer despite its size: as of Sep 2026 Mistral Large 3 is outclassed on reasoning by
+   much smaller current models, so it should not review a frontier model when a current mid
+   model is free. Judge by today's performance, never by parameter count or headline size.
+2. **Provider / lineage.** A different provider is the strongest independence (self-preference
+   bias is measured *within* a family, Step 1). A different model from the author's *own*
+   provider is partial independence and still beats self-review. The same model grading itself
+   is the weakest, and is flagged as such.
+3. **Harness.** Reaching the reviewer through a different CLI or runtime than the author's adds
+   a little independence and dodges shared-harness blind spots; use it as the tie-breaker.
+
+Concrete default ladders (Sep 2026; the runtime probe and the tier rule above override this
+table as the field moves):
+
+| Author model | Reviewer order, best first |
+|---|---|
+| Claude Fable 5.1 | Astra → GPT-5.6 Sol → GLM-5.3 → Claude Opus 5 / Opus 4.8 → Fable self-review |
+| Claude Opus 5 | GPT-5.6 Sol → GLM-5.3 → Astra → Claude Fable 5.1 → Claude Sonnet 5 → GPT-5.6 Terra → Opus self-review |
+| Claude Sonnet 5 (mid) | a current mid model from another provider (GLM-5.3, GPT-5.6 Sol) → a frontier model from another provider → Claude Opus 5 / Fable → Sonnet self-review |
+
+Generalized: **same-tier model from another provider → a larger model from another provider →
+a slightly smaller *current* model from another provider → a different model from your own
+provider → self-review → a much smaller or older model only as an absolute last resort.** That
+last resort is genuinely bad: a 7B local model is not a peer of a frontier model and misses most
+of what matters, so treat "nothing but a 7B is reachable" as grounds to report that no
+independent review was possible, not as a peer review in disguise.
+
+**Reach the preferred reviewer.** The top of these ladders is usually an OpenAI model, so
+`codex` is the primary path: `codex exec --sandbox read-only -m <model>` reading the prompt from
+stdin, and pass `-m` explicitly because the default is a mini tier that is not a frontier peer.
+`cursor-agent -p` is an alternate route to GPT or Gemini models. GLM-5.3 and other
+non-Anthropic frontier models are reached through their own CLI or an OpenAI-compatible endpoint
+(`$OPENAI_BASE_URL` + key via `curl`, or `llm -m ...`). The same-provider Anthropic rungs (Fable
+checking Opus, Opus checking Fable, Sonnet checking either) are reached by spawning a fresh
+subagent with an explicit model override, and are flagged as same-provider.
+
+If a probe fails, **fail soft**: note the one-line reason (`gemini: no API key`) and move on.
+Never abort the lens because one backend is broken.
 
 **Confirm the family, don't assume it from the CLI name.** Multi-provider tools (`opencode`,
 `qwen`, `goose`, `llm`) can be configured to route to *Anthropic* or to an unknown local
@@ -100,14 +142,23 @@ flag, config, or `$OPENAI_BASE_URL`) before trusting independence. If it routes 
 Anthropic or you can't tell, **flag the reviewer as non-independent** in the output, the same
 way the Claude-skeptic fallback is flagged.
 
-### 2c. Fallbacks
+### 2c. When no cross-provider reviewer is reachable
 
-1. **Local model** (`ollama list`, then `ollama run <model> "<prompt>"`): use the strongest
-   local non-Anthropic model, and **flag it as low-tier**: a small local model is not a peer
-   of a frontier model; treat its critique as a sanity check.
-2. **Fresh Claude skeptic (ultimate fallback).** Spawn a fresh Claude subagent (Task tool)
-   with an adversarial, skeptical persona and, if possible, a different model tier. **Flag
-   clearly that this is same-provider** and therefore a weaker form of independence.
+Walk down the tail of the ladder above, flagging the loss of independence at each step:
+
+1. **A different model from the author's own provider** (Opus reviewing Fable, Sonnet reviewing
+   Opus): spawn a fresh subagent (Task tool) with an explicit model override and an adversarial
+   persona. Same-provider, so **flag it** as partial independence; it still catches real issues
+   and is far better than a much weaker model.
+2. **A fresh same-model skeptic** (self-review): the author model reviewing its own work under
+   an adversarial persona. Weakest independence; **flag clearly** that reviewer and author share
+   a model.
+3. **A much smaller or older model** (a 7B via `ollama run <model>`): the floor, and a bad one.
+   A 7B is not a peer of a frontier model and misses most of what matters. Prefer to report "no
+   independent reviewer was available" over passing off a 7B critique as a peer review; use it
+   only when the user explicitly wants *some* second pair of eyes and nothing better exists. A
+   local model is also the fallback when the artifact is too sensitive to send off-machine, in
+   which case you are trading reviewer quality for data control.
 
 Always state which reviewer was actually used and why (so the user can weigh the independence).
 
