@@ -282,9 +282,13 @@ than none: they race on the same worktrees, the same branches, and the same trac
 A routine may exist for exactly one purpose: a **dead-man fallback**. Its first act must
 be to read the tracker's last dated heartbeat line and **stand down - exit immediately,
 touching no lane, no git, no tracker, no hardware - if that line is under two hours old**.
-Only when the orchestrator session has clearly died does it take over, and its first act
-on taking over is to re-arm the two `CronCreate` jobs on itself and confirm them with
-`CronList`.
+Only when the orchestrator session has clearly died does it act, and it cannot become the
+orchestrator: a routine session ends when its turn ends, so any cron it armed on itself
+would die with it (the same mistake in a new coat). What it does instead: run ONE
+heartbeat pass, append a dated tracker line marked as a fallback pass, and notify the
+owner that the orchestrator session is dead, with the exact resume command
+(`claude --resume <orchestrator-session-id>`); the resumed orchestrator re-arms both crons
+and confirms them with `CronList` as its first act.
 
 Both crons are session-scoped and auto-expire after seven days: **re-arm them after any
 context reset, resume, or session restart**, and confirm with `CronList` every time. Each
@@ -412,8 +416,9 @@ you assumed.
 - **Two supervisors.** A routine and the in-session crons acting at the same time, merging,
   pushing and launching the same lanes in parallel from different prompts. A fallback
   routine reads the last dated heartbeat line first and stands down while it is under two
-  hours old; it takes over only when the orchestrator session is genuinely dead, and its
-  first act on taking over is to re-arm both crons on itself.
+  hours old; it acts only when the orchestrator session is genuinely dead, and then it runs
+  one pass and tells the owner how to resume the orchestrator, because a routine cannot
+  hold crons of its own.
 - **Overlapping lanes.** Two same-wave lanes writing the same files ends in silent
   overwrites or coin-flip conflict resolution. File overlap is resolved in the plan, by
   sequencing or contracts, never at merge time.
