@@ -5,13 +5,13 @@ description: >-
   multi-lane program. Interrogates the owner on every ambiguity first, writes a PRD, converts
   it into a dependency-ordered tracker split into waves of non-conflicting parallel lanes,
   sets up and launches each lane as a detached headless worker running relentless to a frozen
-  Definition of Done, supervises on a recurring loop with evidence-based lane state, merges
-  finished lanes within one window, gates each wave with review and personal visual QA, and
-  ships pre-authorized releases between waves. Use whenever the user says "orchestrate" or
-  "run orchestrate", or asks you to plan and launch a big program from scratch, split a
-  backlog or spec into parallel agents/lanes, or take a requirements dump to a shipped
-  release with minimal human gates. Not for one task (use relentless) and not for converging
-  an already-running fleet (use collapse).
+  Definition of Done, supervises from its own resident session on armed in-session crons with
+  evidence-based lane state read from files, merges finished lanes within one window, gates
+  each wave with review and personal visual QA, and ships pre-authorized releases between
+  waves. Use whenever the user says "orchestrate" or "run orchestrate", or asks you to plan
+  and launch a big program from scratch, split a backlog or spec into parallel agents/lanes,
+  or take a requirements dump to a shipped release with minimal human gates. Not for one task
+  (use relentless) and not for converging an already-running fleet (use collapse).
 ---
 
 # Orchestrate
@@ -62,14 +62,16 @@ the mechanics, never the discipline.
 - **Required: an in-session cron for the supervision loop** - `CronCreate` (or the
   host's equivalent that enqueues a prompt into THIS orchestrator session). This is not
   optional and a persistent "scheduled task"/routine is NOT a substitute: a routine spawns
-  a fresh session that has no lane context and is not the orchestrator agent the lanes
-  are required to SendMessage on completion, so every handback fails ("no agent
-  reachable") and finished lanes sit stranded. If neither an in-session cron nor `/loop`
-  exists, you are the loop - say so and stay resident; do not launch lanes you cannot
-  supervise.
-- **Nice to have:** cross-session messaging (SendMessage) for lane report-ins, a
-  push-notification channel for the absent owner, and a lock directory if hardware or any
-  other exclusive resource is involved.
+  a fresh session with no lane context, no armed crons, and its own clock, so the
+  orchestrator never wakes while the routine blunders through the program on a stale
+  prompt - and when the real orchestrator does wake, the two of them merge, push and
+  launch in parallel. If neither an in-session cron nor `/loop` exists, you are the loop:
+  say so, stay resident, and do not launch lanes you cannot supervise.
+- **Nice to have:** cross-session messaging (SendMessage) for lane report-ins - best
+  effort only, because headless `claude -p` lanes are standalone processes and not
+  teammates of any session, so the durable handback is always the lane's files (Phase 5).
+  Also a push-notification channel for the absent owner, and a lock directory if hardware
+  or any other exclusive resource is involved.
 
 ---
 
@@ -163,14 +165,17 @@ Per lane, before launch:
   services or paid production accounts; test keys only; secrets masked in all output),
   the **battery definition** (the exact build, lint, and test commands with the expected
   green markers the lane must paste as evidence), the **evidence discipline** (every
-  issue closes with evidence; DONE goes atop `PROGRESS.md`; a `PR_BODY.md` is written at
-  completion for the merge commit), spend budget, and the orchestrator session's name.
+  issue closes with evidence; the handback is a **file** handback - the single line
+  `LANE-DONE <id>`, or `LANE-BLOCKED <id>: <reason>`, atop `PROGRESS.md`, plus a
+  `PR_BODY.md` written at completion for the merge commit), spend budget, and the
+  orchestrator session's name (for a best-effort message only, never as the handback).
 - **A lane charter skill** (the fleet-lane pattern): one program-specific skill every lane
   invokes at start, holding the rules shared by all lanes - tracker conventions, contract
   protocol, coordination channels, deletion discipline (`rm -rf` inside a project tree
   trips a hard guardrail that fails headlessly - worktrees via `git worktree remove`, else
-  mv-out-then-delete), report-in duties, and hard boundaries. One skill, not N copies in N
-  TASK.md files, so a rule fix lands everywhere at once.
+  mv-out-then-delete), report-in duties (files first, a message only as garnish), and hard
+  boundaries. One skill, not N copies in N TASK.md files, so a rule fix lands everywhere
+  at once.
 - **A device/resource lock protocol if hardware (or any exclusive resource) is involved**:
   a shared map file naming ports/resources, atomic lock files with owner and timestamp
   JSON, random-jitter backoff on contention with doubling windows, a max hold, and a stale
@@ -193,8 +198,10 @@ owner:
 FLEET=/tmp/<program>-fleet && mkdir -p "$FLEET"
 SID=$(uuidgen | tr 'A-Z' 'a-z') && echo "$SID" > "$FLEET/<id>.session"
 nohup claude -p "You are lane <id> of program <name>. Invoke the <lane-charter> skill, \
-read lanes/<id>/TASK.md, and run relentless to its frozen DoD. Report completion and \
-blockers to the orchestrator session by SendMessage." \
+read lanes/<id>/TASK.md, and run relentless to its frozen DoD. Hand back by FILE: put \
+'LANE-DONE <id>' (or 'LANE-BLOCKED <id>: <reason>') as the first line of PROGRESS.md and \
+write PR_BODY.md. A SendMessage to the orchestrator is optional and will usually fail; \
+that is expected, do not retry it and never block on it." \
   --model <pinned-model-id> \
   --session-id "$SID" \
   --dangerously-skip-permissions \
@@ -210,59 +217,86 @@ echo $! > "$FLEET/<id>.pid"
   PROGRESS.md, verify real state, continue."` plus the same model and permission flags.
   Cap kills and crashes are survivable precisely because state lives in the repo and the
   tracker, not in the process.
-- Each lane **runs relentless** inside its worktree to its frozen DoD, and is **required
-  to SendMessage the orchestrator** on completion, on any blocker needing a ruling, and
-  when another lane needs a contract from it. The orchestrator does not watch stdout;
-  a lane that exits with no marker and no message is a failed handback, and the charter
-  skill says so.
+- Each lane **runs relentless** inside its worktree to its frozen DoD and **hands back
+  through files, not messages**. A lane launched with `nohup claude -p` is a standalone OS
+  process, not a teammate of any session, so `SendMessage` from a lane to the orchestrator
+  normally fails ("No agent named '<orchestrator>' is reachable"). **That failure is not
+  an error**: no lane retries it, blocks on it, or treats it as a handback. The durable
+  and mandatory handback is the single line `LANE-DONE <id>` (or
+  `LANE-BLOCKED <id>: <reason>`) at the top of `PROGRESS.md`, plus `PR_BODY.md` at
+  completion; blockers needing a ruling and contracts other lanes are waiting on go on the
+  tracker issue, where the loop will read them. SendMessage is best-effort garnish. The
+  orchestrator does not watch stdout and never waits for a message - a lane that exits
+  with no marker in its files is the only failed handback there is, and the charter skill
+  says exactly that.
 - After each launch, **verify exactly one process per lane** and a first log line in
   `lane.log`. A launcher pointed at an unknown lane name with a leftover worktree can
   spawn a defective duplicate; catch it now, kill the impostor, keep the one with the
   correct TASK.md.
 - Headless lanes do not arm their own crons; **the supervision loop is their continuation
   guarantee** - and that guarantee only exists if the loop runs in the orchestrator's OWN
-  session. **Arm the two `CronCreate` jobs (Phase 6) and confirm them with `CronList`
-  BEFORE the first lane launches**; no armed heartbeat means no launch. Keep the machine
-  awake for the duration (`caffeinate -dims &` with its pid recorded for the flush list)
-  and keep the orchestrator session resident: the crons are session-scoped and die with
-  it.
+  session. **Arm both `CronCreate` jobs (Phase 6) and confirm them with `CronList` BEFORE
+  the first lane launches: no armed heartbeat, no launch.** Keep the machine awake for the
+  duration (`caffeinate -dims &` with its pid recorded for the flush list), and **keep the
+  orchestrator session resident - do not end it while any lane runs**: the crons are
+  session-scoped and die with the session that armed them. After any context reset or
+  `--resume`, re-arm both jobs and re-verify with `CronList` before doing anything else.
 
 ---
 
 ## Phase 6: Supervise on a loop
 
 The loop runs **inside the orchestrator's own session**, armed with `CronCreate` on
-yourself before any lane launches. It is TWO jobs, not one, because they cover two
-different failures:
+yourself and confirmed with `CronList` before any lane launches. It is **two jobs, not
+one**, because there are two different failures and neither job catches the other's: lanes
+finishing or going quiet, and the orchestrator itself going dark under a usage cap.
 
-1. **Lane heartbeat - every 10 minutes** (off-`:00`/`:30`, e.g. `3,13,23,33,43,53 * * * *`).
-   Its prompt: read every `lanes/<id>/lane.log` tail and `PROGRESS.md`, merge any
-   `LANE-DONE` lane within this window, root-cause and relaunch stale lanes from their
-   logs, launch the next queued lanes as capacity frees, append a dated line to the
-   tracker. Ten minutes is the ceiling for "merge within one window": a finished lane
-   should never wait longer than that for a live orchestrator.
-2. **Fallback resume - every hour** (off-minute, e.g. `7 * * * *`). Usage caps are a
-   5-hour rolling window or the weekly budget, so heartbeats can fail silently for a
-   stretch; the hourly wake is what resumes the program when they do. Its prompt verifies
-   the wall clock first (`date -u`, never a stale limit message), then runs the same pass;
-   if still capped, it stops cleanly and the next hour retries.
+1. **Lane heartbeat - every 10 minutes**, off `:00`/`:30` (e.g.
+   `3,13,23,33,43,53 * * * *`). This one covers **the lanes**. Write its prompt so a cold
+   read of it is self-sufficient: read the tail of every `lanes/<id>/lane.log` and the
+   head of every `PROGRESS.md`; merge any lane marked `LANE-DONE` inside this window;
+   root-cause stale lanes from their logs and relaunch them from their session ids; launch
+   the next queued lanes as capacity frees; append a dated heartbeat line to the tracker.
+   Ten minutes is the ceiling on "merge within one window": a finished lane should never
+   wait longer than that for a live orchestrator.
+2. **Fallback resume - every hour**, on an off-minute (e.g. `7 * * * *`). This one covers
+   **you**. Usage caps are a 5-hour rolling window from the first use in that window, or
+   the weekly budget, so a run of heartbeats can die silently and no lane will notice. Its
+   prompt: verify the wall clock with `date -u` first - **never** reason from the text of
+   a limit message, which is stale and often already in the past - then run exactly the
+   heartbeat pass; if still capped, stop cleanly and let the next hour retry.
 
-**Never make a persistent scheduled task/routine the supervisor.** A routine is a fresh
-session: no lane context, not the addressable orchestrator agent the lanes SendMessage on
-completion, and a coarse cadence - the observed result is five lanes finishing, each
-reporting "SendMessage to orchestrator failed: no agent reachable", and sitting unmerged
-for an hour. A routine may exist only as a dead-man fallback that acts when the tracker
-shows no orchestrator heartbeat for over two hours (the session died), and it must
-re-arm the two crons in whatever session it starts. Both crons are session-scoped and
-auto-expire after seven days: re-arm them after any context reset or resume, and confirm
-with `CronList` each time. Each window:
+The heartbeat **reads files**. It never waits for, polls for, or depends on a lane
+message: headless lanes are not teammates and their SendMessage normally fails (Phase 5).
+A quiet lane is a lane whose files you have not read yet.
+
+**A persistent scheduled task / routine is NEVER the supervisor.** A routine is a fresh
+session on its own clock: no lane context, no armed crons, no memory of the window that
+just ran. Observed live: a routine armed in place of the crons meant nobody watched the
+lanes for 46 minutes while five lanes finished green and sat unmerged; then, once the real
+orchestrator finally armed its own crons, the routine's next hourly run fired concurrently
+on the OLD prompt and merged, pushed and launched lanes in parallel with it - a
+**dual-supervisor collision** that had to be stopped mid-run. Two supervisors are worse
+than none: they race on the same worktrees, the same branches, and the same tracker.
+
+A routine may exist for exactly one purpose: a **dead-man fallback**. Its first act must
+be to read the tracker's last dated heartbeat line and **stand down - exit immediately,
+touching no lane, no git, no tracker, no hardware - if that line is under two hours old**.
+Only when the orchestrator session has clearly died does it take over, and its first act
+on taking over is to re-arm the two `CronCreate` jobs on itself and confirm them with
+`CronList`.
+
+Both crons are session-scoped and auto-expire after seven days: **re-arm them after any
+context reset, resume, or session restart**, and confirm with `CronList` every time. Each
+window:
 
 - **Determine lane state from evidence ONLY**: the tail of `lanes/<id>/lane.log`, the head
-  of `PROGRESS.md`, and the presence of `PR_BODY.md`. **NEVER from pid-liveness alone.** A
-  headless process exits when its turn ends - finished, blocked, and errored all look
-  identical from `ps`. DONE detection: grep the first 10 lines of PROGRESS.md
-  case-insensitively for DONE or COMPLETE, and check PR_BODY.md exists - formats vary
-  between lanes.
+  of `PROGRESS.md`, and the presence of `PR_BODY.md`. **NEVER from pid-liveness alone, and
+  never from whether a message arrived.** A headless process exits when its turn ends -
+  finished, blocked, and errored all look identical from `ps`. DONE detection: the
+  canonical marker is `LANE-DONE <id>` in the first lines of PROGRESS.md, with
+  `LANE-BLOCKED <id>: <reason>` its blocked twin; also grep those lines case-insensitively
+  for DONE or COMPLETE and check `PR_BODY.md` exists, because formats drift between lanes.
 - **Never claim a cause without log evidence.** "Unknown - reading the log now" is a
   correct status; a fabricated cause ("probably the usage cap") is worse than no answer
   and is the exact failure this discipline exists to prevent. If the owner asks how the
@@ -279,13 +313,19 @@ with `CronList` each time. Each window:
   base, run the full battery with pasted markers, resolve conflicts by understanding both
   sides - never a blind `-X ours`/`-X theirs`, and never a mechanical union of
   non-list hunks; batteries catch some blind-union breakage, but understanding prevents
-  it - then merge with `PR_BODY.md` as the commit body, close the tracker project, remove
-  the worktree. A red battery stops the merge until fixed honestly.
-- Resume dead lanes via their session ids; give a silent-but-live lane a nudge message;
-  after three windows with no real progress and no marker, treat it as stalled - message
-  it, and if it stays stalled, take the work over in its worktree or re-lane it. Reclaim
-  resource locks older than the stale age. Resumed sessions get new peer names -
-  re-list agents before messaging.
+  it - then merge with `PR_BODY.md` as the commit body. **Finish the paperwork in the same
+  window**: close the lane's tracker/Linear issues and project **with an evidence comment
+  on each** (the green battery markers, the merge commit sha, the screenshot paths), write
+  the merge into the tracker's dated log and `program/RUN.md`, and remove the worktree. A
+  merge nobody recorded is indistinguishable from a merge that never happened, and the
+  next window - or a second supervisor - re-does it. A red battery stops the merge until
+  fixed honestly.
+- Resume dead lanes via their session ids - `claude -p --resume` is the nudge, because a
+  headless lane has no inbox to message. After three windows with no real progress and no
+  marker, treat it as stalled: resume it once with an explicit instruction, and if it
+  stays stalled, take the work over in its worktree or re-lane it. Reclaim resource locks
+  older than the stale age. In a degraded mode where lanes are addressable subagents
+  instead, re-list agents before messaging - resumed sessions get new peer names.
 - Persist everything to a running `program/RUN.md` (window log, merge log, rulings), the
   program's durable memory across your own context resets.
 
@@ -359,11 +399,21 @@ you assumed.
 - **Sitting on finished work.** A completed lane unmerged past one supervision window rots
   against a moving base and stalls its dependents. Merge cadence is an orchestrator duty.
 - **Supervising from the wrong session.** Handing the loop to a persistent scheduled
-  task/routine instead of `CronCreate` on yourself. The routine is a fresh session: it is
-  not the orchestrator the lanes SendMessage, so every completion handback fails with "no
-  agent reachable", and its hourly cadence leaves finished lanes stranded. The orchestrator
-  is a resident session with a 10-minute heartbeat and an hourly fallback armed on itself,
+  task/routine instead of `CronCreate` on yourself. The routine is a fresh session with no
+  lane context on its own coarse clock, so the orchestrator never wakes and finished lanes
+  sit stranded for an hour while the routine acts on a stale prompt. The orchestrator is a
+  resident session with a 10-minute heartbeat and an hourly fallback armed on itself,
   verified with `CronList` before the first launch and re-armed after every reset.
+- **Waiting for a lane message.** Treating a missing or failed `SendMessage` as a lane
+  failure, or as the signal that a lane finished. Headless lanes are standalone processes,
+  not teammates; "No agent named ... is reachable" is the normal case, not an incident.
+  The heartbeat reads `PROGRESS.md`, `lane.log` and `PR_BODY.md` for every lane, every
+  window, and decides from those.
+- **Two supervisors.** A routine and the in-session crons acting at the same time, merging,
+  pushing and launching the same lanes in parallel from different prompts. A fallback
+  routine reads the last dated heartbeat line first and stands down while it is under two
+  hours old; it takes over only when the orchestrator session is genuinely dead, and its
+  first act on taking over is to re-arm both crons on itself.
 - **Overlapping lanes.** Two same-wave lanes writing the same files ends in silent
   overwrites or coin-flip conflict resolution. File overlap is resolved in the plan, by
   sequencing or contracts, never at merge time.

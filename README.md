@@ -73,15 +73,17 @@ Hand it a raw requirements list and it plans and launches the whole program:
 ```
 orchestrate                                  # plan and launch the program in context
 /orchestrate "path/to/requirements.md"
-/orchestrate --tracker=markdown --cadence=30m --max-lanes=8
+/orchestrate --tracker=markdown --cadence=10m --max-lanes=8
 ```
 
 It runs eight phases: **interrogate** the owner on every ambiguity (the one place it stops),
 write a thorough **PRD**, derive a dependency-ordered **tracker** split into waves of parallel
 non-conflicting lanes with frozen Definitions of Done, **set up** each lane (worktree, TASK.md
 charter, file-ownership contract), **launch** them as detached headless `claude -p` workers
-each running relentless to its DoD, **supervise** on a recurring loop where lane state comes
-from logs and progress files (never pid-liveness) and finished lanes merge within one window,
+each running relentless to its DoD, **supervise** from the orchestrator's own resident session
+on two in-session crons armed before the first launch (a 10-minute lane heartbeat and an hourly
+cap-resume fallback) where lane state comes from logs and progress files (never pid-liveness,
+never a lane message) and finished lanes merge within one window,
 **validate** with per-lane prism plus a program-level prism gate and your own eyes on UI
 screenshots, and **release** pre-authorized staged deploys between waves with fresh-context
 post-deploy QA. Plan approval is the only default human gate.
