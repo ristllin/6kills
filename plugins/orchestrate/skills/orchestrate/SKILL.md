@@ -59,8 +59,15 @@ the mechanics, never the discipline.
   the throughput cost - say so up front.
 - **An owner reachable async** for exactly one default gate: plan approval. Everything else
   runs on rulings you make and record.
-- **Nice to have:** cross-session messaging (SendMessage) for lane report-ins, a cron or
-  scheduled-task mechanism for the supervision loop (else `/loop` or a manual cadence), a
+- **Required: an in-session cron for the supervision loop** - `CronCreate` (or the
+  host's equivalent that enqueues a prompt into THIS orchestrator session). This is not
+  optional and a persistent "scheduled task"/routine is NOT a substitute: a routine spawns
+  a fresh session that has no lane context and is not the orchestrator agent the lanes
+  are required to SendMessage on completion, so every handback fails ("no agent
+  reachable") and finished lanes sit stranded. If neither an in-session cron nor `/loop`
+  exists, you are the loop - say so and stay resident; do not launch lanes you cannot
+  supervise.
+- **Nice to have:** cross-session messaging (SendMessage) for lane report-ins, a
   push-notification channel for the absent owner, and a lock directory if hardware or any
   other exclusive resource is involved.
 
@@ -213,15 +220,42 @@ echo $! > "$FLEET/<id>.pid"
   spawn a defective duplicate; catch it now, kill the impostor, keep the one with the
   correct TASK.md.
 - Headless lanes do not arm their own crons; **the supervision loop is their continuation
-  guarantee**. Keep the machine awake for the duration (`caffeinate -dims &` with its pid
-  recorded for the flush list).
+  guarantee** - and that guarantee only exists if the loop runs in the orchestrator's OWN
+  session. **Arm the two `CronCreate` jobs (Phase 6) and confirm them with `CronList`
+  BEFORE the first lane launches**; no armed heartbeat means no launch. Keep the machine
+  awake for the duration (`caffeinate -dims &` with its pid recorded for the flush list)
+  and keep the orchestrator session resident: the crons are session-scoped and die with
+  it.
 
 ---
 
 ## Phase 6: Supervise on a loop
 
-Arm a recurring orchestrator loop (cron or scheduled task, roughly every 30 minutes,
-off-`:00`) whose prompt re-reads the program state fresh each firing. Each window:
+The loop runs **inside the orchestrator's own session**, armed with `CronCreate` on
+yourself before any lane launches. It is TWO jobs, not one, because they cover two
+different failures:
+
+1. **Lane heartbeat - every 10 minutes** (off-`:00`/`:30`, e.g. `3,13,23,33,43,53 * * * *`).
+   Its prompt: read every `lanes/<id>/lane.log` tail and `PROGRESS.md`, merge any
+   `LANE-DONE` lane within this window, root-cause and relaunch stale lanes from their
+   logs, launch the next queued lanes as capacity frees, append a dated line to the
+   tracker. Ten minutes is the ceiling for "merge within one window": a finished lane
+   should never wait longer than that for a live orchestrator.
+2. **Fallback resume - every hour** (off-minute, e.g. `7 * * * *`). Usage caps are a
+   5-hour rolling window or the weekly budget, so heartbeats can fail silently for a
+   stretch; the hourly wake is what resumes the program when they do. Its prompt verifies
+   the wall clock first (`date -u`, never a stale limit message), then runs the same pass;
+   if still capped, it stops cleanly and the next hour retries.
+
+**Never make a persistent scheduled task/routine the supervisor.** A routine is a fresh
+session: no lane context, not the addressable orchestrator agent the lanes SendMessage on
+completion, and a coarse cadence - the observed result is five lanes finishing, each
+reporting "SendMessage to orchestrator failed: no agent reachable", and sitting unmerged
+for an hour. A routine may exist only as a dead-man fallback that acts when the tracker
+shows no orchestrator heartbeat for over two hours (the session died), and it must
+re-arm the two crons in whatever session it starts. Both crons are session-scoped and
+auto-expire after seven days: re-arm them after any context reset or resume, and confirm
+with `CronList` each time. Each window:
 
 - **Determine lane state from evidence ONLY**: the tail of `lanes/<id>/lane.log`, the head
   of `PROGRESS.md`, and the presence of `PR_BODY.md`. **NEVER from pid-liveness alone.** A
@@ -303,7 +337,9 @@ you assumed.
   if the MCP is reachable, else markdown (announce the fallback).
 - **`--max-lanes=<n>`**: parallel lane ceiling per wave. **Default: judge from the
   machine and the wave plan**; the loop re-checks capacity every window.
-- **`--cadence=<dur>`**: supervision loop interval. **Default: 30m.**
+- **`--cadence=<dur>`**: lane-heartbeat interval (the in-session `CronCreate` job).
+  **Default: 10m.** The hourly fallback-resume job is always armed alongside it and is
+  not configurable below 1h; a longer heartbeat is a decision to let finished work wait.
 - **`--model=<id>`**: the pinned lane model. **Default: ask at the plan gate**; never
   launch unpinned.
 - **`--gates=<n>`**: additional human gates beyond plan approval. **Default: 0**; each
@@ -322,6 +358,12 @@ you assumed.
   inventing a cause is worse than "unknown - reading the log now".
 - **Sitting on finished work.** A completed lane unmerged past one supervision window rots
   against a moving base and stalls its dependents. Merge cadence is an orchestrator duty.
+- **Supervising from the wrong session.** Handing the loop to a persistent scheduled
+  task/routine instead of `CronCreate` on yourself. The routine is a fresh session: it is
+  not the orchestrator the lanes SendMessage, so every completion handback fails with "no
+  agent reachable", and its hourly cadence leaves finished lanes stranded. The orchestrator
+  is a resident session with a 10-minute heartbeat and an hourly fallback armed on itself,
+  verified with `CronList` before the first launch and re-armed after every reset.
 - **Overlapping lanes.** Two same-wave lanes writing the same files ends in silent
   overwrites or coin-flip conflict resolution. File overlap is resolved in the plan, by
   sequencing or contracts, never at merge time.
