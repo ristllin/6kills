@@ -1,0 +1,39 @@
+# Kung-Fu Pack: house page style
+
+The look and feel every pack follows. The goal: a reader scans it in two minutes and knows where to
+dig. Dense, technical, lead-backed, and free of filler.
+
+## Shape
+1. **Framing callout (first block).** One quote/callout that says what the target *is* in one or two
+   sentences, the one reframing the reader most needs (for example "X is a vertical on Y, not a
+   standalone thing"), and where the working notes live. This is the single most important block.
+2. **The mental model.** The structure of the thing: a layered stack, the main components, or the
+   lifecycle. Put the primary diagram here. Keep the prose to what the diagram does not already say.
+3. **How it works / runs.** The runtime or process flow, with the second diagram if it earns one.
+   Call out the one or two design decisions that actually matter.
+4. **Where it fits / what is deployed.** Concrete: environments, what is live vs scaffolding, hosts,
+   cloud, chart paths. A deploy diagram often fits here.
+5. **Tables over prose for inventories.** Repos, components, workstreams, engagements, primitives:
+   a table with a Status column and a lead column beats paragraphs.
+6. **Direction / status.** If there is a tracker, a live table (leads, milestone percentages, pull
+   date) plus 3 to 5 strategic insights a newcomer must know. Flag what changed vs older notes.
+7. **Deep-dive leads and sources (last block).** The explicit jump-off list: key READMEs with paths,
+   authoritative doc IDs/URLs, tracker IDs, the workspace path. This is what makes it "onboarding"
+   rather than a summary.
+
+## Rules
+- **Every claim carries a lead:** `path/file.py:120`, a Notion page ID, a Linear issue ID, or a URL.
+  If you cannot back it, soften it or drop it.
+- **Corrections are gold.** When the research overturns a prior belief (deprecated, renamed, moved,
+  blocker cleared), say so explicitly; that is the highest-value content for a new owner.
+- **Flag staleness.** Any snapshot or cache gets its age and a "verify live" note.
+- **Status vocabulary, used consistently:** LIVE, in-flight, deprecated, scaffolding, backlog.
+- **Length matches the ask.** A one-pager stays one page; a "be thorough" brief can run two or three
+  with an appendix. Prefer tight.
+- **No em dashes or en dashes.** Anywhere. Use hyphens, commas, colons, parentheses, or rephrase.
+  This includes the page title (a frequent miss) and all diagram text.
+- **Accents are fine** (names like Rémi, Théo). Arrows (->), middots, and set symbols are fine.
+
+## Tone
+Brief a sharp peer who is new to this area, not a layperson. Assume technical fluency; spend words on
+what is non-obvious, what is wrong in the old mental model, and where to look next.
