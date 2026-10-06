@@ -22,9 +22,13 @@ writing. It is three things: **reaching every source the user has and pulling li
 into high signal with a deep-dive lead behind every claim**. A pretty page built on a stale cache or
 an unverified guess is the failure mode.
 
-This skill expects the `/kung-fu-pack-init` config to exist (saved defaults + detected sources). If
-it is missing, stop and point the user there. If a referenced source is unreachable at run time,
-degrade gracefully and say so; the discipline never changes, only the mechanics.
+This skill runs on Claude Code, Mistral Vibe, and OpenAI Codex (they share the Agent Skills
+`SKILL.md` format). It expects a saved config of defaults + sources at
+`${KUNG_FU_PACK_ROOT:-~/kung-fu-pack}/config.json`. On Claude Code that is created by
+`/kung-fu-pack-init`; on any harness, if the config is missing, run the short setup inline on first
+use (see "First run" below) and write it, then continue. If a source is unreachable at run time,
+degrade gracefully and say so; the discipline never changes, only the mechanics. See "Harness notes"
+at the end for the per-harness equivalents of the few tool-specific steps.
 
 ---
 
@@ -32,10 +36,11 @@ degrade gracefully and say so; the discipline never changes, only the mechanics.
 
 Check at the start and tell the user which mode you are in.
 
-- **Config.** `${KUNG_FU_PACK_ROOT:-~/kung-fu-pack}/config.json` from `/kung-fu-pack-init`: default
-  output, Notion destination, enabled sources, code roots, depth, model, house rules. No config:
-  stop and run init.
-- **Sources (deduced, not assumed).** `ToolSearch` for `notion`, `linear`, `tavily`, `beeper`;
+- **Config.** `${KUNG_FU_PACK_ROOT:-~/kung-fu-pack}/config.json`: default output, Notion
+  destination, enabled sources, code roots, depth, model, house rules. No config: run the "First
+  run" setup inline and write it before continuing.
+- **Sources (deduced, not assumed).** Check which MCP servers are connected for `notion`, `linear`,
+  `tavily`, `beeper` (Claude Code: `ToolSearch`; Vibe/Codex: your connected MCP server list), and
   probe the configured code roots exist. Each present source is a research lane; each absent one is
   a gap to disclose, not to fake.
 - **Render toolchain.** `node` (diagram generation) and a Chrome/Chromium binary (PNG render). No
@@ -78,9 +83,11 @@ example: "Notion + Linear + local code reachable; web off; Beeper not connected"
 to what only it can answer, so the fan-out has no overlap and no gap.
 
 ### 3. Fan out (the core move)
-Create the pack workspace. Launch **parallel exploration agents in a single message**, one per
-source or subtopic, each with a tight remit and instructed to write a findings file into
-`research/` with a `SOURCES` section (URLs, IDs, file:line). Typical lanes:
+Create the pack workspace. Fan out exploration, one worker per source or subtopic, each with a tight
+remit and instructed to return a findings file saved into `research/` with a `SOURCES` section
+(URLs, IDs, file:line). If your harness supports subagents, run them in parallel (Claude Code: the
+Agent tool in a single message; Vibe/Codex: their subagent mechanism); otherwise do focused
+sequential passes, one source at a time. Typical lanes:
 - **Notion**: open the authoritative pages deeply (not just titles); capture IDs and last-edited
   dates; mark authoritative vs stale/draft/stub.
 - **Linear / tracker**: pull live initiatives, projects, milestones, key issues; record IDs and
@@ -142,3 +149,34 @@ could not access, and the deep-dive leads.
 - Do not fabricate a source you could not reach or a claim without a lead; disclose the gap instead.
 - Do not let a stale cache masquerade as live; if you could not refresh it, label it.
 - Do not ship a diagram you have not visually checked.
+
+---
+
+## First run (any harness, when no config exists)
+
+If `${KUNG_FU_PACK_ROOT:-~/kung-fu-pack}/config.json` is missing, do a short setup before the first
+pack (on Claude Code this is the `/kung-fu-pack-init` command; on Vibe/Codex, do it inline):
+1. Detect reachable sources (the connected MCP servers for notion/linear/tavily/beeper) and the
+   render toolchain (`bash skills/kung-fu-pack/setup.sh`, or `setup.sh` from the installed skill dir).
+2. Ask the user: default output (recommend Notion if its MCP is connected, else self-contained
+   HTML), Notion destination (a page/DB URL or draft), which sources to enable, code roots, depth,
+   and any house rules (the no-em-dashes and lead-behind-every-claim defaults stay on).
+3. Write `config.json` (see the schema in the init command) and scaffold `packs/` under the
+   workspace root. Never store secrets there.
+
+## Harness notes
+
+The method is identical everywhere; only these mechanics differ:
+
+| Step | Claude Code | Mistral Vibe | OpenAI Codex |
+|---|---|---|---|
+| Invoke | `/kung-fu-pack`, `/kung-fu-pack-init` | `/kung-fu-pack` (user-invocable skill) | by name, or `$kung-fu-pack` |
+| Skill location | plugin (installed via marketplace) | `~/.vibe/skills/kung-fu-pack/` | `~/.codex/skills/kung-fu-pack/` |
+| Detect MCPs | `ToolSearch` | connected MCP servers | connected MCP servers (declare in `agents/openai.yaml`) |
+| Fan out | Agent tool, parallel | subagents if available, else sequential | subagents if available, else sequential |
+| Ask the user | `AskUserQuestion` | ask in chat | ask in chat |
+| Clarify + plan | plan mode optional | inline | inline |
+
+Install on Vibe or Codex with `bash plugins/kung-fu-pack/install.sh <vibe|codex>` (see the plugin
+README). The MCP tool names (for example Notion `notion-create-file-upload`) are the same across
+harnesses whenever the same MCP server is connected, so publishing is portable.

@@ -22,10 +22,30 @@ without confirming.
 
 ## Install
 
+**Claude Code** (plugin marketplace):
+
 ```
 /plugin marketplace add ristllin/6kills
 /plugin install kung-fu-pack@6kills
 ```
+
+**Mistral Vibe / OpenAI Codex.** They do not use the Claude plugin marketplace, but they read the
+same Agent Skills `SKILL.md` format, so the portable skill installs with one script:
+
+```
+bash plugins/kung-fu-pack/install.sh vibe     # -> ~/.vibe/skills/kung-fu-pack
+bash plugins/kung-fu-pack/install.sh codex    # -> ~/.codex/skills/kung-fu-pack  (+ agents/openai.yaml)
+bash plugins/kung-fu-pack/install.sh all      # every harness detected on this machine
+bash plugins/kung-fu-pack/install.sh vibe --link      # symlink so it tracks this checkout
+bash plugins/kung-fu-pack/install.sh codex --uninstall
+```
+
+Then invoke it as `/kung-fu-pack` (Vibe) or by name / `$kung-fu-pack` (Codex). The first run writes
+`~/kung-fu-pack/config.json` after a short setup interview (there is no `-init` command outside
+Claude Code; the skill self-initializes). The method is identical on all three; only a few mechanics
+differ (how MCP servers are detected, how it fans out, how it asks you) and the skill's "Harness
+notes" section maps them. Notion/Linear/web all work on any harness that has the matching MCP server
+connected.
 
 ## Setup (once)
 
