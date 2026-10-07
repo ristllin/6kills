@@ -1,0 +1,24 @@
+{
+  "configured": false,
+  "configured_at": null,
+  "platform": null,
+  "capture": {
+    "tool": null,
+    "tool_path": null,
+    "method": null,
+    "helper_app": null
+  },
+  "cameras": [],
+  "default_camera": null,
+  "warmup_seconds": null,
+  "output_dir": null,
+  "use_cases": [],
+  "vision": {
+    "mode": null,
+    "endpoint": null,
+    "model": null,
+    "api_key_env": null,
+    "api_key_cmd": null
+  },
+  "notes": ""
+}

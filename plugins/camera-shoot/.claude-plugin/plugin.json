@@ -1,0 +1,19 @@
+{
+  "name": "camera-shoot",
+  "version": "0.1.0",
+  "description": "Give your agent eyes: it takes photos with the cameras attached to your computer and looks at them. Ships with an empty config: on first use the agent discovers the platform, capture tool and cameras, works out camera permissions (building a tiny macOS helper app when the agent host can't get a camera grant), asks you for a default camera and what it'll be looking at, verifies a test shot, and saves it all to the skill's config.json. Later uses go straight to the capture. Works with macOS (imagesnap/ffmpeg), Linux (fswebcam/ffmpeg) and Windows (ffmpeg), and with any harness that loads SKILL.md skills (Claude Code, Mistral Vibe).",
+  "author": {
+    "name": "Roy Darnell",
+    "url": "https://github.com/ristllin"
+  },
+  "keywords": [
+    "camera",
+    "webcam",
+    "photo",
+    "snapshot",
+    "timelapse",
+    "imagesnap",
+    "ffmpeg",
+    "hardware"
+  ]
+}
