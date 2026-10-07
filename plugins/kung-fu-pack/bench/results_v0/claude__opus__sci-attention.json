@@ -1,0 +1,60 @@
+{
+  "cell": "claude__opus__sci-attention",
+  "instance_id": "sci-attention",
+  "version": "results_v0",
+  "t": 1791383929.9917288,
+  "agent": {
+    "writer": "claude",
+    "model": "opus",
+    "ok": true,
+    "duration_s": 148.8,
+    "brief_bytes": 8960
+  },
+  "scores": {
+    "deterministic": {
+      "em_dashes": 0,
+      "em_dash_ok": true,
+      "length_pages": 2.46,
+      "length_ok": true,
+      "lead_coverage": 0.625,
+      "source_coverage": {
+        "precision": 0.5,
+        "recall": 1.0,
+        "f1": 0.667,
+        "n_gold": 1,
+        "n_reached": 6
+      },
+      "has_brief": true,
+      "has_manifest": true,
+      "floors_pass": true
+    },
+    "comprehension": {
+      "ran": true,
+      "reader": "astra",
+      "n_questions": 4,
+      "supported": 4,
+      "comprehension": 1.0,
+      "words": 1231,
+      "efficiency": 0.812
+    },
+    "judge": {
+      "ran": true,
+      "judge": "astra",
+      "coverage": 5,
+      "grounding": 4,
+      "insight": 4,
+      "navigability": 5,
+      "quality": 0.9
+    }
+  },
+  "composite": {
+    "composite": 0.8302,
+    "comprehension": 1.0,
+    "efficiency": 0.812,
+    "grounding": 0.625,
+    "source_coverage": 0.667,
+    "quality": 0.9,
+    "floors_ok": true
+  },
+  "scored": true
+}

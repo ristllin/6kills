@@ -1,0 +1,60 @@
+{
+  "cell": "claude__opus__sci-raft",
+  "instance_id": "sci-raft",
+  "version": "results_v0",
+  "t": 1791384151.656512,
+  "agent": {
+    "writer": "claude",
+    "model": "opus",
+    "ok": true,
+    "duration_s": 162.0,
+    "brief_bytes": 9410
+  },
+  "scores": {
+    "deterministic": {
+      "em_dashes": 0,
+      "em_dash_ok": true,
+      "length_pages": 3.1,
+      "length_ok": false,
+      "lead_coverage": 0.4,
+      "source_coverage": {
+        "precision": 0.714,
+        "recall": 1.0,
+        "f1": 0.833,
+        "n_gold": 1,
+        "n_reached": 14
+      },
+      "has_brief": true,
+      "has_manifest": true,
+      "floors_pass": false
+    },
+    "comprehension": {
+      "ran": true,
+      "reader": "astra",
+      "n_questions": 3,
+      "supported": 3,
+      "comprehension": 1.0,
+      "words": 1548,
+      "efficiency": 0.646
+    },
+    "judge": {
+      "ran": true,
+      "judge": "astra",
+      "coverage": 5,
+      "grounding": 4,
+      "insight": 4,
+      "navigability": 4,
+      "quality": 0.85
+    }
+  },
+  "composite": {
+    "composite": 0.7935,
+    "comprehension": 1.0,
+    "efficiency": 0.646,
+    "grounding": 0.4,
+    "source_coverage": 0.833,
+    "quality": 0.85,
+    "floors_ok": false
+  },
+  "scored": true
+}
