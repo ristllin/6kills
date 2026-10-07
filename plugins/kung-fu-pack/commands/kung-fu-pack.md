@@ -1,6 +1,6 @@
 ---
 description: "Build a styled briefing page on a target: scope it, fan out research across every source you can reach into a cached workspace, consolidate and plan, generate diagrams, then publish to Notion, HTML, Markdown, or a local server"
-argument-hint: "[<target> + scope/directive/links/description, and flags: --output=<notion|html|md|server>, --dest=<notion-url-or-id|draft>, --depth=<standard|deep>, --audience=<who>, --model=<id>; empty uses the target in context]"
+argument-hint: "[<target> + scope/directive/links/description, and flags: --output=<notion|html|md|server>, --dest=<notion-url-or-id|draft>, --depth=<standard|deep>, --audience=<who>, --style=<default|asd-ste100>, --model=<id>; empty uses the target in context]"
 allowed-tools: ["Bash", "Glob", "Grep", "Read", "Edit", "Write", "Agent", "AskUserQuestion", "ToolSearch", "WebFetch", "WebSearch"]
 ---
 
@@ -20,7 +20,9 @@ If it prints `NEEDS_INIT`, the user has not onboarded. Tell them to run `/kung-f
 (it detects their Notion/Linear/web access and saves defaults), then stop. Do not guess a config.
 
 Otherwise follow the kung-fu-pack skill exactly, honoring the saved defaults and any flags that
-override them (`--output`, `--dest`, `--depth`, `--audience`, `--model`). In short:
+override them (`--output`, `--dest`, `--depth`, `--audience`, `--style`, `--model`). `--style`
+selects the writing standard: `default` (dense peer-level prose) or `asd-ste100` (Simplified
+Technical English per `references/asd-ste100.md`). In short:
 
 1. **Scope.** Parse the directive, links, and description. If the scope, audience, or must-cover
    points are thin, ask one focused batch of clarifying questions with proposed defaults, then wait.

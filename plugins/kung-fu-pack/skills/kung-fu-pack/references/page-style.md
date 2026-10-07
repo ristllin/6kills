@@ -37,3 +37,12 @@ dig. Dense, technical, lead-backed, and free of filler.
 ## Tone
 Brief a sharp peer who is new to this area, not a layperson. Assume technical fluency; spend words on
 what is non-obvious, what is wrong in the old mental model, and where to look next.
+
+## Writing standard (configurable)
+`config.writing_standard` (or `--style`) selects the prose rules:
+- `default` (the tone above): dense, technical, peer-level.
+- `asd-ste100`: ASD-STE100 Simplified Technical English. Follow `references/asd-ste100.md` (short
+  single-idea sentences, active voice and imperatives, one term per concept, no "-ing" verbs, vertical
+  lists) and run its lint in the verify step. Use this for a global or non-native audience, for
+  maintenance/procedural content, or when the user asks for plain controlled English. The structure
+  (framing, mental model, tables, leads) is unchanged; only the sentence-level prose changes.

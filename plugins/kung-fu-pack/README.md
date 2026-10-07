@@ -69,8 +69,17 @@ kung-fu-pack                                   # build a pack on the target in c
 ```
 
 Flags override the saved defaults: `--output=<notion|html|md|server>`, `--dest=<notion-url-or-id|draft>`,
-`--depth=<standard|deep>`, `--audience=<who>`, `--model=<id>`. With no arguments it uses the target
-already in the conversation; with none, it asks and stops.
+`--depth=<standard|deep>`, `--audience=<who>`, `--style=<default|asd-ste100>`, `--model=<id>`. With no
+arguments it uses the target already in the conversation; with none, it asks and stops.
+
+### Writing standard
+
+`--style` (or `writing_standard` in config) picks the prose rules: `default` (dense, technical,
+peer-level) or **`asd-ste100`** (ASD-STE100 Simplified Technical English: short single-idea sentences,
+active voice, one term per concept, no "-ing" verbs, vertical lists; good for global/non-native readers
+or procedural docs). See `skills/kung-fu-pack/references/asd-ste100.md`. The page structure is the same
+either way; only the sentence-level prose changes. STE mode approximates the writing rules and lints
+them; strict certification needs a licensed STE checker.
 
 ## The seven steps
 

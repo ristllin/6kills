@@ -55,7 +55,12 @@ questions.
   (larger fan-out, adversarial cross-check) for audits. Model: default to inheriting the session
   model; let them pin one if they want.
 
-**F. House rules.** Confirm the defaults: no em dashes anywhere; every claim carries a lead
+**F. Writing standard** (AskUserQuestion). Offer: "Default (dense, technical, peer-level)
+  (recommended)" and "ASD-STE100 Simplified Technical English (short controlled sentences, active
+  voice, one term per concept; good for global/non-native readers or procedural docs)". Map the pick
+  to `default` or `asd-ste100`. Note that `/kung-fu-pack --style=...` overrides per run.
+
+**G. House rules.** Confirm the defaults: no em dashes anywhere; every claim carries a lead
   (file:line, Notion/Linear ID, URL); flag staleness of any cached or snapshot data; confirm
   before overwriting an existing page. These are on by default; let them add their own (tone,
   banned words, a signature, a default audience like "new engineering manager").
@@ -75,6 +80,7 @@ Expand `~` to `$HOME`. Create the workspace root and its `packs/` dir. Write
   "code_roots": ["~/projects"],
   "depth": "standard",
   "model": "inherit",
+  "writing_standard": "default",
   "house_rules": {
     "no_em_dashes": true,
     "every_claim_has_a_lead": true,

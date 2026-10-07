@@ -117,7 +117,11 @@ in diagram text either.
 
 ### 6. Publish
 Follow the house page style in `references/page-style.md` (framing callout, tight sections, tables,
-every claim with a lead, a sources/leads section at the end). Then emit to the chosen output:
+every claim with a lead, a sources/leads section at the end). Apply the configured
+`writing_standard`: `default` (dense peer-level prose) or `asd-ste100` (Simplified Technical English
+per `references/asd-ste100.md`; short single-idea sentences, active voice, one term per concept, no
+"-ing" verbs, vertical lists). The page structure is the same either way; only the prose changes.
+Then emit to the chosen output:
 - **Notion**: upload each PNG via `notion-create-file-upload` + a multipart POST, embed by the
   returned `markdown_source`, then create or update the page. Default to a **draft** unless a
   destination is named; **confirm before overwriting** an existing page.
@@ -127,9 +131,12 @@ every claim with a lead, a sources/leads section at the end). Then emit to the c
 
 ### 7. Verify
 Re-open or fetch the result: diagrams render, sections hold, tables intact. **Grep the final text
-for em and en dashes (U+2014, U+2013); must be zero** (titles included, a common miss). Spot-check a
-few claims against their leads. Report the output location, the headline insights, anything you
-could not access, and the deep-dive leads.
+for em and en dashes (U+2014, U+2013); must be zero** (titles included, a common miss). If
+`writing_standard` is `asd-ste100`, run the lint in `references/asd-ste100.md` (sentence length, the
+"-ing" form, passive voice, 4+ word noun clusters, one-term-per-concept) and fix the hits, and add
+the "approximated, not dictionary-certified" footer note. Spot-check a few claims against their
+leads. Report the output location, the headline insights, anything you could not access, and the
+deep-dive leads.
 
 ---
 
