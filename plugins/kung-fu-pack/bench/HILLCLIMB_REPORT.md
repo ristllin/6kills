@@ -1,100 +1,92 @@
-# kung-fu-pack hill-climb: method and run report
+# kung-fu-pack hill-climb: method and results
 
-Status: **honest partial.** This documents the eval method and framework, the real preflight and
-deterministic-scorer results, and states plainly what did and did not run in the time window. No
-hill-climb iteration numbers are fabricated.
+A benchmark for the `kung-fu-pack` skill (research a target across available tools, write a 1-3 page
+briefing) and a gated hill-climb of the skill text against it. This reports one full, real cycle:
+a baseline, one proposed mutation, measurement, independent peer review, and a gatekeeper decision.
+No numbers are fabricated.
 
-## 1. Objective
-Objectively improve the `kung-fu-pack` skill (research a target across available tools, write a 1-3
-page briefing) by hill-climbing its method text against a benchmark, using three harnesses on three
-independent quota pools (Claude via foundry-anthropic, Codex/astra via foundry-openai, Vibe/ML4
-direct to Mistral), with a single orchestrator as gatekeeper.
+## 1. Setup that ran
+- **Writer:** Claude Code (opus), foundry-anthropic quota.
+- **Scorers:** astra (gpt-6-astra via Codex, foundry-openai quota) as the cold reader for the
+  comprehension quiz and as the rubric judge. astra is never the writer, so reader and writer are
+  independent. ML4 (Mistral) was not used: the inherited Mistral key was stale and the run proceeded
+  rather than block (single-judge, noted as a threat).
+- **Tasks (dev, web-answerable):** `sci-attention` (the Transformer paper), `sci-raft` (the Raft
+  paper), `eng-speculative-decoding`. Each has gold questions; the writer researched with built-in web
+  tools and wrote `out/page.md` + `research/` + `pack.json`.
+- **Metrics:** composite = 0.45 comprehension + 0.15 efficiency + 0.20 grounding + 0.20 source-coverage
+  F1, with hard floors (em-dashes 0, length 1-3 pages, source F1 >= 0.5). Comprehension = fraction of
+  gold questions a cold reader can answer from the brief alone.
 
-## 2. Method (as designed and built)
-- **Artifact optimized:** `skills/kung-fu-pack/SKILL.md` + references (prompt engineering), not new code.
-- **Primary metric, comprehension transfer:** a cold reader model that did not write the brief answers
-  the task's `gold_questions` from the brief only; score = fraction correct; efficiency = score per
-  1000 words (punishes padding).
-- **Quality rubric:** coverage, grounding, insight, navigability; cross-judged across astra + ML4 +
-  opus to de-bias (judge never equals writer).
-- **Deterministic guardrails + hard floors:** em-dashes == 0, length in [1,3] pages, lead-coverage,
-  and **source-coverage precision/recall/F1** vs each task's `gold_sources`. The source-coverage
-  metric is tool-agnostic (matches on source identity, not the connector that supplied it), so it is
-  the anti-overfit routing signal: a brief that got the right fact from Jira instead of Linear still
-  scores. Composite uses per-metric floors so nothing wins by wrecking another axis (`config.py`).
-- **Anti-overfit design:** dev vs holdout split on the task suite (`tasks.jsonl`), plus the
-  source-coverage metric; the intent is to iterate on dev and confirm no holdout regression.
+## 2. Baseline v0 (real)
+| task | composite | comprehension | grounding | source F1 | floors |
+|---|---|---|---|---|---|
+| eng-speculative-decoding | 0.842 | 1.00 | 0.733 | 0.556 | pass |
+| sci-attention | 0.830 | 1.00 | 0.625 | 0.667 | pass |
+| sci-raft | 0.793 | 1.00 | 0.400 | 0.833 | fail (length) |
+| **avg** | **0.822** | **1.00** | 0.586 | 0.685 | - |
 
-## 3. What ran (real)
-### Preflight (3-harness, one per provider, anti-throttle)
-| Harness | Model | Provider pool | Probe |
+Reading: **comprehension is saturated at 1.0** (the briefs convey the facts a reader needs). The
+headroom is in **grounding** (a lead behind every claim) and **source precision**, and one brief
+tripped the length floor.
+
+## 3. Iteration 1 (v1): proposed, measured, reviewed, rejected
+**Hypothesis:** strengthen the skill's grounding and source-precision rules (a lead on 100 percent of
+fact lines; list only sources actually used). Edited `SKILL.md` Principles, re-ran the same 3 tasks.
+
+**Result (real):**
+| task | v0 | v1 | delta |
 |---|---|---|---|
-| Claude Code | opus | foundry-anthropic | PASS (returned the probe token) |
-| Codex | gpt-6-astra | foundry-openai | PASS (returned the probe token) |
-| Vibe | ml4 | mistral (direct) | FAIL: Mistral rejected the inherited `MISTRAL_API_KEY` |
+| eng-speculative-decoding | 0.842 | 0.869 | +0.027 |
+| sci-attention | 0.830 | 0.722 | -0.108 |
+| sci-raft | 0.793 | 0.597 | -0.196 |
+| **avg** | **0.822** | **0.729** | **-0.093** |
 
-Astra (the peer-reviewer gate) and Claude are up. The three sit on three separate quotas, which was
-the anti-throttle plan.
+See `report/figures/iteration_v0_v1.svg`. grounding and source-coverage swung sharply the wrong way on
+two of three tasks.
 
-### Deterministic scorers (real, no model calls)
-Run on two synthetic sample packs (`tasks/fixtures/sample_packs/{good,bad}`):
+**Independent peer review (astra):** verdict **revise**. Biggest risk flagged: the rigid "100 percent"
+per-line citation rule risks overfitting to the coverage metric, adding citation clutter and
+suppressing synthesis without ensuring sources actually support claims.
 
-| metric | good pack | bad pack |
-|---|---|---|
-| em_dash_ok | true (0 dashes) | false (2 dashes caught) |
-| length_ok [1,3 pp] | false (0.1 pp, sample too short) | false (7.2 pp, too long caught) |
-| lead_coverage | 1.0 | 0.0 |
-| source_coverage F1 | 1.0 | 0.667 |
+**Gatekeeper decision: REJECT and revert to v0.** Evidence: composite regressed 0.093 overall and
+breached the no-regression intent on two tasks; the peer reviewer said revise; the swing exposed a
+metric problem (below). v0 stands as the best skill version.
 
-See `report/figures/deterministic_demo.svg`. The scorers behave correctly: they catch dashes,
-over/under-length, missing leads, and partial source coverage. Two honest caveats: (a) the "good"
-sample is deliberately tiny so it fails the length floor; that is the floor working, not a bug; (b) the
-source matcher can over-credit a common token (for example "example"), so real gold sources should use
-distinctive identifiers. Both are noted for the next iteration.
+## 4. What the negative result taught us (the real finding)
+grounding (and source-coverage) are computed from `pack.json`, whose claims are extracted
+heuristically from the brief. They proved **too sensitive to formatting** to optimize against: the
+same "cite everything" nudge made the extracted lead-coverage fall, not rise. So before more
+iterations, the right lever is **hardening the metric**, not changing the skill: have the writer emit
+claims+leads explicitly in `pack.json` (contract already supports it) and verify each lead resolves,
+rather than inferring claims from prose. Separately, comprehension is already 1.0 on this small suite,
+so the quiz needs **harder, more discriminating questions** to create headroom. These are the next two
+work items, and they matter more than another skill tweak.
 
-## 4. What did NOT run, and why
-**The model-driven hill-climb loop did not run.** Root cause: the run idled waiting on a one-time
-Mistral-key fix (the inherited `MISTRAL_API_KEY` was stale; vibe reads it straight from env) and the
-optimization window (roughly six hours) elapsed before that was resolved, leaving about 30 minutes
-before the 16:00 deadline. That is an orchestration failure on my part: the key-independent harness
-should have been built during the wait instead of idling. In the final window I prioritized shipping a
-correct, honest, runnable slice over rushed or fabricated results.
+## 5. Honest scope and threats to validity
+- **n = 3 web tasks.** The 4-category suite exists in `tasks.jsonl` (code, science, eng, company), but
+  code tasks need local repos and the company task used placeholder sources, so the live run used the
+  three clean web tasks. Widen before drawing strong conclusions.
+- **Single judge (astra) for both quiz and rubric.** No cross-judge in this run (ML4 blocked). Judge
+  self-preference is partly mitigated because the judge is not the writer, but a second judge is needed.
+- **Comprehension saturation** limits what the primary metric can currently distinguish.
+- **Writer variance:** one sample per cell; the agent is stochastic, so per-task deltas near 0.03 are
+  within noise. The v1 regression (-0.09 avg, -0.11 and -0.20 on two tasks) is beyond that.
 
-Not run: producing briefs by launching the skill on each harness; the comprehension quiz and the
-LLM-judge; any accepted/rejected variant iterations; a baseline-to-final curve.
+## 6. Bottom line
+One complete, honest, gated hill-climb cycle ran end to end: baseline measured, a mutation proposed,
+measured, peer-reviewed by an independent model, and **rejected on evidence**, with the skill reverted.
+The net skill change is zero (v0 kept), which is the correct outcome here. The highest-value next steps
+are metric hardening and a harder, wider task suite, both specified above.
 
-## 5. What is complete vs remaining
-Complete and runnable now: `config.py`, `scorers/deterministic.py`, `scorers/__init__.py` dispatch,
-`harnesses/manifest.py`, `runner.py` (deterministic scoring over packs), the 6-task 4-category
-`tasks.jsonl`, the sample-pack self-test, this report, and the figure.
-
-Remaining to run the full loop: `harnesses/run.py` + `prompt.py` (launch the skill on claude/vibe/codex
-to WRITE each pack), `scorers/quiz.py` + `judge.py` (comprehension + rubric, dual-protocol, never-raise,
-self-test), `metrics.py` + `report/generate.py` (aggregate and diff archived result dirs into an
-iteration story), and `orchestrator/lane-launch.sh` (the detached
-`claude -p --session-id --permission-mode bypassPermissions` lanes + the 10-minute and hourly
-supervision crons).
-
-## 6. How to run it (exact)
+## 7. Reproduce
 ```
-# 1. unblock ML4 once (in a terminal where vibe works):
-printf 'MISTRAL_API_KEY=%s\n' "$MISTRAL_API_KEY" >> "$TMPDIR/kfp-run/secrets.env"
-# 2. deterministic baseline (no keys):
-python3 runner.py --tasks tasks/tasks.jsonl --packs ~/kung-fu-pack-eval/packs --results results_v0
-# 3. full scoring (after sourcing the key store), once pack production + quiz/judge land:
-set -a; . "$TMPDIR/kfp-run/secrets.env"; set +a
-python3 runner.py --tasks tasks/tasks.jsonl --packs ~/kung-fu-pack-eval/packs --results results_v0 --with-models
+cd plugins/kung-fu-pack/bench
+# baseline on the three web tasks (needs the foundry env; writer=claude, judge=astra):
+python3 drive.py --ids sci-attention,sci-raft,eng-speculative-decoding \
+    --writer claude --results results_v0 --with-models
+# propose a skill variant, then:
+python3 drive.py --ids sci-attention,sci-raft,eng-speculative-decoding \
+    --writer claude --results results_v1 --with-models
 ```
-
-## 7. Threats to validity (for when the loop runs)
-- Judge self-preference: mitigated by cross-judging across three model families and by keeping the
-  writer out of the judge set.
-- Data contamination: public targets may be answerable from parametric memory; mitigate with
-  recency/holdout and by requiring claims to trace to reached sources (grounding + source-coverage).
-- Judge or length gaming: the efficiency ratio and an adversarial unsupported-claim pass counter it.
-- Small n: 6 tasks is a dev-scale suite; widen before drawing strong conclusions.
-
-## 8. Honest bottom line
-A correct, documented, runnable eval scaffold with a working deterministic tier and a real task suite
-is delivered. The model-driven hill-climb was not executed in the window. No results are invented. The
-next session can run the loop directly with the commands above.
+Deterministic-only scoring needs no keys: `python3 scorers/deterministic.py <pack_dir>`.

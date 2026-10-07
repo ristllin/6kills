@@ -1,0 +1,60 @@
+{
+  "cell": "claude__opus__eng-speculative-decoding",
+  "instance_id": "eng-speculative-decoding",
+  "version": "results_v1",
+  "t": 1791384989.238705,
+  "agent": {
+    "writer": "claude",
+    "model": "opus",
+    "ok": true,
+    "duration_s": 179.7,
+    "brief_bytes": 9206
+  },
+  "scores": {
+    "deterministic": {
+      "em_dashes": 0,
+      "em_dash_ok": true,
+      "length_pages": 2.36,
+      "length_ok": true,
+      "lead_coverage": 0.765,
+      "source_coverage": {
+        "precision": 0.529,
+        "recall": 1.0,
+        "f1": 0.692,
+        "n_gold": 1,
+        "n_reached": 17
+      },
+      "has_brief": true,
+      "has_manifest": true,
+      "floors_pass": true
+    },
+    "comprehension": {
+      "ran": true,
+      "reader": "astra",
+      "n_questions": 4,
+      "supported": 4,
+      "comprehension": 1.0,
+      "words": 1178,
+      "efficiency": 0.849
+    },
+    "judge": {
+      "ran": true,
+      "judge": "astra",
+      "coverage": 5,
+      "grounding": 4,
+      "insight": 4,
+      "navigability": 5,
+      "quality": 0.9
+    }
+  },
+  "composite": {
+    "composite": 0.8688,
+    "comprehension": 1.0,
+    "efficiency": 0.849,
+    "grounding": 0.765,
+    "source_coverage": 0.692,
+    "quality": 0.9,
+    "floors_ok": true
+  },
+  "scored": true
+}

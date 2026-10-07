@@ -53,7 +53,9 @@ Producing packs (the skill WRITING each brief on each harness) is driven by
 `orchestrator/lane-launch.sh`; producing and scoring are decoupled so each is resumable.
 
 ## Status
-See `HILLCLIMB_REPORT.md` for exactly what ran. The deterministic tier and the task suite are
-complete and runnable; the model-driven production + quiz/judge layer is specified and partially
-scaffolded but was not run live within the time window (the run idled on a stale model key). The
-quiz/judge scorers follow a standard dual-protocol, never-raise, self-tested LLM-judge pattern.
+The full pipeline ran end to end for real: `drive.py` produces a brief with a writer harness (Claude),
+then scores it with the deterministic tier + the astra comprehension quiz + the astra rubric, computes
+the composite, and archives `results_vN/`. One complete gated hill-climb cycle executed (baseline v0,
+a proposed v1, astra peer review, gatekeeper reject + revert). See `HILLCLIMB_REPORT.md` for the real
+numbers, the decision log, and the next levers (metric hardening + a harder/wider task suite). ML4 was
+not used (stale Mistral key), so this run was single-judge; cross-judge is the documented next step.
