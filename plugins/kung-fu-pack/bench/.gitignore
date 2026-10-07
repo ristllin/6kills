@@ -1,0 +1,14 @@
+# Raw/bulky/possibly-sensitive run artifacts are never committed.
+# The canonical raw workspace lives OUTSIDE the repo (~/kung-fu-pack-eval).
+# Under the repo we keep only curated, sanitized result.json + metrics + report.
+*.env
+secrets*
+**/agent.log
+**/lane.log
+**/*.raw.*
+**/pack_snapshot/
+report/figures/*.tmp
+__pycache__/
+*.pyc
+# local demo scratch (the bad sample intentionally contains dash chars to test the detector)
+tasks/fixtures/sample_packs/
