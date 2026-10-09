@@ -63,7 +63,7 @@ HTML. Re-run anytime to change defaults.
 
 ```
 kung-fu-pack                                   # build a pack on the target in context
-/kung-fu-pack "Crucible platform - onboarding brief for a new eng manager; include arch + Linear"
+/kung-fu-pack "our payments platform - onboarding brief for a new eng manager; include arch + tracker"
 /kung-fu-pack "<target>" --output=html --depth=deep
 /kung-fu-pack "<target>" --output=notion --dest=https://notion.so/<page-id>
 ```
@@ -85,12 +85,12 @@ them; strict certification needs a licensed STE checker.
 
 | Step | What happens |
 |---|---|
-| 1. Scope | Fix the target, audience, angle, must-cover points, and output. Ask a focused batch if thin. |
+| 1. Scope | Fix the target, audience, angle, must-cover points, and output. If thin, ask one batch of general, parameter-shaped questions (never guessed names). |
 | 2. Capability check | Confirm which enabled sources resolve right now; state the mode; degrade on gaps. |
 | 3. Fan out | Parallel exploration agents, one per source/subtopic, each caching findings to `research/`. Pull live data, flag staleness. |
-| 4. Consolidate + plan | Reconcile conflicts, surface insights and corrections, write `plan.md`; confirm structure for big pages. |
+| 4. Consolidate + plan | Reconcile conflicts, surface insights and corrections, write `plan.md`. Keep one tight 1 to 3 page brief when it fits; nest into an index plus linked sub-pages when breadth would force a monolith. |
 | 5. Diagrams | Author the 1 to 3 information-carrying diagrams, render to PNG (headless Chrome), eyeball each. |
-| 6. Publish | Notion (upload PNGs, draft unless a destination is named), HTML, Markdown, or local server. |
+| 6. Publish | Notion (upload PNGs, draft unless a destination is named), HTML, Markdown, or local server. Nested packs publish as a tree: Notion sub-pages, a wiki-like HTML set, or linked Markdown files. |
 | 7. Verify | Re-open the result, confirm diagrams and structure, grep for dashes (zero), spot-check claims, report with leads. |
 
 ## Workspace
@@ -101,7 +101,7 @@ Each target gets a cached folder so nothing lives only in chat:
 ~/kung-fu-pack/packs/<slug>/
   research/   one findings file per source (raw + SOURCES)
   assets/     diagram gen.js + .html + rendered .png
-  out/        local page.md / page.html when not publishing to Notion
+  out/        local page.md / page.html, or index.md + <section>.md when nested
   plan.md     the planned page structure
 ```
 
@@ -114,3 +114,11 @@ Each target gets a cached folder so nothing lives only in chat:
 - **Local preview server:** `python3` (or node).
 
 Nothing secret is stored in the config; MCP auth and API keys stay in the environment / MCP layer.
+
+## Benchmark
+
+`bench/` holds a synthesis benchmark for hill-climbing the skill text: frozen post-cutoff corpora
+(hundreds of arXiv abstracts, dozens of release notes, a distributed-evidence set), full-corpus gold
+nuggets and integration facts, a two-model judge panel, and floors for length, dashes, and evasion.
+See [`bench/README.md`](bench/README.md) and the results in
+[`bench/HILLCLIMB_REPORT.md`](bench/HILLCLIMB_REPORT.md).

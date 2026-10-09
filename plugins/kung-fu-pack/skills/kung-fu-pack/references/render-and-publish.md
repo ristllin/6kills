@@ -67,3 +67,20 @@ Serve the pack for live viewing:
 ```bash
 cd ../out && python3 -m http.server 8787   # then open http://localhost:8787/page.html
 ```
+
+## Nested packs (index plus sub-pages)
+
+When `plan.md` chose a nested structure, publish a tree and keep the index short: framing, the
+mental model, and one line plus a link per sub-page. Never repeat sub-page content in the index.
+
+- **Notion:** create the index page first, then each section with `notion-create-pages` using the
+  index as `parent` (`page_id`). Add a link to each child in the index body, then fetch the index
+  and confirm every child resolves.
+- **HTML:** write `out/index.html` plus `out/<section>.html`; link with relative hrefs and add a
+  "Back to index" link on every section page. Inline diagrams as base64 per page, or share one
+  `assets/` dir if the set is served together.
+- **Markdown:** write `out/index.md` plus `out/<section>.md`, linked as `[Section](section.md)`.
+- **Preview server:** serve `out/` (`python3 -m http.server 8787`) and open `index.html`.
+
+Verify: every link in the index resolves to a page that exists, and every sub-page links back.
+
