@@ -63,6 +63,9 @@ contrast shows what the mechanism buys, which a single happy-path run does not.
   Chrome (see `render-and-publish.md`). Fetch only public `https://` URLs: never `file://`,
   localhost, or private addresses. If you can run the tool (with the same care as above), real
   terminal output is a real view.
+- Embed it, do not point at it: copy the image into `assets/` and embed it, or paste the captured
+  output as a block. Prose that describes the output, or a path to a screenshot the reader cannot
+  see, is not a real view.
 - Read every captured PNG before using it. Crop to the part that matters; illegible is worse than none.
 - **Shrink before you look.** Never Read a GIF, a video, or a large image directly: one multi-MB
   file can fill the context and kill the run. Extract one frame to PNG, downscale to at most 1600 px

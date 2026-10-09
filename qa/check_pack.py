@@ -31,12 +31,13 @@ IMG_RE = re.compile(r"!\[[^\]]*\]\(([^)\s]+)\)")
 FENCE_RE = re.compile(r"```([^\n]*)\n(.*?)```", re.S)
 # Captured output: an untagged or text/console/shell-style fence, or any fence whose body starts
 # with a shell prompt (a python or mermaid block is not output).
-OUTPUT_LANGS = {"", "text", "txt", "console", "shell", "shell-session", "output", "terminal"}
+OUTPUT_LANGS = {"", "text", "txt", "console", "shell", "shell-session", "output", "terminal", "http"}
 EXAMPLE_MAX_LINES = 25  # about 15 lines is the target; this is the hard ceiling
 # A lead is a URL, a file:line, a path, inline code that names something locatable (a path, a
-# dotted symbol, a #ref), or a source key like [S12] resolved in a sources table. A bare backticked
-# word or a bare domain path (the style requires full https:// URLs) is not a lead.
-LEAD_RE = re.compile(r"(https?://|\[S\d+\]|`[^`\s]*[./:#][^`]*`|[\w./-]+\.\w+:\d+|[\w-]+/[\w./-]+\.\w+)")
+# dotted symbol, a #ref), a source key like [S12] resolved in a sources table, or a Markdown link
+# (inline to a relative file, or reference-style [text][ref]). A bare backticked word or a bare
+# domain path (the style requires full https:// URLs) is not a lead.
+LEAD_RE = re.compile(r"(https?://|\[S\d+\]|\]\[[^\]\s][^\]]*\]|\]\((?:\.\.?/)?[\w-][^)\s]*\)|`[^`\s]*[./:#][^`]*`|[\w./-]+\.\w+:\d+|[\w-]+/[\w./-]+\.\w+)")
 
 
 def words(text: str) -> int:

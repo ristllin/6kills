@@ -167,7 +167,8 @@ Re-open or fetch the result: diagrams render, sections hold, tables intact. Conf
 the words of every page: a single page over ~1500 words (3 A4 pages) is out of bounds**; cut it, or
 nest it if the material is genuinely broad. For a nested pack, the index stays within that budget.
 For a show-it target, confirm the example passes its own tests (shows the mechanism, about 15 lines
-or one screen, lead or `Illustrative` label) and at least one real visual is embedded. A missing
+or one screen, lead or `Illustrative` label) and at least one real visual is embedded (an image in `assets/` or a pasted output block; a description
+or a path to a screenshot does not count). A missing
 real visual is a gap to close, not to report: go back, fetch a docs or README image (or run the code
 if you are already in a container or sandbox), then publish; for a product
 target, also that the usage sub-page exists and is linked. **Grep the final text
