@@ -1,0 +1,84 @@
+"""Semi-automated gold authoring: a model proposes nuggets + integration-facts from a frozen
+corpus; the orchestrator vets the output before it is used. Writes gold.json into the fixture.
+
+    python gold/author.py --corpus tasks/fixtures/f1_arxiv_cslg --kind landscape --judge astra
+
+Vetting is a human/gatekeeper step after this runs: check counts, drop duplicates, and confirm
+each integration_fact genuinely needs >=2 sources.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import re
+from pathlib import Path
+
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from harnesses import llm  # noqa: E402
+
+PROMPTS = {
+    "landscape": (
+        "You are building a GOLD answer key to grade briefings that synthesize a research landscape "
+        "from many recent arXiv abstracts. From the abstracts below, extract:\n"
+        "1) nuggets: 16-22 atomic, salient facts a good 1-3 page landscape MUST or SHOULD contain "
+        "(recurring methods, trends, problems, benchmarks). Label each vital=true (must-have) or "
+        "vital=false (nice-to-have). Give each an id (N1..) and the paper index numbers that support it.\n"
+        "2) integration_facts: 5-7 cross-paper patterns that require synthesizing >=2 papers "
+        "(e.g. 'several papers converge on technique X for problem Y', 'approaches A and B disagree "
+        "on Z'). Each needs min_sources>=2 and the supporting paper indices. Id I1..\n"
+        "3) answer_key: 6 questions a reader should be able to answer from a good brief, with concise answers.\n"
+    ),
+    "releases": (
+        "You are building a GOLD answer key to grade briefings that digest software release notes "
+        "across versions. From the release notes below, extract:\n"
+        "1) nuggets: 14-20 atomic facts a good 'what changed / migration' brief MUST or SHOULD contain "
+        "(key features, breaking changes, deprecations). Label vital true/false, id N1.., with the "
+        "release tag(s) that support each.\n"
+        "2) integration_facts: 5-7 CROSS-VERSION patterns requiring >=2 releases (a feature introduced "
+        "in vA then changed/removed in vC; a breaking change and its migration). min_sources>=2, id I1..\n"
+        "3) answer_key: 6 questions with concise answers.\n"
+    ),
+}
+
+SCHEMA = (
+    'Return ONLY JSON: {"task":"...","nuggets":[{"id":"N1","text":"...","vital":true,'
+    '"sources":[1,2]}],"integration_facts":[{"id":"I1","text":"...","min_sources":2,'
+    '"sources":[1,5]}],"answer_key":[{"q":"...","a":"..."}]}.'
+)
+
+
+def _extract_json(text: str):
+    m = re.search(r"\{.*\}", text, re.S)
+    if not m:
+        return None
+    try:
+        return json.loads(m.group(0))
+    except Exception:
+        return None
+
+
+def author(corpus_dir: Path, kind: str, judge: str, max_chars: int) -> dict:
+    blurbs = (corpus_dir / "blurbs.txt").read_text(errors="ignore")[:max_chars]
+    prompt = PROMPTS[kind] + SCHEMA + "\n\n=== SOURCE BLURBS ===\n" + blurbs
+    out = llm.call(judge, prompt)
+    data = _extract_json(out)
+    if not data:
+        (corpus_dir / "gold.raw.txt").write_text(out)
+        raise SystemExit("no JSON from judge; raw saved to gold.raw.txt for manual authoring")
+    data.setdefault("split", "dev")
+    (corpus_dir / "gold.json").write_text(json.dumps(data, indent=2))
+    return {"nuggets": len(data.get("nuggets", [])),
+            "vital": sum(1 for n in data.get("nuggets", []) if n.get("vital")),
+            "integration_facts": len(data.get("integration_facts", [])),
+            "answers": len(data.get("answer_key", []))}
+
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--corpus", required=True)
+    ap.add_argument("--kind", required=True, choices=list(PROMPTS))
+    ap.add_argument("--judge", default="astra")
+    ap.add_argument("--max-chars", type=int, default=60000)
+    a = ap.parse_args()
+    print(json.dumps(author(Path(a.corpus), a.kind, a.judge, a.max_chars), indent=2))
