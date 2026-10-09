@@ -106,7 +106,8 @@ sequential passes, one source at a time. Typical lanes:
 - **Usage and visuals** (show-it targets: products, platforms, tools, vendors, libraries, codebases): docs quickstarts,
   sample repos, CLI or API references, launch posts and public demos. Collect candidate examples and
   real screenshots or output with their URLs; for a code target you can run, run it and save the
-  output (third-party code only in a sandbox or after the user confirms). If you cannot run it, the real view comes from the docs or README images; never skip it. Keep fetched pages small (extract the part you need) so one page cannot flood the context.
+  output (third-party code only in a sandbox or after the user confirms; a container you are already
+  in counts, see `references/examples-and-visuals.md`). If you cannot run it, the real view comes from the docs or README images; never skip it. Keep fetched pages small (extract the part you need) so one page cannot flood the context.
 Two rules that bite: subagents often cannot write files, so have each **return** its findings and
 you persist them; and **pull live data** wherever a tool allows, stamping the age of anything that
 is a cache or snapshot. For `--depth=deep`, add a second wave: an adversarial cross-check of the
@@ -166,7 +167,9 @@ Re-open or fetch the result: diagrams render, sections hold, tables intact. Conf
 the words of every page: a single page over ~1500 words (3 A4 pages) is out of bounds**; cut it, or
 nest it if the material is genuinely broad. For a nested pack, the index stays within that budget.
 For a show-it target, confirm the example passes its own tests (shows the mechanism, about 15 lines
-or one screen, lead or `Illustrative` label) and at least one real visual is embedded; for a product
+or one screen, lead or `Illustrative` label) and at least one real visual is embedded. A missing
+real visual is a gap to close, not to report: go back, fetch a docs or README image (or run the code
+if you are already in a container or sandbox), then publish; for a product
 target, also that the usage sub-page exists and is linked. **Grep the final text
 for em and en dashes (U+2014, U+2013); must be zero** (titles included, a common miss). If
 `writing_standard` is `asd-ste100`, run the lint in `references/asd-ste100.md` (sentence length, the

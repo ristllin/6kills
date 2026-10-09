@@ -25,7 +25,8 @@ DASHES = (chr(0x2014), chr(0x2013))
 # pack pages only: relative, no scheme (an absolute path is a lead into the target repo); an
 # #anchor or a "title" after the target is allowed
 LINK_RE = re.compile(r"\]\((?![A-Za-z][\w+.-]*:|/)([^)#\s]+\.(?:md|html))(?:#[^)\s]*)?(?:\s+\"[^\"]*\")?\)")
-PATH_LEAD_RE = re.compile(r"`?([\w./-]+/[\w.-]+\.\w+)(?::\d+(?:-\d+)?)?`?")
+# the extension starts with a letter, so versions (HTTP/1.1, v2/3.12) are not paths
+PATH_LEAD_RE = re.compile(r"`?([\w./-]+/[\w.-]+\.[A-Za-z]\w*)(?::\d+(?:-\d+)?)?`?")
 IMG_RE = re.compile(r"!\[[^\]]*\]\(([^)\s]+)\)")
 CODE_RE = re.compile(r"```[^\n]*\n(.*?)```", re.S)
 # Captured output: a text/console/shell-style fence, or any fence whose body starts with a shell
