@@ -1,0 +1,455 @@
+{
+  "task": "Grade a 1\u20133 page landscape of the full 220-paper corpus for coverage of recurring methods, major findings, cross-paper patterns and evidence limitations.",
+  "nuggets": [
+    {
+      "id": "N1",
+      "text": "Matched controls repeatedly weaken proposed explanations for performance gains or apparently meaningful mechanistic signals.",
+      "vital": true,
+      "sources": [
+        18,
+        32,
+        36,
+        126,
+        177,
+        199
+      ]
+    },
+    {
+      "id": "N2",
+      "text": "Strong aggregate or proxy scores can coexist with poor local behavior, trajectory fidelity, localization or downstream decision value.",
+      "vital": true,
+      "sources": [
+        49,
+        52,
+        58,
+        67,
+        98,
+        111,
+        112,
+        169
+      ]
+    },
+    {
+      "id": "N3",
+      "text": "Structured compression exploits geometric alignment, low-rank structure and residual redundancy to reduce model or KV-cache costs.",
+      "vital": true,
+      "sources": [
+        28,
+        30,
+        96,
+        128,
+        140,
+        207
+      ]
+    },
+    {
+      "id": "N4",
+      "text": "Realized efficiency depends on memory traffic, execution conditions, hardware topology and complete workflow costs.",
+      "vital": true,
+      "sources": [
+        20,
+        30,
+        140,
+        147,
+        175,
+        214,
+        215
+      ]
+    },
+    {
+      "id": "N5",
+      "text": "Frozen backbones support useful adaptation through instruction rewriting, activation transforms, belief updates, routed adapters or trained auxiliary models.",
+      "vital": true,
+      "sources": [
+        3,
+        19,
+        31,
+        38,
+        50,
+        129,
+        134
+      ]
+    },
+    {
+      "id": "N6",
+      "text": "Distillation quality depends on student-compatible supervision; privileged shortcuts, inherited base-policy bias and invalid teacher coordination can obstruct transfer.",
+      "vital": true,
+      "sources": [
+        4,
+        11,
+        13,
+        95,
+        186
+      ]
+    },
+    {
+      "id": "N7",
+      "text": "Conditioning exploration incentives on correctness or successful behavior improves useful diversity and generalization.",
+      "vital": false,
+      "sources": [
+        1,
+        119
+      ]
+    },
+    {
+      "id": "N8",
+      "text": "Intermediate or token-level credit and explicit correction of stale trajectories improve the efficiency of RL post-training.",
+      "vital": true,
+      "sources": [
+        83,
+        124,
+        143,
+        184
+      ]
+    },
+    {
+      "id": "N9",
+      "text": "Additional computation or updates have context-dependent value; frequent re-solving and unconditional refinement can worsen outcomes.",
+      "vital": true,
+      "sources": [
+        27,
+        166,
+        187,
+        198,
+        206,
+        209
+      ]
+    },
+    {
+      "id": "N10",
+      "text": "Forecasting, sampling and asynchronous learning require treatment of accumulated, path-dependent errors beyond isolated one-step accuracy.",
+      "vital": false,
+      "sources": [
+        14,
+        34,
+        67,
+        70,
+        80,
+        184
+      ]
+    },
+    {
+      "id": "N11",
+      "text": "Physical equations, conservation laws, boundary conditions and symmetries are repeatedly embedded in scientific models to improve validity or extrapolation.",
+      "vital": true,
+      "sources": [
+        12,
+        53,
+        118,
+        159,
+        164,
+        188,
+        213
+      ]
+    },
+    {
+      "id": "N12",
+      "text": "Transfer and adaptation benefits depend on the target task, representation and distribution shift; stronger source modeling or additional adaptation can hurt target performance.",
+      "vital": true,
+      "sources": [
+        24,
+        59,
+        67,
+        72,
+        139,
+        148,
+        155,
+        160,
+        162
+      ]
+    },
+    {
+      "id": "N13",
+      "text": "Flow and diffusion models recur as frameworks for probabilistic forecasting, spatial-field generation, multimodal generation and inverse-problem inference.",
+      "vital": true,
+      "sources": [
+        14,
+        16,
+        81,
+        131,
+        158,
+        219
+      ]
+    },
+    {
+      "id": "N14",
+      "text": "Covariance structure and coordinated latent randomness materially affect joint predictive likelihood and generation coherence.",
+      "vital": false,
+      "sources": [
+        16,
+        95,
+        125,
+        131
+      ]
+    },
+    {
+      "id": "N15",
+      "text": "Uncertainty and safety assessment must match the deployment distribution and the relevant outcome region, selected subset or risk tail.",
+      "vital": true,
+      "sources": [
+        67,
+        85,
+        98,
+        114,
+        194,
+        202,
+        204
+      ]
+    },
+    {
+      "id": "N16",
+      "text": "Identifiability and guaranteed decisions can fail when retained state or observations cannot distinguish alternatives relevant to the requested operation.",
+      "vital": true,
+      "sources": [
+        5,
+        25,
+        35,
+        55,
+        91,
+        126,
+        149,
+        153,
+        165,
+        211
+      ]
+    },
+    {
+      "id": "N17",
+      "text": "Online-learning guarantees explicitly tie achievable rates to noise moments, distribution-change assumptions and available feedback.",
+      "vital": false,
+      "sources": [
+        2,
+        7,
+        9,
+        40,
+        64,
+        89,
+        163
+      ]
+    },
+    {
+      "id": "N18",
+      "text": "Compact models and simpler baselines can outperform more elaborate comparators in small-data learning, forecasting and anomaly detection.",
+      "vital": false,
+      "sources": [
+        8,
+        125,
+        167,
+        169
+      ]
+    },
+    {
+      "id": "N19",
+      "text": "Weak, self-supervised and unpaired methods reduce dependence on dense labels or paired observations for learning useful representations.",
+      "vital": false,
+      "sources": [
+        66,
+        130,
+        144,
+        145,
+        195,
+        211,
+        217
+      ]
+    },
+    {
+      "id": "N20",
+      "text": "Agentic search has produced useful scientific models, valid kernels, mathematical constructions and executable control programs under task-specific evaluation.",
+      "vital": true,
+      "sources": [
+        6,
+        26,
+        47,
+        75,
+        189
+      ]
+    },
+    {
+      "id": "N21",
+      "text": "Robot-agent reliability remains limited by instruction sensitivity and inaccurate or hallucinated task state.",
+      "vital": true,
+      "sources": [
+        3,
+        21,
+        205
+      ]
+    },
+    {
+      "id": "N22",
+      "text": "Behavioral interventions need explicit preservation of benign or successful capabilities because broad benchmark stability can hide collateral damage.",
+      "vital": true,
+      "sources": [
+        58,
+        76,
+        205,
+        220
+      ]
+    },
+    {
+      "id": "N23",
+      "text": "Spectral rank is not a universal health or robustness score; its interpretation depends on architecture, training conditions and the representation measured.",
+      "vital": false,
+      "sources": [
+        116,
+        160,
+        171
+      ]
+    },
+    {
+      "id": "N24",
+      "text": "Feedback through agent interaction or recursive synthetic-data training can reinforce bias and reduce behavioral diversity.",
+      "vital": false,
+      "sources": [
+        141,
+        216,
+        218
+      ]
+    }
+  ],
+  "integration_facts": [
+    {
+      "id": "I1",
+      "text": "Across distillation, contextual inputs, graph transfer and domain adaptation, stronger source performance or additional information can hurt when the transferred signal is incompatible with the downstream learner or task.",
+      "min_sources": 2,
+      "sources": [
+        13,
+        23,
+        59,
+        72,
+        95,
+        155
+      ]
+    },
+    {
+      "id": "I2",
+      "text": "A recurring efficiency strategy moves expensive learning or search offline and reuses its results through graph-free students, compact decoders, adapters, stored experience or executable programs and priors.",
+      "min_sources": 2,
+      "sources": [
+        4,
+        28,
+        38,
+        94,
+        189,
+        212
+      ]
+    },
+    {
+      "id": "I3",
+      "text": "Safety, forecasting, anomaly detection and verification share a mismatch between aggregate success and operational reliability: local benign behavior, complete trajectories, localization and failures conditional on acceptance require separate evaluation.",
+      "min_sources": 2,
+      "sources": [
+        58,
+        98,
+        111,
+        112,
+        194,
+        202
+      ]
+    },
+    {
+      "id": "I4",
+      "text": "Stateful systems require reasoning over whole trajectories: forecast initialization errors, numerical amplification, stale-policy errors and update schedules depend on accumulated state and future consequences.",
+      "min_sources": 2,
+      "sources": [
+        14,
+        20,
+        27,
+        70,
+        80,
+        184,
+        187
+      ]
+    },
+    {
+      "id": "I5",
+      "text": "Equations and symmetry improve several scientific surrogates, yet forward-model fidelity and physical consistency do not ensure accurate inverse estimates or forecasts; structural priors must suit the intended prediction problem.",
+      "min_sources": 2,
+      "sources": [
+        12,
+        53,
+        67,
+        72,
+        118,
+        188,
+        200
+      ]
+    },
+    {
+      "id": "I6",
+      "text": "Unlearning, sensing, latent recovery and safety share an information-sufficiency boundary: guarantees require observations or retained state that distinguish the alternatives relevant to the requested operation.",
+      "min_sources": 2,
+      "sources": [
+        5,
+        25,
+        35,
+        55,
+        91,
+        149,
+        153,
+        165,
+        211
+      ]
+    },
+    {
+      "id": "I7",
+      "text": "Method rankings are conditional on data regime, evaluation target and resource model: compact models can win on constrained data, larger models benefit from diverse pretraining, and hardware or interaction costs can reverse apparent efficiency advantages.",
+      "min_sources": 2,
+      "sources": [
+        8,
+        24,
+        147,
+        175,
+        214,
+        215
+      ]
+    },
+    {
+      "id": "I8",
+      "text": "Diversity depends on the feedback mechanism: rewarding successful exploration helps, while interacting agents or self-consuming training can homogenize behavior. Reference-data injection stabilizes some analyzed synthetic-training dynamics, but these studies do not establish a universal remedy.",
+      "min_sources": 2,
+      "sources": [
+        1,
+        119,
+        141,
+        216,
+        218
+      ]
+    }
+  ],
+  "answer_key": [
+    {
+      "q": "What is the corpus's central evaluation lesson?",
+      "a": "Progress requires matched controls, strong baselines and deployment-relevant tests. Aggregate accuracy, likelihood or proxy improvements can conceal local regressions, conditional risk, poor trajectories or absent decision value."
+    },
+    {
+      "q": "What recurring strategies reduce model and inference costs?",
+      "a": "Structured compression and quantization, sparse retrieval, state reuse, frozen-backbone adaptation and offline distillation or program generation. Their value depends on retained capabilities and actual memory, latency, hardware and workflow costs."
+    },
+    {
+      "q": "What makes RL post-training and teacher transfer more effective?",
+      "a": "Student-compatible supervision, successful or quality-filtered diversity, useful intermediate credit, stale-trajectory correction and appropriate compute allocation. Better teachers, richer inputs and additional updates are not automatically beneficial."
+    },
+    {
+      "q": "What unifies advances in scientific machine learning, and what limits their scope?",
+      "a": "Physics-aware structure, probabilistic flow/diffusion models and cross-domain training improve scientific surrogates. Claims still require validation on long rollouts, inverse tasks, new geometries and relevant distribution shifts, including independently varied climate forcings."
+    },
+    {
+      "q": "What common boundary appears in the theoretical results?",
+      "a": "Recoverability and achievable rates depend on available information and explicit noise, feedback and dynamics assumptions. Missing distinguishing information can make deletion, latent recovery or timely safe action impossible."
+    },
+    {
+      "q": "What does the corpus establish about autonomous agents and behavioral safety?",
+      "a": "Agents achieve useful task-specific discoveries and executable improvements, while grounding, state tracking and sustained execution remain fragile. Behavioral repairs require capability-retention checks and evaluation of local, conditional and tail risks."
+    }
+  ],
+  "vetting": {
+    "integration_dropped": 0
+  },
+  "provenance": {
+    "method": "map-reduce over the full corpus",
+    "slices": 8,
+    "corpus_chars": 336006,
+    "judge": "astra"
+  },
+  "split": "dev"
+}
