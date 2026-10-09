@@ -1,34 +1,33 @@
 {
   "cell": "claude__opus__f1-arxiv-cslg",
   "instance_id": "f1-arxiv-cslg",
-  "version": "v0",
-  "duration_s": 225.2,
+  "version": "v1",
   "scores": {
-    "composite": 0.0724,
-    "floors_pass": false,
+    "composite": 0.2481,
+    "floors_pass": true,
     "parts": {
       "integration_recall": 0.0,
       "vital_nugget_recall": 0.0,
-      "citation_recall": 0.0,
+      "citation_recall": 0.033,
       "source_coverage_f1": 1.0,
       "nesting": 1.0,
-      "non_redundancy": 0.827
+      "non_redundancy": 0.863
     },
     "detail": {
       "deterministic": {
         "em_dashes": 0,
         "em_dash_ok": true,
-        "length_pages": 0.0,
+        "length_pages": 9.0,
         "length_ok": false,
-        "lead_coverage": 0.0,
+        "lead_coverage": 0.006,
         "source_coverage": {
           "precision": 1.0,
           "recall": 1.0,
           "f1": 1.0,
           "n_gold": 1,
-          "n_reached": 1
+          "n_reached": 2
         },
-        "has_brief": false,
+        "has_brief": true,
         "has_manifest": true,
         "floors_pass": false
       },
@@ -45,30 +44,30 @@
       },
       "citation": {
         "ran": true,
-        "recall": 0.0,
-        "resolvable_precision": 1.0,
-        "n_fact_lines": 27,
-        "n_leads": 0,
+        "recall": 0.033,
+        "resolvable_precision": 0.0,
+        "n_fact_lines": 30,
+        "n_leads": 1,
         "note": "deterministic resolvability approximation of ALCE"
       },
       "coverage": {
         "ran": true,
-        "non_redundancy": 0.827,
-        "n_sentences": 44
+        "non_redundancy": 0.863,
+        "n_sentences": 46
       },
       "nesting": {
         "appropriateness": 1.0,
         "note": "nested as required",
-        "pages": 6.73,
-        "n_pages": 7,
-        "total_words": 3364,
+        "pages": 9.0,
+        "n_pages": 8,
+        "total_words": 4502,
         "nested": true,
         "index": "index.md",
-        "sub_pages": 6,
-        "index_links": 6
+        "sub_pages": 7,
+        "index_links": 14
       }
     }
   },
-  "composite": 0.0724,
-  "floors_pass": false
+  "composite": 0.2481,
+  "floors_pass": true
 }

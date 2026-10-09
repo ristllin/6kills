@@ -23,12 +23,13 @@ BENCH = Path(__file__).resolve().parent
 MAX_CORPUS_CHARS = int(__import__("os").environ.get("KFP_MAX_CORPUS", "160000"))
 
 CONTRACT = """
-OUTPUT CONTRACT (write files in your current directory):
-1. out/page.md  the brief: 1 to 3 A4 pages. Framing line first, then tight sections and tables.
-   EVERY fact line ends with a lead in parentheses (a source id/url/tag from the corpus). NO em or
-   en dashes anywhere (use hyphens). End with a Sources section.
-2. pack.json  {"output_path":"out/page.md","sources_reached":[...ids/urls you used...],
-   "claims":[{"claim":"...","lead":"..."}]}.
+OUTPUT CONTRACT (write files in your current directory, structured per the skill method):
+- Write your brief into out/. You may use a single out/page.md, or, if your method calls for it, an
+  out/index.md plus linked out/<section>.md sub-pages. Choose the structure the method prescribes.
+- EVERY fact line ends with a lead in parentheses (a source id/url/tag from the corpus). NO em or en
+  dashes anywhere (use hyphens). End the top page with a Sources section.
+- Also write pack.json: {"output_path":"out/page.md or out/index.md","sources_reached":[...ids/urls
+  you used...],"claims":[{"claim":"...","lead":"..."}]}.
 Synthesize ONLY from the provided corpus. Compress: find the most important and distinct facts, merge
 duplicates, and surface cross-source patterns (facts that need combining multiple sources). Do not pad.
 Reply with just: BRIEF_DONE.
@@ -46,7 +47,7 @@ def _load_corpus(task: dict) -> str:
 
 
 def build_prompt(task: dict, skill_text: str, corpus: str) -> str:
-    skill = skill_text.strip()[:9000]
+    skill = skill_text.strip()[:14000]
     return (
         "You are executing the kung-fu-pack skill. Follow its method.\n\n===== SKILL METHOD =====\n"
         + skill + "\n===== END METHOD =====\n\n"

@@ -75,7 +75,11 @@ they are the audit trail behind every claim and the starting point for the next 
 Read the directive, links, and description. Fix: the **target**, the **audience** (who reads this
 and what decision it serves), the **angle/depth**, the **must-cover** points, and the **output**
 (default from config, override from `--output`). If any of these is unclear, ask one numbered batch
-of clarifying questions, each with a proposed default, and wait. Do not fan out on guesses.
+of clarifying questions and wait. Keep every question general and parameter-shaped: ask about the
+KIND of thing (its category, boundary, audience, depth, time window), never a guessed instance. Offer
+a proposed default only for genuine parameters (audience, depth, output format); never invent concrete
+names (projects, products, teams, people) as a default. If the target or its members are unknown, ask
+the user to name them. Do not fan out on guesses.
 
 ### 2. Capability check
 Confirm which enabled sources actually resolve right now and state the mode in one line (for
@@ -104,8 +108,14 @@ riskiest claims and a "what is missing" completeness pass.
 Read every `research/` file. Reconcile conflicts (prefer live over cached, newest over oldest, code
 over doc for "what exists"). Pull out the **non-obvious insights and corrections**, not just a
 summary. Write `plan.md`: the section order, which claims need a lead, and which 1 to 3 diagrams
-carry real information. For a large or high-stakes page, show the user the structure before
-publishing (this is the natural place to use plan mode if available).
+carry real information. **Decide structure by complexity, not a hard page count.** Keep a single tight
+page when the material reads well as one 1 to 3 page brief; that is the default and the goal. Nest only
+when genuine breadth would otherwise force a cramped monolith or lose navigability: then write a short
+index/overview (framing, the mental model, and a linked map of the sub-pages, each with a one-line
+summary and a lead) plus one sub-page per major section. The index summarizes and links; it must not
+repeat the sub-pages. Prefer the lightest structure that stays readable, never fragment a brief that
+works as one page, and honor an explicit single-page request. For a large or high-stakes page, show
+the user the structure before publishing (the natural place to use plan mode if available).
 
 ### 5. Diagrams (only where they carry information)
 A diagram earns its place by making a structure clearer than prose can: a layered stack, a runtime
@@ -128,6 +138,12 @@ Then emit to the chosen output:
 - **Self-contained HTML**: one file in `out/` with diagrams inlined as base64 so it is portable.
 - **Local Markdown**: `out/page.md` plus the `assets/` PNGs referenced relatively.
 - **Local preview server**: render the HTML pack and serve `out/` at localhost for live viewing.
+
+If `plan.md` chose a nested structure, publish a tree, not one page: **Notion** = an overview page
+with one child sub-page per section, each linked from the overview; **HTML** = `index.html` plus one
+linked section page each (wiki-like); **Markdown** = `out/index.md` plus `out/<section>.md`, linked
+with relative links; **preview server** = serve the directory so the index and sub-pages are browsable.
+Verify every inter-page link resolves.
 
 ### 7. Verify
 Re-open or fetch the result: diagrams render, sections hold, tables intact. **Grep the final text

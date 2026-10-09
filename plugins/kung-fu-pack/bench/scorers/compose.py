@@ -33,7 +33,12 @@ def score_all(task: dict, pack_dir: Path, with_models: bool = True) -> dict:
 
     eligible = nug.get("eligible", True) and det.get("has_brief", False)
     em_ok = det.get("em_dash_ok", False)
-    length_ok = det.get("length_ok", False) or bool(task.get("expect_nested"))
+    # length floor: a flat brief must be within budget; a nest-expected task passes only if it
+    # actually nested (index + sub-pages) or still fit the budget. A monolith overflow fails.
+    if task.get("expect_nested"):
+        length_ok = bool(nst.get("nested")) or det.get("length_ok", False)
+    else:
+        length_ok = det.get("length_ok", False)
     floors_pass = bool(eligible and em_ok and length_ok)
 
     parts = {

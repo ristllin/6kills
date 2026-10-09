@@ -28,8 +28,14 @@ dig. Dense, technical, lead-backed, and free of filler.
   blocker cleared), say so explicitly; that is the highest-value content for a new owner.
 - **Flag staleness.** Any snapshot or cache gets its age and a "verify live" note.
 - **Status vocabulary, used consistently:** LIVE, in-flight, deprecated, scaffolding, backlog.
-- **Length matches the ask.** A one-pager stays one page; a "be thorough" brief can run two or three
-  with an appendix. Prefer tight.
+- **Length matches the ask, and overflow nests.** A one-pager stays one page; a "be thorough" brief
+  can run two or three. If the honest coverage genuinely exceeds about three pages, do NOT cram or
+  pile it into one monolith: nest. Write a 1 to 3 page index/overview (framing, mental model, and a
+  map of the sub-pages with a one-line summary and a lead each) plus one linked sub-page per section,
+  the way a wiki or a Notion space is organized. Nesting is a judgment call on genuine complexity, not
+  a hard page-count trigger: the index links to the sub-pages and does not duplicate them, and you
+  never fragment a brief that reads well as one page. Honor an explicit single-page request. Prefer
+  the lightest structure that stays readable, and prefer tight at every level.
 - **No em dashes or en dashes.** Anywhere. Use hyphens, commas, colons, parentheses, or rephrase.
   This includes the page title (a frequent miss) and all diagram text.
 - **Accents are fine** (names like Rémi, Théo). Arrows (->), middots, and set symbols are fine.

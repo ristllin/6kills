@@ -24,10 +24,22 @@ EM_EN = (chr(0x2014), chr(0x2013))  # em dash, en dash; from ordinals so this fi
 
 
 def _read_brief(pack: Path) -> str:
-    for rel in ("out/page.md", "out/page.html", "page.md"):
+    for rel in ("out/page.md", "out/index.md", "out/page.html", "page.md"):
         p = pack / rel
         if p.exists():
-            return p.read_text(errors="ignore")
+            base = p.read_text(errors="ignore")
+            # nested output: an index plus sub-pages; include the sub-pages too
+            outdir = pack / "out"
+            if p.name in ("index.md",) and outdir.is_dir():
+                subs = [q.read_text(errors="ignore") for q in sorted(outdir.rglob("*.md"))
+                        if q != p]
+                return "\n\n".join([base] + subs)
+            return base
+    outdir = pack / "out"
+    if outdir.is_dir():
+        md = sorted(outdir.rglob("*.md"))
+        if md:
+            return "\n\n".join(q.read_text(errors="ignore") for q in md)
     return ""
 
 

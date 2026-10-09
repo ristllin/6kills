@@ -1,32 +1,31 @@
 {
   "cell": "claude__opus__f3-multitool",
   "instance_id": "f3-multitool",
-  "version": "v0",
-  "duration_s": 75.6,
+  "version": "v1",
   "scores": {
-    "composite": 0.7018,
+    "composite": 0.7056,
     "floors_pass": true,
     "parts": {
       "integration_recall": 0.8,
       "vital_nugget_recall": 1.0,
-      "citation_recall": 0.207,
+      "citation_recall": 0.231,
       "source_coverage_f1": 0.0,
       "nesting": 1.0,
-      "non_redundancy": 0.816
+      "non_redundancy": 0.82
     },
     "detail": {
       "deterministic": {
         "em_dashes": 0,
         "em_dash_ok": true,
-        "length_pages": 1.29,
+        "length_pages": 1.07,
         "length_ok": true,
-        "lead_coverage": 0.034,
+        "lead_coverage": 0.038,
         "source_coverage": {
           "precision": 0.0,
           "recall": 0.0,
           "f1": 0.0,
           "n_gold": 3,
-          "n_reached": 6
+          "n_reached": 1
         },
         "has_brief": true,
         "has_manifest": true,
@@ -57,23 +56,23 @@
       },
       "citation": {
         "ran": true,
-        "recall": 0.207,
-        "resolvable_precision": 0.75,
-        "n_fact_lines": 29,
-        "n_leads": 8,
+        "recall": 0.231,
+        "resolvable_precision": 0.857,
+        "n_fact_lines": 26,
+        "n_leads": 7,
         "note": "deterministic resolvability approximation of ALCE"
       },
       "coverage": {
         "ran": true,
-        "non_redundancy": 0.816,
-        "n_sentences": 39
+        "non_redundancy": 0.82,
+        "n_sentences": 31
       },
       "nesting": {
         "appropriateness": 1.0,
         "note": "appropriately flat and within budget",
-        "pages": 1.29,
+        "pages": 1.07,
         "n_pages": 1,
-        "total_words": 645,
+        "total_words": 537,
         "nested": false,
         "index": "page.md",
         "sub_pages": 0,
@@ -81,6 +80,6 @@
       }
     }
   },
-  "composite": 0.7018,
+  "composite": 0.7056,
   "floors_pass": true
 }

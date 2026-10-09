@@ -25,7 +25,9 @@ selects the writing standard: `default` (dense peer-level prose) or `asd-ste100`
 Technical English per `references/asd-ste100.md`). In short:
 
 1. **Scope.** Parse the directive, links, and description. If the scope, audience, or must-cover
-   points are thin, ask one focused batch of clarifying questions with proposed defaults, then wait.
+   points are thin, ask one focused batch of clarifying questions, then wait. Keep questions general
+   and parameter-shaped (the KIND of thing, its audience, depth, time window); offer a default only
+   for genuine parameters and never invent concrete names (projects, products, teams, people).
 2. **Capability check.** Confirm which enabled sources are actually reachable right now
    (ToolSearch for notion/linear/tavily/beeper; probe the code roots). State the mode and degrade
    gracefully on anything missing.
