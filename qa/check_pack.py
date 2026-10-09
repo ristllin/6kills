@@ -46,9 +46,10 @@ def words(text: str) -> int:
 
 def main_page(pages: list) -> Path:
     """index, else page, else the largest page that is not a usage or business sub-page."""
-    by_stem = {p.stem.lower(): p for p in pages}
-    if "index" in by_stem or "page" in by_stem:
-        return by_stem.get("index") or by_stem["page"]
+    for stem in ("index", "page"):  # the shallowest one, if a sub-folder has its own index
+        hits = [p for p in pages if p.stem.lower() == stem]
+        if hits:
+            return min(hits, key=lambda p: (len(p.parts), str(p)))
     rest = [p for p in pages if p.stem.lower() not in ("usage", "business")] or pages
     return max(rest, key=lambda p: p.stat().st_size)
 
@@ -81,10 +82,11 @@ def show_checks(pack: Path, texts: dict, main: Path, links: list,
     imgs = [m for t in texts.values() for m in IMG_RE.findall(t)]
     # Notion upload refs (file-upload://) carry no name, so they cannot be told apart; skip them.
     real_imgs = [i for i in imgs if Path(i).stem not in diagrams and not i.startswith("file-upload:")]
-    # a block labelled "Illustrative" just above it is crafted, not captured
+    # a block labelled "Illustrative" just above or below it is crafted, not captured
     output = [m for t in texts.values() for m in FENCE_RE.finditer(t)
               if (m.group(1).strip().lower() in OUTPUT_LANGS or m.group(2).startswith("$ "))
-              and "illustrative" not in t[max(0, m.start() - 300):m.start()].lower()]
+              and "illustrative" not in (t[max(0, m.start() - 300):m.start()]
+                                         + t[m.end():m.end() + 200]).lower()]
     checks = {
         "example_choice_planned": bool(re.search(r"example choice", plan, re.I)),
         "see_it_in_action": sect is not None and (bool(blocks) or bool(IMG_RE.search(sect))),
@@ -119,11 +121,12 @@ def check(root: Path, repo: Path, show: bool = False, product: bool = False,
     allt = "\n".join(texts.values())
     c["zero_dashes"] = sum(allt.count(d) for d in DASHES) == 0
 
-    index = next((p for p in pages if p.stem.lower() == "index"), None)
     main = main_page(pages)
+    index = main if main.stem.lower() == "index" else None
     links = LINK_RE.findall(texts[main])
-    # nested = an index linking at least one sub-page (a product's index + usage is the smallest tree)
-    nested = index is not None and len(pages) >= 2 and bool(links)
+    # nested = an index linking at least one other page (a product's index + usage is the smallest tree)
+    subpages = {(main.parent / ln).resolve() for ln in links} - {main.resolve()}
+    nested = index is not None and any(p.resolve() in subpages for p in pages)
     res["structure"] = {"pages": len(pages), "nested": nested,
                         "total_pages": round(words(allt) / WORDS_PER_PAGE, 2)}
     if nested:

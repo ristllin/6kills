@@ -25,7 +25,8 @@ before using it; regenerate if text clips or overlaps.
 ## Capture a real screenshot (product visuals)
 
 For a public docs page, launch post, or demo page, screenshot the part that shows the product.
-Public `https://` URLs only: never `file://`, localhost, or private addresses. Scale 1 and a window
+Public `https://` URLs only: never `file://`, localhost, private or link-local addresses, or a
+page that redirects to one. Scale 1 and a window
 at most 1600 px wide keep the PNG within the size you may Read:
 
 ```bash

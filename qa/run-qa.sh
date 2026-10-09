@@ -38,15 +38,17 @@ rm -rf "$OUT" && mkdir -p "$OUT"
 QA_DIR="$OUT/.qa-ref"; mkdir -p "$QA_DIR"
 git -C "$ROOT" archive "$REF" qa | tar -x -C "$QA_DIR" || { echo "cannot export qa/ at $REF" >&2; exit 1; }
 # Mount a bare clone, not the live checkout: containers see committed history only, never the
-# working tree or untracked files.
-git clone --bare -q "$ROOT" "$OUT/.src.git" || { echo "cannot clone $ROOT" >&2; exit 1; }
+# working tree or untracked files. --no-local copies objects instead of hardlinking them to the
+# host repo, and the clone lives outside the writable /out mount.
+SRC="$(mktemp -d)"; trap 'rm -rf "$SRC"' EXIT
+git clone --bare --no-local -q "$ROOT" "$SRC/src.git" || { echo "cannot clone $ROOT" >&2; exit 1; }
 echo "building $IMAGE ..."
 docker build -q -t "$IMAGE" "$QA_DIR/qa" >"$OUT/build.log" 2>&1 || { cat "$OUT/build.log"; exit 1; }
 
 echo "testing ref ${REF:0:9} on: ${HARNESSES[*]}"
 for h in "${HARNESSES[@]}"; do
   docker run --rm --name "6kills-qa-$h" ${ENV_ARGS[@]+"${ENV_ARGS[@]}"} ${CFG_ARGS[@]+"${CFG_ARGS[@]}"} -e KFP_QA_REF="$REF" \
-    -v "$OUT/.src.git:/src:ro" -v "$QA_DIR/qa:/qa:ro" -v "$OUT:/out" "$IMAGE" "$h" \
+    -v "$SRC/src.git:/src:ro" -v "$QA_DIR/qa:/qa:ro" -v "$OUT:/out" "$IMAGE" "$h" \
     >"$OUT/$h.container.log" 2>&1 &
 done
 wait

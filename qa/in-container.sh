@@ -41,8 +41,11 @@ if [ "$H" = vibe ] && [ -f /cfg/vibe.config.toml ]; then
 fi
 
 # --- 2. a real-world target and a seeded config (same schema /kung-fu-pack-init writes) ---
-mkdir -p "$HOME/work" && git clone -q --depth 1 "$TARGET_REPO" "$HOME/work/$TARGET_NAME"
-git clone -q --depth 1 "$PRODUCT_REPO" "$HOME/work/$PRODUCT_DIR"
+# separate parents, so a target and a product repo with the same basename cannot collide
+TARGET_PATH="$HOME/work/target/$TARGET_NAME"; PRODUCT_PATH="$HOME/work/product/$PRODUCT_DIR"
+mkdir -p "$HOME/work/target" "$HOME/work/product"
+git clone -q --depth 1 "$TARGET_REPO" "$TARGET_PATH" || { log "FAIL clone target"; exit 1; }
+git clone -q --depth 1 "$PRODUCT_REPO" "$PRODUCT_PATH" || { log "FAIL clone product"; exit 1; }
 mkdir -p "$HOME/kung-fu-pack/packs"
 cat > "$HOME/kung-fu-pack/config.json" <<JSON
 {"version": 1, "output_default": "md", "notion_destination": "draft",
@@ -75,24 +78,28 @@ run "$INVOKE build me an onboarding brief" "$OUT/A_interview.txt"
 
 # --- 4. scenario B: a full pack on the real repo, local Markdown output ---
 log "scenario B (pack on $TARGET_NAME)"
-run "$INVOKE the $TARGET_NAME library checked out at $HOME/work/$TARGET_NAME. Scope: onboarding \
+run "$INVOKE the $TARGET_NAME library checked out at $TARGET_PATH. Scope: onboarding \
 brief for a new maintainer covering architecture, key modules, extension points, and the testing \
 and release process. Audience: an experienced Python engineer. Output: md. The scope is complete; \
 do not ask questions, proceed to publish." "$OUT/B_pack.txt"
 
-python3 /qa/check_pack.py --root "$HOME/kung-fu-pack" --repo "$HOME/work/$TARGET_NAME" --show \
+python3 /qa/check_pack.py --root "$HOME/kung-fu-pack" --repo "$TARGET_PATH" --show \
   --out "$OUT/B_check.json" && log "PASS pack checks" || log "FAIL pack checks"
 
 # --- 5. scenario C: a product one-pager must show the product, not just describe it ---
 log "scenario C (product pack on $PRODUCT_NAME)"
 before=$(ls "$HOME/kung-fu-pack/packs" 2>/dev/null)
-run "$INVOKE a one-pager on the $PRODUCT_NAME product, source checked out at $HOME/work/$PRODUCT_DIR, \
+run "$INVOKE a one-pager on the $PRODUCT_NAME product, source checked out at $PRODUCT_PATH, \
 plus its public docs on the web if reachable. Audience: engineers deciding whether to adopt it. \
 Output: md. The scope is complete; do not ask questions, proceed to publish." "$OUT/C_product.txt"
 
 # check the pack scenario C created, not whichever pack was touched last
 slug=$(comm -13 <(echo "$before") <(ls "$HOME/kung-fu-pack/packs" 2>/dev/null) | head -1)
-python3 /qa/check_pack.py --root "$HOME/kung-fu-pack" --repo "$HOME/work/$PRODUCT_DIR" --product \
-  ${slug:+--pack "$slug"} --out "$OUT/C_check.json" && log "PASS product checks" || log "FAIL product checks"
+if [ -z "$slug" ]; then
+  log "FAIL product checks (scenario C created no new pack)"
+else
+  python3 /qa/check_pack.py --root "$HOME/kung-fu-pack" --repo "$PRODUCT_PATH" --product \
+    --pack "$slug" --out "$OUT/C_check.json" && log "PASS product checks" || log "FAIL product checks"
+fi
 cp -R "$HOME/kung-fu-pack/packs" "$OUT/packs" 2>/dev/null
 log "done"

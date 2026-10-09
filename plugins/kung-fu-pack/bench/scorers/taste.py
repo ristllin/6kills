@@ -123,7 +123,8 @@ def pairwise(a: Path, b: Path, judges: list[str]) -> dict:
         # a criterion is won only when the judge picks the same pack in both orders
         # (reversed, pack A is shown as "B")
         winner = {("A", "B"): str(a), ("B", "A"): str(b)}
-        res[j] = {k: winner.get((fwd.get(k), rev.get(k)), "tie/inconsistent") for k in keys}
+        res[j] = {k: winner.get((str(fwd.get(k)), str(rev.get(k))), "tie/inconsistent")
+                  for k in keys}
         res[j]["why"] = fwd.get("why", "")
     return {"a": str(a), "b": str(b), "judges": res,
             "failed_judges": [j for j, r in res.items() if r is None]}
