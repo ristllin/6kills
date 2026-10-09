@@ -52,17 +52,21 @@ The task scopes also told the writer to nest, which made nesting a property of t
 the skill. That hint is removed. The retracted headline (v0 0.306 to v1 0.477) is superseded by:
 
 ## 4. Corrected baseline: v0 vs v1 (same scorer, same gold, fresh packs)
-Writer: Claude. Judges: Codex + Claude. "raw" is the composite before the floor multiplier.
+Writer: Claude. Judges: Codex + Claude. "raw" is the composite before the floor multiplier. Both
+runs were re-scored after the release review fixed three more scorer issues: a citation resolver
+that accepted any lead ending in `/` or matching as a substring, table separator rows counted as
+uncited fact lines, and a judge failure that silently fell back to keyword matching under the
+judge's name (a failed judge is now dropped and recorded; one h1 cell hit this and was re-judged).
 
-| task | v0 | v1 | v0 raw | v1 raw | pages v0 / v1 | kappa range |
+| task | v0 | v1 | v0 raw | v1 raw | pages v0 / v1 | kappa v0 / v1 |
 |---|---|---|---|---|---|---|
-| f1-arxiv-cslg | 0.177 | 0.195 | 0.59 | 0.65 | 6.6 / 4.6 (flat) | 0.72 to 0.86 |
-| f2-releases | 0.176 | 0.204 | 0.59 | 0.68 | 4.6 / 5.1 (flat) | 0.38 to 0.66 |
-| f3-multitool | 0.962 | 0.964 | 0.96 | 0.96 | 1 page, correct | n/a |
-| h1-arxiv-cscr | 0.166 | 0.156 | 0.55 | 0.52 | 5.8 / 5.8 (flat) | 0.50 to 0.69 |
-| h2-releases | 0.157 | 0.203 | 0.52 | 0.68 | 4.5 / 5.5 (flat) | 0.44 to 0.82 |
+| f1-arxiv-cslg | 0.197 | 0.193 | 0.66 | 0.64 | 6.5 / 4.6 (flat) | 0.71 / 0.58 |
+| f2-releases | 0.190 | 0.200 | 0.63 | 0.67 | 4.6 / 5.1 (flat) | 0.41 / 0.55 |
+| f3-multitool | 0.965 | 0.967 | 0.97 | 0.97 | 1 page, correct | 1.00 / 1.00 |
+| h1-arxiv-cscr | 0.152 | 0.164 | 0.51 | 0.55 | 5.8 / 5.8 (flat) | 0.52 / 0.81 |
+| h2-releases | 0.189 | 0.204 | 0.63 | 0.68 | 4.5 / 5.5 (flat) | 0.75 / 0.81 |
 
-Integration recall ranges 0.25 to 0.56 on the four large tasks; vital-nugget recall 0.68 to 0.86.
+Integration recall ranges 0.25 to 0.56 on the four large tasks; vital-nugget recall 0.69 to 0.86.
 
 ## 5. Findings
 - **The length problem is not solved.** With no nesting hint in the prompt, neither v0 nor v1 nests;
@@ -70,11 +74,12 @@ Integration recall ranges 0.25 to 0.56 on the four large tasks; vital-nugget rec
   rule, softened into "a judgment call" after peer review, is too permissive to change behavior.
   This is the first target of the next iteration: a concrete trigger (draft over ~3 pages means nest)
   while keeping the "do not fragment a brief that fits" guard.
-- **v1 content is modestly better** on 3 of 4 large tasks (raw +0.06 to +0.16) and slightly worse on
-  h1 (-0.03), at n=1 per cell. Treat as suggestive, not significant.
+- **v1 content is slightly better** on 3 of 4 large tasks (raw +0.04 to +0.05, driven by
+  integration recall) and slightly worse on f1 (-0.02), at n=1 per cell. Treat as suggestive, not
+  significant.
 - **The benchmark is unsaturated where it matters.** Integration recall tops out at 0.56, and the
   floors still bite. **F3 is saturated** (0.96 for both versions) and needs a harder variant.
-- **Judges mostly agree** (kappa 0.38 to 0.86, mostly substantial), so a two-judge mean is a reasonable
+- **Judges mostly agree** (kappa 0.41 to 0.81 on the large tasks, mostly moderate to substantial), so a two-judge mean is a reasonable
   signal; single-run variance is still the main threat.
 - The v1 interview fix (parameter-shaped questions, no invented names) is not exercised by these
   frozen-corpus tasks; it is checked in the harness QA run instead (see the repo AGENTS.md).

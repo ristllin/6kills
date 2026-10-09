@@ -3,15 +3,15 @@
   "instance_id": "f1-arxiv-cslg",
   "version": "r0",
   "split": "dev",
-  "duration_s": 382.1,
+  "duration_s": 379.7,
   "scores": {
-    "composite": 0.177,
+    "composite": 0.1969,
     "floors_pass": false,
     "parts": {
-      "integration_recall": 0.312,
-      "vital_nugget_recall": 0.812,
-      "all_nugget_recall": 0.771,
-      "citation": 0.911,
+      "integration_recall": 0.5,
+      "vital_nugget_recall": 0.781,
+      "all_nugget_recall": 0.75,
+      "citation": 0.936,
       "nesting": 0.2,
       "non_redundancy": 0.868
     },
@@ -37,16 +37,18 @@
       "nuggets": {
         "ran": true,
         "eligible": true,
-        "vital_nugget_recall": 0.812,
-        "all_nugget_recall": 0.771,
-        "integration_recall": 0.312,
+        "vital_nugget_recall": 0.781,
+        "all_nugget_recall": 0.75,
+        "integration_recall": 0.5,
         "n_vital": 16,
         "n_integration": 8,
+        "method": "judges",
+        "failed_judges": [],
         "judges": {
           "codex": {
-            "vital_nugget_recall": 0.812,
-            "all_nugget_recall": 0.75,
-            "integration_recall": 0.25,
+            "vital_nugget_recall": 0.75,
+            "all_nugget_recall": 0.708,
+            "integration_recall": 0.375,
             "supported_nuggets": [
               "N1",
               "N11",
@@ -60,7 +62,6 @@
               "N22",
               "N23",
               "N24",
-              "N4",
               "N5",
               "N6",
               "N7",
@@ -69,13 +70,14 @@
             ],
             "supported_integration": [
               "I2",
+              "I5",
               "I8"
             ]
           },
           "claude": {
             "vital_nugget_recall": 0.812,
             "all_nugget_recall": 0.792,
-            "integration_recall": 0.375,
+            "integration_recall": 0.625,
             "supported_nuggets": [
               "N1",
               "N11",
@@ -98,7 +100,9 @@
               "N9"
             ],
             "supported_integration": [
+              "I1",
               "I2",
+              "I3",
               "I5",
               "I8"
             ]
@@ -107,15 +111,15 @@
         "agreement": {
           "codex~claude": {
             "agree": 0.875,
-            "kappa": 0.724
+            "kappa": 0.714
           }
         }
       },
       "citation": {
         "ran": true,
-        "recall": 0.915,
-        "resolvable_precision": 0.996,
-        "n_fact_lines": 130,
+        "recall": 0.944,
+        "resolvable_precision": 0.991,
+        "n_fact_lines": 126,
         "n_leads": 230,
         "note": "deterministic resolvability approximation of ALCE"
       },
@@ -133,10 +137,12 @@
         "nested": false,
         "index": "page.md",
         "sub_pages": 0,
-        "index_links": 0
+        "index_links": 0,
+        "index_words": 3274,
+        "links_resolve": false
       }
     }
   },
-  "composite": 0.177,
+  "composite": 0.1969,
   "floors_pass": false
 }

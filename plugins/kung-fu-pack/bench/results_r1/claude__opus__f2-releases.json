@@ -3,15 +3,15 @@
   "instance_id": "f2-releases",
   "version": "r1",
   "split": "dev",
-  "duration_s": 132.1,
+  "duration_s": 124.3,
   "scores": {
-    "composite": 0.2041,
+    "composite": 0.1995,
     "floors_pass": false,
     "parts": {
       "integration_recall": 0.562,
-      "vital_nugget_recall": 0.796,
-      "all_nugget_recall": 0.796,
-      "citation": 0.878,
+      "vital_nugget_recall": 0.75,
+      "all_nugget_recall": 0.75,
+      "citation": 0.91,
       "nesting": 0.2,
       "non_redundancy": 0.784
     },
@@ -37,11 +37,13 @@
       "nuggets": {
         "ran": true,
         "eligible": true,
-        "vital_nugget_recall": 0.796,
-        "all_nugget_recall": 0.796,
+        "vital_nugget_recall": 0.75,
+        "all_nugget_recall": 0.75,
         "integration_recall": 0.562,
         "n_vital": 22,
         "n_integration": 8,
+        "method": "judges",
+        "failed_judges": [],
         "judges": {
           "codex": {
             "vital_nugget_recall": 0.682,
@@ -71,13 +73,12 @@
             ]
           },
           "claude": {
-            "vital_nugget_recall": 0.909,
-            "all_nugget_recall": 0.909,
+            "vital_nugget_recall": 0.818,
+            "all_nugget_recall": 0.818,
             "integration_recall": 0.75,
             "supported_nuggets": [
               "N1",
               "N10",
-              "N11",
               "N12",
               "N13",
               "N14",
@@ -92,7 +93,6 @@
               "N3",
               "N5",
               "N6",
-              "N7",
               "N8",
               "N9"
             ],
@@ -108,16 +108,16 @@
         },
         "agreement": {
           "codex~claude": {
-            "agree": 0.733,
-            "kappa": 0.375
+            "agree": 0.8,
+            "kappa": 0.545
           }
         }
       },
       "citation": {
         "ran": true,
-        "recall": 0.892,
+        "recall": 0.925,
         "resolvable_precision": 0.984,
-        "n_fact_lines": 111,
+        "n_fact_lines": 107,
         "n_leads": 248,
         "note": "deterministic resolvability approximation of ALCE"
       },
@@ -135,10 +135,12 @@
         "nested": false,
         "index": "page.md",
         "sub_pages": 0,
-        "index_links": 0
+        "index_links": 0,
+        "index_words": 2572,
+        "links_resolve": false
       }
     }
   },
-  "composite": 0.2041,
+  "composite": 0.1995,
   "floors_pass": false
 }

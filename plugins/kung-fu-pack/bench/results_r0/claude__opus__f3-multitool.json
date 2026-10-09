@@ -3,15 +3,15 @@
   "instance_id": "f3-multitool",
   "version": "r0",
   "split": "dev",
-  "duration_s": 37.6,
+  "duration_s": 36.4,
   "scores": {
-    "composite": 0.962,
+    "composite": 0.9652,
     "floors_pass": true,
     "parts": {
       "integration_recall": 1.0,
       "vital_nugget_recall": 1.0,
       "all_nugget_recall": 0.857,
-      "citation": 0.864,
+      "citation": 0.896,
       "nesting": 1.0,
       "non_redundancy": 0.799
     },
@@ -42,6 +42,8 @@
         "integration_recall": 1.0,
         "n_vital": 5,
         "n_integration": 5,
+        "method": "judges",
+        "failed_judges": [],
         "judges": {
           "codex": {
             "vital_nugget_recall": 1.0,
@@ -93,9 +95,9 @@
       },
       "citation": {
         "ran": true,
-        "recall": 0.929,
+        "recall": 0.963,
         "resolvable_precision": 0.93,
-        "n_fact_lines": 28,
+        "n_fact_lines": 27,
         "n_leads": 43,
         "note": "deterministic resolvability approximation of ALCE"
       },
@@ -113,10 +115,12 @@
         "nested": false,
         "index": "page.md",
         "sub_pages": 0,
-        "index_links": 0
+        "index_links": 0,
+        "index_words": 643,
+        "links_resolve": false
       }
     }
   },
-  "composite": 0.962,
+  "composite": 0.9652,
   "floors_pass": true
 }

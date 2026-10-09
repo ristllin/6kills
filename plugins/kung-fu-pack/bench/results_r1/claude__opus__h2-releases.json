@@ -3,15 +3,15 @@
   "instance_id": "h2-releases",
   "version": "r1",
   "split": "heldout",
-  "duration_s": 179.4,
+  "duration_s": 131.3,
   "scores": {
-    "composite": 0.203,
+    "composite": 0.2041,
     "floors_pass": false,
     "parts": {
       "integration_recall": 0.5,
       "vital_nugget_recall": 0.857,
       "all_nugget_recall": 0.864,
-      "citation": 0.846,
+      "citation": 0.88,
       "nesting": 0.2,
       "non_redundancy": 0.774
     },
@@ -42,6 +42,8 @@
         "integration_recall": 0.5,
         "n_vital": 21,
         "n_integration": 8,
+        "method": "judges",
+        "failed_judges": [],
         "judges": {
           "codex": {
             "vital_nugget_recall": 0.857,
@@ -117,9 +119,9 @@
       },
       "citation": {
         "ran": true,
-        "recall": 0.877,
-        "resolvable_precision": 0.965,
-        "n_fact_lines": 163,
+        "recall": 0.917,
+        "resolvable_precision": 0.96,
+        "n_fact_lines": 156,
         "n_leads": 371,
         "note": "deterministic resolvability approximation of ALCE"
       },
@@ -137,10 +139,12 @@
         "nested": false,
         "index": "page.md",
         "sub_pages": 0,
-        "index_links": 0
+        "index_links": 0,
+        "index_words": 2755,
+        "links_resolve": false
       }
     }
   },
-  "composite": 0.203,
+  "composite": 0.2041,
   "floors_pass": false
 }
