@@ -22,19 +22,32 @@ from pathlib import Path
 WORDS_PER_PAGE = 500
 MAX_PAGES = 3
 DASHES = (chr(0x2014), chr(0x2013))
-LINK_RE = re.compile(r"\]\((?![a-z][\w+.-]*:)([^)#\s]+\.(?:md|html))\)")  # local pages only
+# pack pages only: relative, no scheme (an absolute path is a lead into the target repo); an
+# #anchor or a "title" after the target is allowed
+LINK_RE = re.compile(r"\]\((?![A-Za-z][\w+.-]*:|/)([^)#\s]+\.(?:md|html))(?:#[^)\s]*)?(?:\s+\"[^\"]*\")?\)")
 PATH_LEAD_RE = re.compile(r"`?([\w./-]+/[\w.-]+\.\w+)(?::\d+(?:-\d+)?)?`?")
 IMG_RE = re.compile(r"!\[[^\]]*\]\(([^)\s]+)\)")
 CODE_RE = re.compile(r"```[^\n]*\n(.*?)```", re.S)
+# Captured output: a console/output-style fence, or a body that starts with a shell prompt.
+OUTPUT_RE = re.compile(r"```(?:console|shell-session|output|terminal)[^\n]*\n(.*?)```|```[^\n]*\n(\$ .*?)```", re.S)
 EXAMPLE_MAX_LINES = 25  # about 15 lines is the target; this is the hard ceiling
 # A lead is a URL, a file:line, a path, inline code that names something locatable (a path, a
 # dotted symbol, a #ref), or a source key like [S12] resolved in a sources table. A bare backticked
-# word is not a lead.
-LEAD_RE = re.compile(r"(https?://|\[S\d+\]|\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}/[^\s)|]+|`[^`\s]*[./:#][^`]*`|[\w./-]+\.\w+:\d+|[\w-]+/[\w./-]+\.\w+)")
+# word or a bare domain path (the style requires full https:// URLs) is not a lead.
+LEAD_RE = re.compile(r"(https?://|\[S\d+\]|`[^`\s]*[./:#][^`]*`|[\w./-]+\.\w+:\d+|[\w-]+/[\w./-]+\.\w+)")
 
 
 def words(text: str) -> int:
     return len(re.findall(r"\S+", text))
+
+
+def main_page(pages: list) -> Path:
+    """index, else page, else the largest page that is not a usage or business sub-page."""
+    by_stem = {p.stem.lower(): p for p in pages}
+    if "index" in by_stem or "page" in by_stem:
+        return by_stem.get("index") or by_stem["page"]
+    rest = [p for p in pages if p.stem.lower() not in ("usage", "business")] or pages
+    return max(rest, key=lambda p: p.stat().st_size)
 
 
 def newest_pack(root: Path) -> Path | None:
@@ -42,24 +55,33 @@ def newest_pack(root: Path) -> Path | None:
     return max(packs, key=lambda p: p.stat().st_mtime) if packs else None
 
 
-def show_checks(pack: Path, texts: dict, index: Path | None, links: list,
+def section(text: str, title: str) -> str | None:
+    """The body of the first heading named `title` (optionally numbered), up to the next heading
+    of the same or a higher level."""
+    m = re.search(rf"^(#+)\s*(?:\d+[.)]\s*)?{title}.*$", text, re.I | re.M)
+    if not m:
+        return None
+    end = re.compile(rf"^#{{1,{len(m.group(1))}}}\s", re.M).search(text, m.end())
+    return text[m.start():end.start() if end else len(text)]
+
+
+def show_checks(pack: Path, texts: dict, main: Path, links: list,
                 product: bool) -> tuple[dict, dict]:
     """The "show it" contract: a chosen example and a real visual; products add a usage sub-page."""
     plan = (pack / "plan.md").read_text(errors="ignore") if (pack / "plan.md").exists() else ""
-    main = index or next(iter(texts))
-    mtext = texts[main]
-    sect = re.search(r"^#+\s*(?:\d+[.)]\s*)?see it in action.*?(?=^#{1,2}\s|\Z)", mtext, re.I | re.M | re.S)
-    blocks = CODE_RE.findall(sect.group(0)) if sect else []
+    sect = section(texts[main], "see it in action")
+    blocks = CODE_RE.findall(sect) if sect else []
     # A diagram is a PNG generated from an .html of the same stem in assets/; anything else embedded
-    # (a screenshot, a saved vendor image) or a code block of captured output is a real visual.
+    # (a screenshot, a saved vendor image) or a block of captured output is a real visual. Whether a
+    # screenshot shows the product (not a blog or repo page) is judged by eye and by bench taste.py.
     diagrams = {h.stem.removesuffix(".min") for h in (pack / "assets").glob("*.html")}
     imgs = [m for t in texts.values() for m in IMG_RE.findall(t)]
     # Notion upload refs (file-upload://) carry no name, so they cannot be told apart; skip them.
     real_imgs = [i for i in imgs if Path(i).stem not in diagrams and not i.startswith("file-upload:")]
-    output = [b for t in texts.values() for b in re.findall(r"```(?!mermaid)[^\n]*\n(.*?)```", t, re.S)]
+    output = [m for t in texts.values() for m in OUTPUT_RE.findall(t)]
     checks = {
         "example_choice_planned": bool(re.search(r"example choice", plan, re.I)),
-        "see_it_in_action": sect is not None and (bool(blocks) or bool(IMG_RE.search(sect.group(0)))),
+        "see_it_in_action": sect is not None and (bool(blocks) or bool(IMG_RE.search(sect))),
         "example_size_ok": all(len(b.strip().splitlines()) <= EXAMPLE_MAX_LINES for b in blocks),
         "real_visual": bool(real_imgs) or bool(output),
     }
@@ -69,10 +91,11 @@ def show_checks(pack: Path, texts: dict, index: Path | None, links: list,
     return checks, {"real_images": real_imgs[:10], "example_blocks": len(blocks)}
 
 
-def check(root: Path, repo: Path, show: bool = False, product: bool = False) -> dict:
+def check(root: Path, repo: Path, show: bool = False, product: bool = False,
+          slug: str | None = None) -> dict:
     res: dict = {"checks": {}}
-    pack = newest_pack(root)
-    if pack is None:
+    pack = (root / "packs" / slug) if slug else newest_pack(root)
+    if pack is None or not pack.is_dir():
         res["checks"]["pack_exists"] = False
         return res
     res["pack"] = pack.name
@@ -91,8 +114,10 @@ def check(root: Path, repo: Path, show: bool = False, product: bool = False) -> 
     c["zero_dashes"] = sum(allt.count(d) for d in DASHES) == 0
 
     index = next((p for p in pages if p.stem.lower() == "index"), None)
-    links = LINK_RE.findall(texts[index]) if index else []
-    nested = index is not None and len(pages) >= 3 and len(links) >= 2
+    main = main_page(pages)
+    links = LINK_RE.findall(texts[main])
+    # nested = an index linking at least one sub-page (a product's index + usage is the smallest tree)
+    nested = index is not None and len(pages) >= 2 and bool(links)
     res["structure"] = {"pages": len(pages), "nested": nested,
                         "total_pages": round(words(allt) / WORDS_PER_PAGE, 2)}
     if nested:
@@ -101,8 +126,7 @@ def check(root: Path, repo: Path, show: bool = False, product: bool = False) -> 
     else:
         c["length_ok"] = words(allt) <= MAX_PAGES * WORDS_PER_PAGE
     if show or product:
-        sc, res["show"] = show_checks(pack, texts, index, links or LINK_RE.findall(texts[pages[0]]),
-                                      product)
+        sc, res["show"] = show_checks(pack, texts, main, links, product)
         c.update(sc)
 
     sep = re.compile(r"\|[\s:|-]+\|")
@@ -119,7 +143,7 @@ def check(root: Path, repo: Path, show: bool = False, product: bool = False) -> 
     # Version strings like 3.10/3.12 are not paths; pack-relative leads (research/, plan.md) are
     # valid and resolve against the pack itself.
     paths = {m.group(1).removeprefix("./") for ln in with_lead
-             for m in PATH_LEAD_RE.finditer(re.sub(r"(https?://|\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}/)\S+", "", ln))
+             for m in PATH_LEAD_RE.finditer(re.sub(r"(https?://|(?<![\w/.])[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}/)\S+", "", ln))
              if not m.group(1).startswith(("http", "www.")) and not m.group(1)[0].isdigit()}
 
     def resolves(p: str) -> bool:
@@ -142,8 +166,9 @@ def main() -> int:
     ap.add_argument("--out", required=True)
     ap.add_argument("--show", action="store_true", help="also check the show-it contract")
     ap.add_argument("--product", action="store_true", help="--show plus a linked usage sub-page")
+    ap.add_argument("--pack", help="pack slug under <root>/packs (default: the newest pack)")
     a = ap.parse_args()
-    res = check(Path(a.root).expanduser(), Path(a.repo).expanduser(), a.show, a.product)
+    res = check(Path(a.root).expanduser(), Path(a.repo).expanduser(), a.show, a.product, a.pack)
     res["pass"] = bool(res["checks"]) and all(res["checks"].values())
     Path(a.out).write_text(json.dumps(res, indent=2))
     print(json.dumps(res, indent=2))

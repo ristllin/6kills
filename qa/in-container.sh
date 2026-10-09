@@ -12,7 +12,8 @@ TARGET_REPO="${KFP_QA_TARGET_REPO:-fastapi/typer}"
 TARGET_NAME="$(basename "$TARGET_REPO")"
 PRODUCT_REPO="${KFP_QA_PRODUCT_REPO:-httpie/cli}"
 [[ "$PRODUCT_REPO" == *://* ]] || PRODUCT_REPO="https://github.com/$PRODUCT_REPO"
-PRODUCT_NAME="$(basename "$(dirname "$PRODUCT_REPO")")"  # the owner names the product (httpie/cli)
+PRODUCT_NAME="${KFP_QA_PRODUCT_NAME:-httpie}"  # the product, which is not always the repo name
+PRODUCT_DIR="$(basename "$PRODUCT_REPO" .git)"
 log(){ echo "[$H] $*" | tee -a "$OUT/steps.log"; }
 
 # --- 1. fresh install from the committed ref (not the host's working tree) ---
@@ -41,7 +42,7 @@ fi
 
 # --- 2. a real-world target and a seeded config (same schema /kung-fu-pack-init writes) ---
 mkdir -p "$HOME/work" && git clone -q --depth 1 "$TARGET_REPO" "$HOME/work/$TARGET_NAME"
-git clone -q --depth 1 "$PRODUCT_REPO" "$HOME/work/$PRODUCT_NAME"
+git clone -q --depth 1 "$PRODUCT_REPO" "$HOME/work/$PRODUCT_DIR"
 mkdir -p "$HOME/kung-fu-pack/packs"
 cat > "$HOME/kung-fu-pack/config.json" <<JSON
 {"version": 1, "output_default": "md", "notion_destination": "draft",
@@ -84,11 +85,14 @@ python3 /qa/check_pack.py --root "$HOME/kung-fu-pack" --repo "$HOME/work/$TARGET
 
 # --- 5. scenario C: a product one-pager must show the product, not just describe it ---
 log "scenario C (product pack on $PRODUCT_NAME)"
-run "$INVOKE a one-pager on the $PRODUCT_NAME product, source checked out at $HOME/work/$PRODUCT_NAME, \
+before=$(ls "$HOME/kung-fu-pack/packs" 2>/dev/null)
+run "$INVOKE a one-pager on the $PRODUCT_NAME product, source checked out at $HOME/work/$PRODUCT_DIR, \
 plus its public docs on the web if reachable. Audience: engineers deciding whether to adopt it. \
 Output: md. The scope is complete; do not ask questions, proceed to publish." "$OUT/C_product.txt"
 
-python3 /qa/check_pack.py --root "$HOME/kung-fu-pack" --repo "$HOME/work/$PRODUCT_NAME" --product \
-  --out "$OUT/C_check.json" && log "PASS product checks" || log "FAIL product checks"
+# check the pack scenario C created, not whichever pack was touched last
+slug=$(comm -13 <(echo "$before") <(ls "$HOME/kung-fu-pack/packs" 2>/dev/null) | head -1)
+python3 /qa/check_pack.py --root "$HOME/kung-fu-pack" --repo "$HOME/work/$PRODUCT_DIR" --product \
+  ${slug:+--pack "$slug"} --out "$OUT/C_check.json" && log "PASS product checks" || log "FAIL product checks"
 cp -R "$HOME/kung-fu-pack/packs" "$OUT/packs" 2>/dev/null
 log "done"

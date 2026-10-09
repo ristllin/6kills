@@ -4,10 +4,14 @@ A reader trusts a pack when they can see the thing work. Prose and diagrams expl
 real screenshot prove. This file is how to choose them. Choosing the example is the hard part: it must
 show the depth and the load-bearing part of the target, and stay simple enough to read in a minute.
 
-## When this applies
-Always for a product, platform, tool, library, codebase, or vendor target. For a person, an account,
-or a set of engagements, use it only when a concrete artifact (a deliverable, a run, a report) makes
-the point better than prose.
+## When this applies (two target kinds, used everywhere in the skill)
+- **Product target:** a product, platform, tool, or vendor; something a reader would adopt, buy,
+  integrate, or compete with. It gets the example and a real view, and nests a usage sub-page by
+  default.
+- **Show-it target:** any product target, plus a library or a codebase. It gets the example and a
+  real view, but stays a single page when the material fits one.
+For a person, an account, or a set of engagements, use this only when a concrete artifact (a
+deliverable, a run, a report) makes the point better than prose.
 
 ## 1. Name the load-bearing mechanism first
 Before you pick anything, write one sentence in `plan.md`: what makes this thing work, or what makes
@@ -37,10 +41,12 @@ contrast shows what the mechanism buys, which a single happy-path run does not.
 - If no real artifact is small and clear enough, craft a minimal one from documented behavior. Label
   it `Illustrative, based on <lead>` directly above or below it. Never present a crafted example as
   captured output, and never invent behavior the sources do not support.
-- For a code target you can run, run it and paste the real output rather than describing it.
+- For a code target you can run, run it and paste the real output rather than describing it. Run
+  third-party code only in a sandbox or container, or after the user confirms; never install its
+  dependencies or run its scripts on the host unprompted.
 
 ## 5. Visuals: diagrams explain, screenshots prove
-- A product or tool target gets at least one real view of the thing itself when one exists: a UI
+- A show-it target gets at least one real view of the thing itself when one exists: a UI
   screenshot, a results view, a terminal session, a rendered report. A diagram does not count.
 - A real view shows the product doing its job: a finding with its data flow, a results list, a fix
   diff, a dashboard with data, a CLI run and its output. A screenshot of a repo landing page, a
@@ -50,7 +56,9 @@ contrast shows what the mechanism buys, which a single happy-path run does not.
   real UI screenshots: open the page, find the `<img>` that shows the feature, and save that image),
   launch posts and release notes with product images, public demo videos (a frame), the README's
   own screenshots or GIFs. Save the image with its page URL as the lead, or capture it with headless
-  Chrome (see `render-and-publish.md`). If you can run the tool, real terminal output is a real view.
+  Chrome (see `render-and-publish.md`). Fetch only public `https://` URLs: never `file://`,
+  localhost, or private addresses. If you can run the tool (with the same care as above), real
+  terminal output is a real view.
 - Read every captured PNG before using it. Crop to the part that matters; illegible is worse than none.
 - **Shrink before you look.** Never Read a GIF, a video, or a large image directly: one multi-MB
   file can fill the context and kill the run. Extract one frame to PNG, downscale to at most 1600 px
@@ -65,5 +73,5 @@ contrast shows what the mechanism buys, which a single happy-path run does not.
   (inline, within the size limit) and one real visual, each with a lead.
 - **Usage sub-page** (`usage.md` / a child page): the full walkthrough (how a user actually runs it,
   the output they get, what they do next), more screenshots, and the runner-up examples. Link it from
-  the main page. For a product, platform, or vendor target this sub-page is the default even when the
-  main page would fit on its own.
+  the main page. For a product target this sub-page is the default even when the main page would fit
+  on its own; a show-it target that is not a product adds it only when the walkthrough is too big.

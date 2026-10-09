@@ -36,13 +36,14 @@ Technical English per `references/asd-ste100.md`). In short:
    exploration agents, one per source or subtopic, each saving an intermediate file to `research/`.
    Pull live data where possible and flag the age of any cache or snapshot.
 4. **Consolidate and plan.** Read every intermediate file, reconcile conflicts, surface the
-   non-obvious insights and corrections, and write `plan.md` with the page structure. For a product,
-   tool, platform, or vendor target, also record the load-bearing mechanism and the example choice
-   (shortlist, winner, why) per `references/examples-and-visuals.md`, and nest a usage sub-page. For a large
+   non-obvious insights and corrections, and write `plan.md` with the page structure. For a show-it
+   target (product, platform, tool, vendor, library, or codebase), also record the load-bearing
+   mechanism and the example choice (shortlist, winner, why) per `references/examples-and-visuals.md`;
+   a product target (product, platform, tool, or vendor) also nests a usage sub-page. For a large
    or high-stakes page, confirm the structure with the user before publishing.
 5. **Diagrams and screenshots.** Identify the 1 to 3 diagrams that carry real information, generate
    them from the dataviz template, render to PNG with headless Chrome, and eyeball each before using
-   it. For a product target, also capture at least one real view of the thing (screenshot or output)
+   it. For a show-it target, also capture at least one real view of the thing (screenshot or output)
    with its source; never draw a fake UI.
 6. **Publish** to the chosen output: Notion (upload PNGs, create or update the page; draft unless a
    destination is named; confirm before overwriting), self-contained HTML, local Markdown, or the

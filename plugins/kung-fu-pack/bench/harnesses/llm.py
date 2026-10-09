@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+import tempfile
 
 WALL = int(os.environ.get("KFP_CALL_WALL_S", "600"))
 CODEX_PROFILE = os.environ.get("KFP_CODEX_PROFILE", "")
@@ -17,9 +18,12 @@ CODEX_PROFILE = os.environ.get("KFP_CODEX_PROFILE", "")
 
 def _run(cmd: list[str], prompt: str, cwd: str | None = None) -> str:
     # The prompt goes on stdin: a 400k-char corpus as one argv entry hits E2BIG on Linux.
+    # A judge call (no cwd) runs in an empty temp dir, so it never picks up the caller's repo
+    # (its AGENTS.md, project config, or files) as context.
     try:
-        p = subprocess.run(cmd, input=prompt, cwd=cwd, capture_output=True, text=True,
-                           timeout=WALL)
+        with tempfile.TemporaryDirectory() as tmp:
+            p = subprocess.run(cmd, input=prompt, cwd=cwd or tmp, capture_output=True, text=True,
+                               timeout=WALL)
         return (p.stdout or "") + (("\n[stderr]\n" + p.stderr) if p.returncode and p.stderr else "")
     except subprocess.TimeoutExpired:
         return "[timeout]"

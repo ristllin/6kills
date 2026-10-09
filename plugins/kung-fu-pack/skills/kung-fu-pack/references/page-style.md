@@ -11,7 +11,7 @@ dig. Dense, technical, lead-backed, and free of filler.
    lifecycle. Put the primary diagram here. Keep the prose to what the diagram does not already say.
 3. **How it works / runs.** The runtime or process flow, with the second diagram if it earns one.
    Call out the one or two design decisions that actually matter.
-3b. **See it in action.** For a product, tool, platform, codebase, or vendor target: one example
+3b. **See it in action.** For a show-it target (see `references/examples-and-visuals.md`): one example
    chosen to show the load-bearing mechanism (often a before/after), readable in under a minute, plus
    one real visual of the thing itself (screenshot or captured output). Each with a lead; label
    crafted examples as illustrative. The full walkthrough goes on a linked usage sub-page. How to
@@ -42,10 +42,11 @@ dig. Dense, technical, lead-backed, and free of filler.
   map of the sub-pages with a one-line summary and a lead each) plus one linked sub-page per section,
   the way a wiki or a Notion space is organized. Nesting is a judgment call on genuine complexity, not
   a hard page-count trigger: the index links to the sub-pages and does not duplicate them, and you
-  never fragment a brief that reads well as one page. Honor an explicit single-page request. Prefer
+  never fragment a brief that reads well as one page (product targets are the exception: they
+  always link a usage sub-page). Honor an explicit single-page request. Prefer
   the lightest structure that stays readable, and prefer tight at every level.
 - **Technical first; nest by content, not only by length.** The main page spends its words on what
-  the thing is, how it works, and how it is used. For a product, platform, or vendor target, nest by
+  the thing is, how it works, and how it is used. For a product target, nest by
   default: a usage sub-page (walkthrough, screenshots, more examples) and, when it would crowd the
   technical content, a business sub-page (funding, market, pricing, deals). Keep a one-line summary
   and a link for each on the main page.

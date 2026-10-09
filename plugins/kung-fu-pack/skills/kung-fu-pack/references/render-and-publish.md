@@ -24,17 +24,21 @@ before using it; regenerate if text clips or overlaps.
 
 ## Capture a real screenshot (product visuals)
 
-For a public docs page, launch post, or demo page, screenshot the part that shows the product:
+For a public docs page, launch post, or demo page, screenshot the part that shows the product.
+Public `https://` URLs only: never `file://`, localhost, or private addresses. Scale 1 and a window
+at most 1600 px wide keep the PNG within the size you may Read:
 
 ```bash
-shot() {  # name  url  width  height
-  "$CHROME" --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=2 \
+shot() {  # name  url  width(<=1600)  height
+  case "$2" in https://*) ;; *) echo "https only" >&2; return 1 ;; esac
+  "$CHROME" --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 \
     --window-size=$3,$4 --screenshot="$1.png" "$2" >/dev/null 2>&1
 }
 shot 10-results-view "https://docs.example.com/results" 1400 900
 ```
 
-Or save an image the vendor published (`curl -sL -o 11-ui.png "<image url>"`), then shrink it
+Or save an image the vendor published
+(`curl -sL --proto =https --proto-redir =https --max-filesize 20M -o 11-ui.png "<image url>"`), then shrink it
 before reading it: at most 1600 px wide and about 500 KB, one PNG frame for a GIF or video (never
 Read the raw file; see `examples-and-visuals.md`). Record the page URL
 as the lead under the image on the page. Read the PNG; crop or re-shoot if it shows a cookie banner,
@@ -47,7 +51,7 @@ output as a code block instead of a screenshot.
    (`filename: "<name>.png"`). It returns `upload_url` and `upload_headers`.
 2. POST the bytes (short-lived URL, ~10 min window):
    ```bash
-   curl -s -X POST "$UPLOAD_URL" -H "authorization: $BEARER" \
+   curl -s -X POST "$UPLOAD_URL" -H @<(printf 'authorization: %s\n' "$BEARER") \
      -F "file=@01-layered-stack.png;type=image/png"
    ```
    The response has `status: uploaded` and `markdown_source: file-upload://<id>`.

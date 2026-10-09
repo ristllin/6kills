@@ -30,19 +30,26 @@ from harnesses import llm
 CRITERIA = ("mechanism", "readable", "real_view", "technical", "honest")
 IMG_RE = re.compile(r"!\[([^\]]*)\]\(([^)\s]+)\)")
 MAX_CHARS = 24000
+PAGE_CHARS = 12000  # per page, so one long sub-page cannot crowd the others out of the budget
+
+
+def _order(p: Path) -> tuple[int, str]:
+    # what a reader opens first: the index, then usage, then the rest, business last
+    rank = {"index": 0, "page": 0, "usage": 1, "business": 3}.get(p.stem.lower(), 2)
+    return rank, str(p)
 
 
 def render(pack: Path) -> str:
     """The pack as a judge sees it: every out/ page (Markdown preferred), images as tags."""
     out = pack / "out"
-    pages = sorted(out.rglob("*.md")) or sorted(out.rglob("*.html"))
+    pages = sorted(list(out.rglob("*.md")) or list(out.rglob("*.html")), key=_order)
     diagrams = {h.stem.removesuffix(".min") for h in (pack / "assets").glob("*.html")}
 
     def tag(m: re.Match) -> str:
         kind = "diagram" if Path(m.group(2)).stem in diagrams else "visual"
         return f"[{kind} image: {m.group(1)} ({Path(m.group(2)).name})]"
-    parts = [f"=== {p.relative_to(out)} ===\n" + IMG_RE.sub(tag, p.read_text(errors="ignore"))
-             for p in pages]
+    parts = [f"=== {p.relative_to(out)} ===\n"
+             + IMG_RE.sub(tag, p.read_text(errors="ignore"))[:PAGE_CHARS] for p in pages]
     return "\n\n".join(parts)[:MAX_CHARS]
 
 
@@ -87,6 +94,11 @@ Reply with JSON only: {"mechanism":"A|B|tie",...,"overall":"A|B|tie","why":"one 
 """
 
 
+def _pair(a: str, b: str) -> str:
+    # one pass, so a "{b}" inside pack A's text is never substituted
+    return re.sub(r"\{([ab])\}", lambda m: a if m.group(1) == "a" else b, PAIR)
+
+
 def absolute(pack: Path, judges: list[str]) -> dict:
     res = {}
     for j in judges:
@@ -103,16 +115,15 @@ def pairwise(a: Path, b: Path, judges: list[str]) -> dict:
     keys = (*CRITERIA, "overall")
     res = {}
     for j in judges:
-        fwd = _json(llm.call(j, PAIR.replace("{a}", ta).replace("{b}", tb)))
-        rev = _json(llm.call(j, PAIR.replace("{a}", tb).replace("{b}", ta)))
+        fwd = _json(llm.call(j, _pair(ta, tb)))
+        rev = _json(llm.call(j, _pair(tb, ta)))
         if not fwd or not rev:
             res[j] = None
             continue
-        flip = {"A": "B", "B": "A"}
         # a criterion is won only when the judge picks the same pack in both orders
-        res[j] = {k: (str(a) if fwd.get(k) == "A" and flip.get(rev.get(k)) == "A"
-                      else str(b) if fwd.get(k) == "B" and flip.get(rev.get(k)) == "B"
-                      else "tie/inconsistent") for k in keys}
+        # (reversed, pack A is shown as "B")
+        winner = {("A", "B"): str(a), ("B", "A"): str(b)}
+        res[j] = {k: winner.get((fwd.get(k), rev.get(k)), "tie/inconsistent") for k in keys}
         res[j]["why"] = fwd.get("why", "")
     return {"a": str(a), "b": str(b), "judges": res,
             "failed_judges": [j for j, r in res.items() if r is None]}

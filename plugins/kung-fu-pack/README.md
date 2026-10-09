@@ -102,7 +102,7 @@ Each target gets a cached folder so nothing lives only in chat:
   research/   one findings file per source (raw + SOURCES)
   assets/     diagram gen.js + .html + rendered .png, plus captured screenshots
   out/        local page.md / page.html, or index.md + <section>.md when nested
-              (products: index.md + usage.md)
+              (product targets: index.md + usage.md)
   plan.md     the planned page structure, the load-bearing mechanism, and the example choice
 ```
 
