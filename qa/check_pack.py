@@ -81,7 +81,9 @@ def show_checks(pack: Path, texts: dict, main: Path, links: list,
     diagrams = {h.stem.removesuffix(".min") for h in (pack / "assets").glob("*.html")}
     imgs = [m for t in texts.values() for m in IMG_RE.findall(t)]
     # Notion upload refs (file-upload://) carry no name, so they cannot be told apart; skip them.
-    real_imgs = [i for i in imgs if Path(i).stem not in diagrams and not i.startswith("file-upload:")]
+    # A screenshot is raster; an SVG is a drawn diagram even without an .html source.
+    real_imgs = [i for i in imgs if Path(i).stem not in diagrams and not i.startswith("file-upload:")
+                 and Path(i).suffix.lower() in (".png", ".jpg", ".jpeg", ".gif", ".webp")]
     # a block labelled "Illustrative" just above or below it is crafted, not captured
     output = [m for t in texts.values() for m in FENCE_RE.finditer(t)
               if (m.group(1).strip().lower() in OUTPUT_LANGS or m.group(2).startswith("$ "))
