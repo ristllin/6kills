@@ -11,7 +11,8 @@ RUN npm install -g @anthropic-ai/claude-code @openai/codex
 RUN useradd -m -s /bin/bash qa
 USER qa
 ENV PATH="/home/qa/.local/bin:${PATH}"
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh && uv tool install mistral-vibe
+# Vibe ships wheels for 3.12; the distro 3.11 forces a source build that needs Rust.
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && uv tool install --python 3.12 mistral-vibe
 
 WORKDIR /home/qa
 ENTRYPOINT ["bash", "/qa/in-container.sh"]
