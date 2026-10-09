@@ -1,0 +1,77 @@
+{
+  "cell": "claude__opus__f1-arxiv-cslg",
+  "instance_id": "f1-arxiv-cslg",
+  "version": "v0",
+  "duration_s": 193.3,
+  "scores": {
+    "composite": 0.0358,
+    "floors_pass": false,
+    "parts": {
+      "integration_recall": 0.0,
+      "vital_nugget_recall": 0.167,
+      "citation_recall": 0.03,
+      "source_coverage_f1": 0.0,
+      "nesting": 0.3,
+      "non_redundancy": 0.86
+    },
+    "detail": {
+      "deterministic": {
+        "em_dashes": 0,
+        "em_dash_ok": true,
+        "length_pages": 3.79,
+        "length_ok": false,
+        "lead_coverage": 0.0,
+        "source_coverage": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "n_gold": 1,
+          "n_reached": 0
+        },
+        "has_brief": true,
+        "has_manifest": true,
+        "floors_pass": false
+      },
+      "nuggets": {
+        "ran": true,
+        "eligible": true,
+        "vital_nugget_recall": 0.167,
+        "all_nugget_recall": 0.091,
+        "integration_recall": 0.0,
+        "n_vital": 12,
+        "n_integration": 7,
+        "supported_nuggets": [
+          "N1",
+          "N13"
+        ],
+        "supported_integration": []
+      },
+      "citation": {
+        "ran": true,
+        "recall": 0.03,
+        "resolvable_precision": 1.0,
+        "n_fact_lines": 66,
+        "n_leads": 2,
+        "note": "deterministic resolvability approximation of ALCE"
+      },
+      "coverage": {
+        "ran": true,
+        "non_redundancy": 0.86,
+        "n_sentences": 79
+      },
+      "nesting": {
+        "appropriateness": 0.3,
+        "note": "single page but over the length budget",
+        "pages": 3.79,
+        "n_pages": 1,
+        "total_words": 1893,
+        "nested": false,
+        "index": "page.md",
+        "sub_pages": 0,
+        "index_links": 0
+      }
+    }
+  },
+  "composite": 0.0358,
+  "floors_pass": false
+}

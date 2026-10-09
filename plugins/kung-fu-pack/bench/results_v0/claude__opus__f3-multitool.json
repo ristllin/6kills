@@ -1,0 +1,86 @@
+{
+  "cell": "claude__opus__f3-multitool",
+  "instance_id": "f3-multitool",
+  "version": "v0",
+  "duration_s": 70.9,
+  "scores": {
+    "composite": 0.692,
+    "floors_pass": true,
+    "parts": {
+      "integration_recall": 0.8,
+      "vital_nugget_recall": 1.0,
+      "citation_recall": 0.171,
+      "source_coverage_f1": 0.0,
+      "nesting": 1.0,
+      "non_redundancy": 0.727
+    },
+    "detail": {
+      "deterministic": {
+        "em_dashes": 0,
+        "em_dash_ok": true,
+        "length_pages": 1.59,
+        "length_ok": true,
+        "lead_coverage": 0.0,
+        "source_coverage": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "n_gold": 3,
+          "n_reached": 0
+        },
+        "has_brief": true,
+        "has_manifest": true,
+        "floors_pass": true
+      },
+      "nuggets": {
+        "ran": true,
+        "eligible": true,
+        "vital_nugget_recall": 1.0,
+        "all_nugget_recall": 0.857,
+        "integration_recall": 0.8,
+        "n_vital": 5,
+        "n_integration": 5,
+        "supported_nuggets": [
+          "A1",
+          "A2",
+          "A3",
+          "A6",
+          "B2",
+          "B6"
+        ],
+        "supported_integration": [
+          "INT1",
+          "INT2",
+          "INT3",
+          "INT5"
+        ]
+      },
+      "citation": {
+        "ran": true,
+        "recall": 0.171,
+        "resolvable_precision": 1.0,
+        "n_fact_lines": 35,
+        "n_leads": 6,
+        "note": "deterministic resolvability approximation of ALCE"
+      },
+      "coverage": {
+        "ran": true,
+        "non_redundancy": 0.727,
+        "n_sentences": 43
+      },
+      "nesting": {
+        "appropriateness": 1.0,
+        "note": "appropriately flat and within budget",
+        "pages": 1.59,
+        "n_pages": 1,
+        "total_words": 794,
+        "nested": false,
+        "index": "page.md",
+        "sub_pages": 0,
+        "index_links": 0
+      }
+    }
+  },
+  "composite": 0.692,
+  "floors_pass": true
+}

@@ -1,0 +1,90 @@
+{
+  "cell": "claude__opus__f2-releases",
+  "instance_id": "f2-releases",
+  "version": "v0",
+  "duration_s": 164.9,
+  "scores": {
+    "composite": 0.1289,
+    "floors_pass": false,
+    "parts": {
+      "integration_recall": 0.167,
+      "vital_nugget_recall": 0.833,
+      "citation_recall": 0.631,
+      "source_coverage_f1": 0.0,
+      "nesting": 0.3,
+      "non_redundancy": 0.768
+    },
+    "detail": {
+      "deterministic": {
+        "em_dashes": 0,
+        "em_dash_ok": true,
+        "length_pages": 3.57,
+        "length_ok": false,
+        "lead_coverage": 0.615,
+        "source_coverage": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "n_gold": 2,
+          "n_reached": 0
+        },
+        "has_brief": true,
+        "has_manifest": true,
+        "floors_pass": false
+      },
+      "nuggets": {
+        "ran": true,
+        "eligible": true,
+        "vital_nugget_recall": 0.833,
+        "all_nugget_recall": 0.65,
+        "integration_recall": 0.167,
+        "n_vital": 12,
+        "n_integration": 6,
+        "supported_nuggets": [
+          "N10",
+          "N11",
+          "N12",
+          "N14",
+          "N15",
+          "N19",
+          "N2",
+          "N3",
+          "N4",
+          "N5",
+          "N6",
+          "N7",
+          "N9"
+        ],
+        "supported_integration": [
+          "I1"
+        ]
+      },
+      "citation": {
+        "ran": true,
+        "recall": 0.631,
+        "resolvable_precision": 1.0,
+        "n_fact_lines": 65,
+        "n_leads": 74,
+        "note": "deterministic resolvability approximation of ALCE"
+      },
+      "coverage": {
+        "ran": true,
+        "non_redundancy": 0.768,
+        "n_sentences": 91
+      },
+      "nesting": {
+        "appropriateness": 0.3,
+        "note": "single page but over the length budget",
+        "pages": 3.57,
+        "n_pages": 1,
+        "total_words": 1787,
+        "nested": false,
+        "index": "page.md",
+        "sub_pages": 0,
+        "index_links": 0
+      }
+    }
+  },
+  "composite": 0.1289,
+  "floors_pass": false
+}
