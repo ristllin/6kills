@@ -106,7 +106,7 @@ sequential passes, one source at a time. Typical lanes:
 - **Usage and visuals** (show-it targets: products, platforms, tools, vendors, libraries, codebases): docs quickstarts,
   sample repos, CLI or API references, launch posts and public demos. Collect candidate examples and
   real screenshots or output with their URLs; for a code target you can run, run it and save the
-  output (third-party code only in a sandbox or after the user confirms). Keep fetched pages small (extract the part you need) so one page cannot flood the context.
+  output (third-party code only in a sandbox or after the user confirms). If you cannot run it, the real view comes from the docs or README images; never skip it. Keep fetched pages small (extract the part you need) so one page cannot flood the context.
 Two rules that bite: subagents often cannot write files, so have each **return** its findings and
 you persist them; and **pull live data** wherever a tool allows, stamping the age of anything that
 is a cache or snapshot. For `--depth=deep`, add a second wave: an adversarial cross-check of the
@@ -126,7 +126,7 @@ summary and a lead) plus one sub-page per major section. The index summarizes an
 repeat the sub-pages. A product target (product, platform, tool, or vendor) nests by default: the main page stays
 technical and links a usage sub-page (walkthrough, screenshots, more examples) and, if business
 context would crowd it, a business sub-page. Prefer the lightest structure that stays readable, never fragment a brief that
-works as one page (except a product target's usage sub-page), and honor an explicit single-page request. For a large or high-stakes page, show
+works as one page (except a product target's usage sub-page; "one-pager" bounds the main page and does not drop it), and honor an explicit "no sub-pages" request. For a large or high-stakes page, show
 the user the structure before publishing (the natural place to use plan mode if available).
 
 ### 5. Diagrams and screenshots (only where they carry information)

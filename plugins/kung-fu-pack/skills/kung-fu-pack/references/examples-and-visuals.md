@@ -43,11 +43,15 @@ contrast shows what the mechanism buys, which a single happy-path run does not.
   captured output, and never invent behavior the sources do not support.
 - For a code target you can run, run it and paste the real output rather than describing it. Run
   third-party code only in a sandbox or container, or after the user confirms; never install its
-  dependencies or run its scripts on the host unprompted.
+  dependencies or run its scripts on the host unprompted. If you are already inside an isolated,
+  disposable environment (a container or CI sandbox, for example `/.dockerenv` exists), that is a
+  sandbox: run it there.
 
 ## 5. Visuals: diagrams explain, screenshots prove
 - A show-it target gets at least one real view of the thing itself when one exists: a UI
-  screenshot, a results view, a terminal session, a rendered report. A diagram does not count.
+  screenshot, a results view, a terminal session, a rendered report. A diagram does not count. Not
+  being able to run the tool is no reason to skip it: the docs and README images below are the
+  first source anyway.
 - A real view shows the product doing its job: a finding with its data flow, a results list, a fix
   diff, a dashboard with data, a CLI run and its output. A screenshot of a repo landing page, a
   marketing page, a blog post, or an advisory is not a view of the product; do not use one as the

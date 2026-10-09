@@ -28,8 +28,9 @@ LINK_RE = re.compile(r"\]\((?![A-Za-z][\w+.-]*:|/)([^)#\s]+\.(?:md|html))(?:#[^)
 PATH_LEAD_RE = re.compile(r"`?([\w./-]+/[\w.-]+\.\w+)(?::\d+(?:-\d+)?)?`?")
 IMG_RE = re.compile(r"!\[[^\]]*\]\(([^)\s]+)\)")
 CODE_RE = re.compile(r"```[^\n]*\n(.*?)```", re.S)
-# Captured output: a console/output-style fence, or a body that starts with a shell prompt.
-OUTPUT_RE = re.compile(r"```(?:console|shell-session|output|terminal)[^\n]*\n(.*?)```|```[^\n]*\n(\$ .*?)```", re.S)
+# Captured output: a text/console/shell-style fence, or any fence whose body starts with a shell
+# prompt. A block labelled "Illustrative" just above it is crafted, not captured.
+OUTPUT_RE = re.compile(r"```(?:(?:text|txt|console|shell|shell-session|output|terminal)\b[^\n]*\n|[^\n]*\n(?=\$ ))(.*?)```", re.S)
 EXAMPLE_MAX_LINES = 25  # about 15 lines is the target; this is the hard ceiling
 # A lead is a URL, a file:line, a path, inline code that names something locatable (a path, a
 # dotted symbol, a #ref), or a source key like [S12] resolved in a sources table. A bare backticked
@@ -78,7 +79,8 @@ def show_checks(pack: Path, texts: dict, main: Path, links: list,
     imgs = [m for t in texts.values() for m in IMG_RE.findall(t)]
     # Notion upload refs (file-upload://) carry no name, so they cannot be told apart; skip them.
     real_imgs = [i for i in imgs if Path(i).stem not in diagrams and not i.startswith("file-upload:")]
-    output = [m for t in texts.values() for m in OUTPUT_RE.findall(t)]
+    output = [m for t in texts.values() for m in OUTPUT_RE.finditer(t)
+              if "illustrative" not in t[max(0, m.start() - 300):m.start()].lower()]
     checks = {
         "example_choice_planned": bool(re.search(r"example choice", plan, re.I)),
         "see_it_in_action": sect is not None and (bool(blocks) or bool(IMG_RE.search(sect))),

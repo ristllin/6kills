@@ -43,7 +43,9 @@ dig. Dense, technical, lead-backed, and free of filler.
   the way a wiki or a Notion space is organized. Nesting is a judgment call on genuine complexity, not
   a hard page-count trigger: the index links to the sub-pages and does not duplicate them, and you
   never fragment a brief that reads well as one page (product targets are the exception: they
-  always link a usage sub-page). Honor an explicit single-page request. Prefer
+  always link a usage sub-page). "One-pager" bounds the main page, not the tree: a product
+  one-pager still links its usage sub-page. Only an explicit "single page, no sub-pages" request
+  drops it. Prefer
   the lightest structure that stays readable, and prefer tight at every level.
 - **Technical first; nest by content, not only by length.** The main page spends its words on what
   the thing is, how it works, and how it is used. For a product target, nest by
