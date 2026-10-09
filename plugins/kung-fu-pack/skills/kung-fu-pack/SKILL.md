@@ -79,7 +79,9 @@ of clarifying questions and wait. Keep every question general and parameter-shap
 KIND of thing (its category, boundary, audience, depth, time window), never a guessed instance. Offer
 a proposed default only for genuine parameters (audience, depth, output format); never invent concrete
 names (projects, products, teams, people) as a default. If the target or its members are unknown, ask
-the user to name them. Do not fan out on guesses.
+the user to name them. Do not fan out on guesses. The target must come from the user: never pick
+it yourself from a configured code root, the working directory, or the workspace, even when only one
+candidate exists. You may list what you found as options, then wait for the answer.
 
 ### 2. Capability check
 Confirm which enabled sources actually resolve right now and state the mode in one line (for

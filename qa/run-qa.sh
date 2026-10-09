@@ -32,13 +32,16 @@ CFG_ARGS=(); [ -n "${KFP_QA_CFG:-}" ] && CFG_ARGS=(-v "$KFP_QA_CFG:/cfg:ro")
 
 case "$OUT" in ""|/|"$HOME"|"$HOME/") echo "refusing to wipe KFP_QA_OUT=$OUT" >&2; exit 2 ;; esac
 rm -rf "$OUT" && mkdir -p "$OUT"
+# Snapshot qa/ from the tested ref: the containers must not read live (possibly edited) scripts.
+QA_DIR="$OUT/.qa-ref"; mkdir -p "$QA_DIR"
+git -C "$ROOT" archive "$REF" qa | tar -x -C "$QA_DIR" || { echo "cannot export qa/ at $REF" >&2; exit 1; }
 echo "building $IMAGE ..."
-docker build -q -t "$IMAGE" "$ROOT/qa" >"$OUT/build.log" 2>&1 || { cat "$OUT/build.log"; exit 1; }
+docker build -q -t "$IMAGE" "$QA_DIR/qa" >"$OUT/build.log" 2>&1 || { cat "$OUT/build.log"; exit 1; }
 
 echo "testing ref ${REF:0:9} on: ${HARNESSES[*]}"
 for h in "${HARNESSES[@]}"; do
   docker run --rm --name "6kills-qa-$h" ${ENV_ARGS[@]+"${ENV_ARGS[@]}"} ${CFG_ARGS[@]+"${CFG_ARGS[@]}"} -e KFP_QA_REF="$REF" \
-    -v "$ROOT:/src:ro" -v "$ROOT/qa:/qa:ro" -v "$OUT:/out" "$IMAGE" "$h" \
+    -v "$ROOT:/src:ro" -v "$QA_DIR/qa:/qa:ro" -v "$OUT:/out" "$IMAGE" "$h" \
     >"$OUT/$h.container.log" 2>&1 &
 done
 wait

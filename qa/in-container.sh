@@ -21,8 +21,8 @@ case "$H" in
   claude)
     claude plugin marketplace add "$HOME/6kills" >>"$OUT/install.log" 2>&1
     claude plugin install kung-fu-pack@6kills >>"$OUT/install.log" 2>&1
-    claude plugin list 2>&1 | tee -a "$OUT/install.log" | grep -q "kung-fu-pack" \
-      && log "PASS install" || log "FAIL install" ;;
+    list="$(claude plugin list 2>&1)"; echo "$list" >>"$OUT/install.log"
+    grep -q "kung-fu-pack" <<<"$list" && log "PASS install" || log "FAIL install" ;;
   codex|vibe)
     bash "$HOME/6kills/plugins/kung-fu-pack/install.sh" "$H" >>"$OUT/install.log" 2>&1
     test -f "$HOME/.$H/skills/kung-fu-pack/SKILL.md" && log "PASS install" || log "FAIL install" ;;
