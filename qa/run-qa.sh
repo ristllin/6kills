@@ -12,6 +12,7 @@
 #                       containers (read-only); keep it outside the repo
 #   KFP_QA_TARGET_REPO  public repo used as the real-world target: owner/repo or a git URL
 #                       (default: fastapi/typer)
+#   KFP_QA_PRODUCT_REPO public repo of a product for scenario C (default: httpie/cli)
 #   KFP_QA_CODEX_MODEL  model override for codex exec
 # Credentials pass through by NAME only (docker -e VAR), so values never touch the command line.
 # Needs a host `claude` CLI to grade scenario A. Exits nonzero if any harness fails any column.
@@ -26,7 +27,7 @@ IMAGE=6kills-qa
 PASS_ENV=(CLAUDE_CODE_USE_FOUNDRY ANTHROPIC_API_KEY ANTHROPIC_FOUNDRY_BASE_URL
   ANTHROPIC_FOUNDRY_API_KEY ANTHROPIC_DEFAULT_OPUS_MODEL ANTHROPIC_DEFAULT_SONNET_MODEL
   ANTHROPIC_DEFAULT_HAIKU_MODEL OPENAI_API_KEY OPENAI_BASE_URL AZURE_OPENAI_API_KEY
-  MISTRAL_API_KEY VIBE_ACTIVE_MODEL KFP_QA_CODEX_MODEL KFP_QA_TARGET_REPO)
+  MISTRAL_API_KEY VIBE_ACTIVE_MODEL KFP_QA_CODEX_MODEL KFP_QA_TARGET_REPO KFP_QA_PRODUCT_REPO)
 ENV_ARGS=(); for v in "${PASS_ENV[@]}"; do [ -n "${!v:-}" ] && ENV_ARGS+=(-e "$v"); done
 CFG_ARGS=(); [ -n "${KFP_QA_CFG:-}" ] && CFG_ARGS=(-v "$KFP_QA_CFG:/cfg:ro")
 
@@ -65,16 +66,17 @@ $(tail -c 12000 "$t")" --tools "" --output-format text 2>/dev/null | head -1
 {
   echo "# 6kills QA: kung-fu-pack (ref ${REF:0:9})"
   echo
-  echo "| harness | install | interview (A) | pack (B) | structure | lead ratio |"
-  echo "|---|---|---|---|---|---|"
+  echo "| harness | install | interview (A) | pack (B) | structure | lead ratio | product (C) |"
+  echo "|---|---|---|---|---|---|---|"
   for h in "${HARNESSES[@]}"; do
     inst=$(grep -o "PASS install\|FAIL install" "$OUT/$h/steps.log" 2>/dev/null | head -1)
     a=$(grade_interview "$h")
     b=$(jq -r 'if .pass then "PASS" else "FAIL: " + ([.checks|to_entries[]|select(.value|not)|.key]|join(",")) end' "$OUT/$h/B_check.json" 2>/dev/null || echo "FAIL (no check)")
     st=$(jq -r '"\(.structure.pages) pages, nested=\(.structure.nested), \(.structure.total_pages) A4 total"' "$OUT/$h/B_check.json" 2>/dev/null)
     lr=$(jq -r '.lead_ratio' "$OUT/$h/B_check.json" 2>/dev/null)
-    echo "| $h | ${inst:-FAIL} | ${a:-FAIL} | $b | ${st:-n/a} | ${lr:-n/a} |"
-    [[ "$inst" == PASS* && "$a" == PASS* && "$b" == PASS ]] || echo "$h" >>"$OUT/.failed"
+    c=$(jq -r 'if .pass then "PASS" else "FAIL: " + ([.checks|to_entries[]|select(.value|not)|.key]|join(",")) end' "$OUT/$h/C_check.json" 2>/dev/null || echo "FAIL (no check)")
+    echo "| $h | ${inst:-FAIL} | ${a:-FAIL} | $b | ${st:-n/a} | ${lr:-n/a} | $c |"
+    [[ "$inst" == PASS* && "$a" == PASS* && "$b" == PASS && "$c" == PASS ]] || echo "$h" >>"$OUT/.failed"
   done
 } | tee "$OUT/summary.md"
 echo "artifacts: $OUT"

@@ -88,8 +88,8 @@ them; strict certification needs a licensed STE checker.
 | 1. Scope | Fix the target, audience, angle, must-cover points, and output. If thin, ask one batch of general, parameter-shaped questions (never guessed names). |
 | 2. Capability check | Confirm which enabled sources resolve right now; state the mode; degrade on gaps. |
 | 3. Fan out | Parallel exploration agents, one per source/subtopic, each caching findings to `research/`. Pull live data, flag staleness. |
-| 4. Consolidate + plan | Reconcile conflicts, surface insights and corrections, write `plan.md`. Keep one tight 1 to 3 page brief when it fits; nest into an index plus linked sub-pages when breadth would force a monolith. |
-| 5. Diagrams | Author the 1 to 3 information-carrying diagrams, render to PNG (headless Chrome), eyeball each. |
+| 4. Consolidate + plan | Reconcile conflicts, surface insights and corrections, write `plan.md`. Keep one tight 1 to 3 page brief when it fits; nest into an index plus linked sub-pages when breadth would force a monolith. For a product or tool, name the load-bearing mechanism and choose the example from a scored shortlist; products nest a usage sub-page by default. |
+| 5. Diagrams + screenshots | Author the 1 to 3 information-carrying diagrams, render to PNG (headless Chrome), eyeball each. Products also get at least one real view (screenshot or captured output) with its source; never a fake UI. |
 | 6. Publish | Notion (upload PNGs, draft unless a destination is named), HTML, Markdown, or local server. Nested packs publish as a tree: Notion sub-pages, a wiki-like HTML set, or linked Markdown files. |
 | 7. Verify | Re-open the result, confirm diagrams and structure, grep for dashes (zero), spot-check claims, report with leads. |
 
@@ -100,9 +100,10 @@ Each target gets a cached folder so nothing lives only in chat:
 ```
 ~/kung-fu-pack/packs/<slug>/
   research/   one findings file per source (raw + SOURCES)
-  assets/     diagram gen.js + .html + rendered .png
+  assets/     diagram gen.js + .html + rendered .png, plus captured screenshots
   out/        local page.md / page.html, or index.md + <section>.md when nested
-  plan.md     the planned page structure
+              (products: index.md + usage.md)
+  plan.md     the planned page structure, the load-bearing mechanism, and the example choice
 ```
 
 ## Requirements
@@ -120,5 +121,7 @@ Nothing secret is stored in the config; MCP auth and API keys stay in the enviro
 `bench/` holds a synthesis benchmark for hill-climbing the skill text: frozen post-cutoff corpora
 (hundreds of arXiv abstracts, dozens of release notes, a distributed-evidence set), full-corpus gold
 nuggets and integration facts, a two-model judge panel, and floors for length, dashes, and evasion.
+A taste scorer (`bench/scorers/taste.py`) grades product packs on whether they show the thing:
+the example's mechanism, readability, real views, technical lead, and honesty, absolute and pairwise.
 See [`bench/README.md`](bench/README.md) and the results in
 [`bench/HILLCLIMB_REPORT.md`](bench/HILLCLIMB_REPORT.md).

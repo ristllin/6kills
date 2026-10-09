@@ -6,7 +6,8 @@ description: >-
   out parallel exploration across every source the user can reach (Notion, Linear, local code,
   web, Beeper), caches intermediate findings in a local workspace, pulls live data and flags
   staleness, consolidates into a planned structure, generates real information-carrying diagrams
-  (dataviz dark-mode, rendered to PNG via headless Chrome), and publishes a styled page to Notion,
+  (dataviz dark-mode, rendered to PNG via headless Chrome), shows the target in action with a
+  carefully chosen example and real screenshots, and publishes a styled page to Notion,
   a self-contained HTML file, local Markdown, or a local preview server. Every claim carries a
   deep-dive lead and it never uses em dashes. Use whenever the user says "kung-fu-pack", or asks
   to build a briefing, onboarding page, dossier, one-pager, or overview of something by pulling
@@ -61,6 +62,7 @@ are cheap:
   research/     one intermediate file per source or subtopic (raw findings + SOURCES)
   assets/       diagram gen.js, the .html, and rendered .png files
   out/          local output (page.md / page.html, or index.md plus <section>.md when nested)
+                (product targets: index.md plus usage.md, and business.md when needed)
   plan.md       the planned page structure, written before publishing
 ```
 
@@ -101,6 +103,10 @@ sequential passes, one source at a time. Typical lanes:
 - **Local code**: Explore agents over the code roots; read READMEs and entrypoints; verify claims
   with file:line; compare git recency to settle "is X still used / deprecated".
 - **Web**: Tavily/WebSearch for external context, with citations.
+- **Usage and visuals** (product, tool, platform, codebase, or vendor targets): docs quickstarts,
+  sample repos, CLI or API references, launch posts and public demos. Collect candidate examples and
+  real screenshots or output with their URLs; for a code target you can run, run it and save the
+  output. Keep fetched pages small (extract the part you need) so one page cannot flood the context.
 Two rules that bite: subagents often cannot write files, so have each **return** its findings and
 you persist them; and **pull live data** wherever a tool allows, stamping the age of anything that
 is a cache or snapshot. For `--depth=deep`, add a second wave: an adversarial cross-check of the
@@ -110,26 +116,34 @@ riskiest claims and a "what is missing" completeness pass.
 Read every `research/` file. Reconcile conflicts (prefer live over cached, newest over oldest, code
 over doc for "what exists"). Pull out the **non-obvious insights and corrections**, not just a
 summary. Always write `plan.md` in the pack folder (it records the structure decision): the section order, which claims need a lead, and which 1 to 3 diagrams
-carry real information. **Decide structure by complexity, not a hard page count.** Keep a single tight
+carry real information. For a product, tool, platform, codebase, or vendor target, also record
+the **load-bearing mechanism** in one sentence and an `## Example choice` section (2 or 3 candidates,
+scored, the winner and why) per `references/examples-and-visuals.md`. **Decide structure by complexity, not a hard page count.** Keep a single tight
 page when the material reads well as one 1 to 3 page brief; that is the default and the goal. Nest only
 when genuine breadth would otherwise force a cramped monolith or lose navigability: then write a short
 index/overview (framing, the mental model, and a linked map of the sub-pages, each with a one-line
 summary and a lead) plus one sub-page per major section. The index summarizes and links; it must not
-repeat the sub-pages. Prefer the lightest structure that stays readable, never fragment a brief that
+repeat the sub-pages. A product, platform, or vendor target nests by default: the main page stays
+technical and links a usage sub-page (walkthrough, screenshots, more examples) and, if business
+context would crowd it, a business sub-page. Prefer the lightest structure that stays readable, never fragment a brief that
 works as one page, and honor an explicit single-page request. For a large or high-stakes page, show
 the user the structure before publishing (the natural place to use plan mode if available).
 
-### 5. Diagrams (only where they carry information)
+### 5. Diagrams and screenshots (only where they carry information)
 A diagram earns its place by making a structure clearer than prose can: a layered stack, a runtime
 flow, a pipeline, a mapping. Generate from the dataviz template
 (`references/diagram-gen.template.js`): copy it into `assets/gen.js`, author your diagrams in the
 dark-mode palette, `node gen.js`, then render each to PNG with headless Chrome (see
 `references/render-and-publish.md`) and **Read the PNG to eyeball it** before using it. No em dashes
-in diagram text either.
+in diagram text either. Diagrams explain; screenshots prove. A product or tool target also gets at
+least one real view of the thing (UI screenshot, results view, captured output), saved in `assets/`
+with its source URL as the lead and read back before use. Never draw a fake UI. Choose and place the
+example and visuals per `references/examples-and-visuals.md`.
 
 ### 6. Publish
 Follow the house page style in `references/page-style.md` (framing callout, tight sections, tables,
-every claim with a lead, a sources/leads section at the end). Apply the configured
+a "See it in action" example for product targets, every claim with a lead, a sources/leads section at
+the end). Apply the configured
 `writing_standard`: `default` (dense peer-level prose) or `asd-ste100` (Simplified Technical English
 per `references/asd-ste100.md`; short single-idea sentences, active voice, one term per concept, no
 "-ing" verbs, vertical lists). The page structure is the same either way; only the prose changes.
@@ -150,7 +164,10 @@ Verify every inter-page link resolves.
 ### 7. Verify
 Re-open or fetch the result: diagrams render, sections hold, tables intact. Confirm `plan.md` exists. **Count
 the words of every page: a single page over ~1500 words (3 A4 pages) is out of bounds**; cut it, or
-nest it if the material is genuinely broad. For a nested pack, the index stays within that budget. **Grep the final text
+nest it if the material is genuinely broad. For a nested pack, the index stays within that budget.
+For a product target, confirm the example passes its own tests (shows the mechanism, about 15 lines
+or one screen, lead or `Illustrative` label), at least one real visual is embedded, and the usage
+sub-page exists and is linked. **Grep the final text
 for em and en dashes (U+2014, U+2013); must be zero** (titles included, a common miss). If
 `writing_standard` is `asd-ste100`, run the lint in `references/asd-ste100.md` (sentence length, the
 "-ing" form, passive voice, 4+ word noun clusters, one-term-per-concept) and fix the hits, and add
@@ -167,6 +184,8 @@ deep-dive leads.
 - **A lead behind every claim.** file:line, Notion/Linear ID, or URL, so the reader can verify.
 - **Cache the raw findings.** The workspace is the audit trail and the cheap path to the next refresh.
 - **Diagrams must inform.** No decorative boxes; each diagram replaces a paragraph.
+- **Show, then explain.** One well-chosen example of the load-bearing mechanism and one real view of
+  the thing beat a page of description.
 - **Max signal.** Concise but technical; corrections and insights, not a table of contents.
 - **No em dashes anywhere.** Hyphens or rephrase, in chat, files, diagrams, and the published page.
 

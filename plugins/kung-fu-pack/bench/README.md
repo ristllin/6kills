@@ -24,7 +24,8 @@ bench/
   corpora/             freezers: arXiv abstracts, GitHub release notes
   gold/author.py       map-reduce gold authoring over the whole corpus
   scorers/             brief reader, nuggets (+ eligibility), citation, coverage, nesting,
-                       deterministic floors, compose (composite + floors)
+                       deterministic floors, compose (composite + floors), taste (product packs:
+                       does the pack show the thing; absolute and order-swapped pairwise)
   tasks/synth_tasks.jsonl            3 dev + 2 held-out tasks
   tasks/fixtures/<task>/             frozen corpus + gold.json
   results_r0/ results_r1/            curated scores for skill v0 and v1

@@ -11,6 +11,11 @@ dig. Dense, technical, lead-backed, and free of filler.
    lifecycle. Put the primary diagram here. Keep the prose to what the diagram does not already say.
 3. **How it works / runs.** The runtime or process flow, with the second diagram if it earns one.
    Call out the one or two design decisions that actually matter.
+3b. **See it in action.** For a product, tool, platform, codebase, or vendor target: one example
+   chosen to show the load-bearing mechanism (often a before/after), readable in under a minute, plus
+   one real visual of the thing itself (screenshot or captured output). Each with a lead; label
+   crafted examples as illustrative. The full walkthrough goes on a linked usage sub-page. How to
+   choose: `references/examples-and-visuals.md`.
 4. **Where it fits / what is deployed.** Concrete: environments, what is live vs scaffolding, hosts,
    cloud, chart paths. A deploy diagram often fits here.
 5. **Tables over prose for inventories.** Repos, components, workstreams, engagements, primitives:
@@ -23,6 +28,9 @@ dig. Dense, technical, lead-backed, and free of filler.
 
 ## Rules
 - **Every claim carries a lead:** `path/file.py:120`, a Notion page ID, a Linear issue ID, or a URL.
+  Write URLs in full (`https://...`, or a Markdown link) so they are clickable; a bare domain path is not.
+  The rule holds on every sub-page too: "press releases", "platform page", or "see research" is not a
+  lead; name the exact URL, or mark the row as a gap.
   If you cannot back it, soften it or drop it.
 - **Corrections are gold.** When the research overturns a prior belief (deprecated, renamed, moved,
   blocker cleared), say so explicitly; that is the highest-value content for a new owner.
@@ -36,6 +44,11 @@ dig. Dense, technical, lead-backed, and free of filler.
   a hard page-count trigger: the index links to the sub-pages and does not duplicate them, and you
   never fragment a brief that reads well as one page. Honor an explicit single-page request. Prefer
   the lightest structure that stays readable, and prefer tight at every level.
+- **Technical first; nest by content, not only by length.** The main page spends its words on what
+  the thing is, how it works, and how it is used. For a product, platform, or vendor target, nest by
+  default: a usage sub-page (walkthrough, screenshots, more examples) and, when it would crowd the
+  technical content, a business sub-page (funding, market, pricing, deals). Keep a one-line summary
+  and a link for each on the main page.
 - **No em dashes or en dashes.** Anywhere. Use hyphens, commas, colons, parentheses, or rephrase.
   This includes the page title (a frequent miss) and all diagram text.
 - **Accents are fine** (names like Rémi, Théo). Arrows (->), middots, and set symbols are fine.

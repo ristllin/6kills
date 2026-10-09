@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Public collection of Claude Code plugins: prism (mode-aware code review/hardening orchestrator), deep-research, relentless (autonomous long-task ship charter), linkedin-triage (sandboxed LinkedIn DM triage via Beeper), collapse (converge parallel lanes into one clean, reviewed, deployed main), orchestrate (plan and launch a multi-lane autonomous program from a raw requirements list), and kung-fu-pack (turn a target into a styled, diagram-rich briefing page sourced from Notion, Linear, code, and the web).",
-    "version": "0.6.0"
+    "version": "0.7.0"
   },
   "plugins": [
     {
@@ -42,7 +42,7 @@
     {
       "name": "kung-fu-pack",
       "source": "./plugins/kung-fu-pack",
-      "description": "Turn a target (a system, codebase, account, set of engagements, or topic) into a tight, high-signal briefing page. Interviews you once to wire up every source you have access to (Notion, Linear, local repos, web) and save your defaults, then on each run it fans out parallel exploration agents into a cached local workspace, pulls live data, consolidates and plans the page, generates real architecture diagrams (dataviz dark-mode, rendered to PNG via headless Chrome), and publishes a styled page to Notion, a self-contained HTML file, local Markdown, or a local preview server. Large topics become a short index plus linked sub-pages. Every claim carries a deep-dive lead, staleness is flagged, and it never uses em dashes. Also installs on Mistral Vibe and OpenAI Codex. Exposes /kung-fu-pack and /kung-fu-pack-init."
+      "description": "Turn a target (a system, codebase, account, set of engagements, or topic) into a tight, high-signal briefing page. Interviews you once to wire up every source you have access to (Notion, Linear, local repos, web) and save your defaults, then on each run it fans out parallel exploration agents into a cached local workspace, pulls live data, consolidates and plans the page, generates real architecture diagrams (dataviz dark-mode, rendered to PNG via headless Chrome), and publishes a styled page to Notion, a self-contained HTML file, local Markdown, or a local preview server. Product and tool targets get a carefully chosen example of the load-bearing mechanism, real screenshots or output, and a usage sub-page; large topics become a short index plus linked sub-pages. Every claim carries a deep-dive lead, staleness is flagged, and it never uses em dashes. Also installs on Mistral Vibe and OpenAI Codex. Exposes /kung-fu-pack and /kung-fu-pack-init."
     }
   ]
 }

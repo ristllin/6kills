@@ -32,6 +32,13 @@ accepted and written in the PR body.
      single page within 1500 words, about 3 A4 pages at 500 words each; or an index within that
      budget plus linked sub-pages whose links resolve), at least 60% of fact lines carry a lead, and
      at least 80% of path-shaped leads resolve to a real file in the target repo or the pack.
+     Scenario B also runs the show-it checks (`--show`): `plan.md` records the example choice, the
+     page has a "See it in action" section with an example of at most 25 lines, and a real visual
+     (a non-diagram image or captured output) is present;
+   - **scenario C**, a product one-pager on a public product repo (`KFP_QA_PRODUCT_REPO`, default
+     `httpie/cli`), checked with `--product`: the show-it checks plus a linked usage sub-page.
+   For a change to examples, visuals, or page taste, also run `bench/scorers/taste.py` on a before
+   and after pack of the same target and report the pairwise result.
    Credentials pass by env var name only. Harness configs (Codex provider, Vibe model) are supplied
    from a directory outside the repo via `KFP_QA_CFG`. Scenario A is graded by the host `claude`
    CLI, so it must be installed and authenticated. The script exits nonzero if any harness fails

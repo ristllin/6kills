@@ -22,6 +22,25 @@ Set `--window-size` to exactly the diagram's canvas WxH (the template's `fit()` 
 viewport width, so scale stays 1 and the capture is clean). Then **Read each PNG** to eyeball it
 before using it; regenerate if text clips or overlaps.
 
+## Capture a real screenshot (product visuals)
+
+For a public docs page, launch post, or demo page, screenshot the part that shows the product:
+
+```bash
+shot() {  # name  url  width  height
+  "$CHROME" --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=2 \
+    --window-size=$3,$4 --screenshot="$1.png" "$2" >/dev/null 2>&1
+}
+shot 10-results-view "https://docs.example.com/results" 1400 900
+```
+
+Or save an image the vendor published (`curl -sL -o 11-ui.png "<image url>"`), then shrink it
+before reading it: at most 1600 px wide and about 500 KB, one PNG frame for a GIF or video (never
+Read the raw file; see `examples-and-visuals.md`). Record the page URL
+as the lead under the image on the page. Read the PNG; crop or re-shoot if it shows a cookie banner,
+a login wall, or text too small to read. For a CLI or library you can run, paste the real terminal
+output as a code block instead of a screenshot.
+
 ## Publish to Notion (upload PNGs, embed, create/update)
 
 1. For each PNG, ask for an upload URL with the `notion-create-file-upload` MCP tool
