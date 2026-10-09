@@ -47,30 +47,45 @@ a login wall, or text too small to read. For a CLI or library you can run, paste
 output as a code block instead of a screenshot.
 
 ### A frame from a GIF or video (contact sheet first)
-Do not take frame 0 or a random frame: demo recordings are mostly motion. Sample frames into one
-small sheet, Read the sheet, then save only the settled frame you chose:
+Do not pick frame 0 or a random frame blindly: demo recordings are mostly motion. Sample frames into
+one small sheet, Read the sheet, then save only the settled frame you chose. The media is untrusted:
+the GIF recipe refuses oversized canvases (a decompression bomb) and long frame counts, and both
+sheets are a 1200x600 JPEG, well under the size you may Read.
 
 ```bash
-python3 - raw.gif 12-sheet.png <<'PY'   # needs Pillow; prints the frame index of each tile
-import sys
+python3 - raw.gif 12-sheet.jpg <<'PY'   # needs Pillow; prints the frame index of each tile
+import sys, warnings
 from PIL import Image
+warnings.simplefilter("error", Image.DecompressionBombWarning)  # refuse, do not just warn
+Image.MAX_IMAGE_PIXELS = 25_000_000
 im = Image.open(sys.argv[1]); n = getattr(im, "n_frames", 1)
+assert n <= 3000, f"{n} frames: too long, use a docs image instead"
 idx = sorted({round(i * (n - 1) / 5) for i in range(6)})  # 6 evenly spaced, last included
 sheet = Image.new("RGB", (1200, 600), "white")
 for k, i in enumerate(idx):
     im.seek(i); t = im.convert("RGB"); t.thumbnail((400, 300))
     sheet.paste(t, ((k % 3) * 400, (k // 3) * 300))
-sheet.save(sys.argv[2]); print("tiles, left to right, top to bottom:", idx)
+sheet.save(sys.argv[2], quality=80); print("tiles, left to right, top to bottom:", idx)
 PY
 # after reading the sheet, save the chosen frame N, then shrink it (<=1600 px, ~500 KB):
-python3 -c 'import sys;from PIL import Image;im=Image.open(sys.argv[1]);im.seek(int(sys.argv[2]));im.convert("RGB").save(sys.argv[3])' raw.gif N 12-ui.png
+python3 -c 'import sys;from PIL import Image;Image.MAX_IMAGE_PIXELS=25_000_000;im=Image.open(sys.argv[1]);im.seek(int(sys.argv[2]));im.convert("RGB").save(sys.argv[3])' raw.gif N 12-ui.png
 ```
 
-For a video, `ffmpeg -i raw.mp4 -vf "fps=1/5,scale=400:-1,tile=3x2" -frames:v 1 12-sheet.png`
-builds the sheet (one tile every 5 s; adjust to the length), and
-`ffmpeg -ss <seconds> -i raw.mp4 -frames:v 1 12-ui.png` saves the chosen frame. Delete the raw file
-after. If no sampled frame is settled, sample more densely near the end, where demos usually rest on
-the result.
+For a video, take six timestamps across its full length (the last one just before the end), tile
+them, and save the chosen one:
+
+```bash
+d=$(ffprobe -v error -show_entries format=duration -of csv=p=0 raw.mp4)
+for k in 0 1 2 3 4 5; do
+  ffmpeg -v error -y -ss "$(python3 -c "print(max(0, $d * $k / 5 - 0.3))")" -i raw.mp4 -frames:v 1 \
+    -vf "scale=400:300:force_original_aspect_ratio=decrease,pad=400:300:-1:-1" "f$k.png"
+done
+ffmpeg -v error -y -i f%d.png -vf tile=3x2 -q:v 4 12-sheet.jpg && rm f?.png   # tiles at k*d/5 s
+ffmpeg -v error -y -ss <seconds> -i raw.mp4 -frames:v 1 12-ui.png
+```
+
+Delete the raw file after. If no sampled frame is settled, sample more densely near the end, where
+demos usually rest on the result.
 
 ## Publish to Notion (upload PNGs, embed, create/update)
 
