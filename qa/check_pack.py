@@ -84,13 +84,21 @@ def show_checks(pack: Path, texts: dict, main: Path, links: list,
     # A screenshot is raster; an SVG is a drawn diagram even without an .html source.
     real_imgs = [i for i in imgs if Path(i).stem not in diagrams and not i.startswith("file-upload:")
                  and Path(i).suffix.lower() in (".png", ".jpg", ".jpeg", ".gif", ".webp")]
-    # a block labelled "Illustrative" just above or below it is crafted, not captured; the label
-    # belongs to the nearest block, so the window stops at the neighbouring fences
+    # a block labelled "Illustrative" just above or below it is crafted, not captured. The window
+    # stops at the neighbouring fences, but a label over a code block also covers the output
+    # block right after it ("Illustrative example and output"), unless it calls that output real
+    # or captured.
     def labelled(t: str, fences: list, i: int) -> bool:
         m = fences[i]
         lo = max(m.start() - 300, fences[i - 1].end() if i else 0)
         hi = min(m.end() + 200, fences[i + 1].start() if i + 1 < len(fences) else len(t))
-        return "illustrative" in (t[lo:m.start()] + t[m.end():hi]).lower()
+        if "illustrative" in (t[lo:m.start()] + t[m.end():hi]).lower():
+            return True
+        if not i or t[fences[i - 1].end():m.start()].strip():
+            return False
+        prev = fences[i - 1]
+        label = t[max(prev.start() - 300, fences[i - 2].end() if i > 1 else 0):prev.start()].lower()
+        return "illustrative" in label and not re.search(r"\b(real|captured)\b", label)
     output = []
     for t in texts.values():
         fences = list(FENCE_RE.finditer(t))
