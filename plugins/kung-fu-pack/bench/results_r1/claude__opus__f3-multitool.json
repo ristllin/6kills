@@ -1,0 +1,126 @@
+{
+  "cell": "claude__opus__f3-multitool",
+  "instance_id": "f3-multitool",
+  "version": "r1",
+  "split": "dev",
+  "duration_s": 32.9,
+  "scores": {
+    "composite": 0.9673,
+    "floors_pass": true,
+    "parts": {
+      "integration_recall": 1.0,
+      "vital_nugget_recall": 1.0,
+      "all_nugget_recall": 0.857,
+      "citation": 0.933,
+      "nesting": 1.0,
+      "non_redundancy": 0.765
+    },
+    "source_coverage_f1": 0.0,
+    "detail": {
+      "deterministic": {
+        "em_dashes": 0,
+        "em_dash_ok": true,
+        "length_pages": 1.37,
+        "length_ok": true,
+        "lead_coverage": 0.0,
+        "source_coverage": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "n_gold": 3,
+          "n_reached": 6
+        },
+        "has_brief": true,
+        "has_manifest": true,
+        "floors_pass": true
+      },
+      "nuggets": {
+        "ran": true,
+        "eligible": true,
+        "vital_nugget_recall": 1.0,
+        "all_nugget_recall": 0.857,
+        "integration_recall": 1.0,
+        "n_vital": 5,
+        "n_integration": 5,
+        "method": "judges",
+        "failed_judges": [],
+        "judges": {
+          "codex": {
+            "vital_nugget_recall": 1.0,
+            "all_nugget_recall": 0.857,
+            "integration_recall": 1.0,
+            "supported_nuggets": [
+              "A1",
+              "A2",
+              "A3",
+              "A6",
+              "B2",
+              "B6"
+            ],
+            "supported_integration": [
+              "INT1",
+              "INT2",
+              "INT3",
+              "INT4",
+              "INT5"
+            ]
+          },
+          "claude": {
+            "vital_nugget_recall": 1.0,
+            "all_nugget_recall": 0.857,
+            "integration_recall": 1.0,
+            "supported_nuggets": [
+              "A1",
+              "A2",
+              "A3",
+              "A6",
+              "B2",
+              "B6"
+            ],
+            "supported_integration": [
+              "INT1",
+              "INT2",
+              "INT3",
+              "INT4",
+              "INT5"
+            ]
+          }
+        },
+        "agreement": {
+          "codex~claude": {
+            "agree": 1.0,
+            "kappa": 1.0
+          }
+        }
+      },
+      "citation": {
+        "ran": true,
+        "recall": 0.933,
+        "resolvable_precision": 1.0,
+        "n_fact_lines": 30,
+        "n_leads": 44,
+        "note": "deterministic resolvability approximation of ALCE"
+      },
+      "coverage": {
+        "ran": true,
+        "non_redundancy": 0.765,
+        "n_sentences": 35
+      },
+      "nesting": {
+        "appropriateness": 1.0,
+        "note": "appropriately flat and within budget",
+        "pages": 1.37,
+        "n_pages": 1,
+        "total_words": 686,
+        "nested": false,
+        "index": "page.md",
+        "sub_pages": 0,
+        "index_links": 0,
+        "index_words": 686,
+        "links_resolve": false
+      }
+    }
+  },
+  "composite": 0.9673,
+  "floors_pass": true
+}

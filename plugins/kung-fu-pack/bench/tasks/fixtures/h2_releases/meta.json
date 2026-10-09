@@ -1,0 +1,11 @@
+{
+  "source": "github-releases",
+  "repos": [
+    "pytorch/pytorch",
+    "langchain-ai/langchain"
+  ],
+  "after": "2026-09-01",
+  "n": 41,
+  "oldest": "2026-09-01",
+  "newest": "2026-10-08"
+}

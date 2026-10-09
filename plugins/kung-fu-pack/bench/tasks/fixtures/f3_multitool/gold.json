@@ -1,0 +1,29 @@
+{
+  "task": "Brief an engineer deciding whether to adopt Orbital Mesh Sync (OMS): current capabilities, limits, and what changed. Synthesize across the design doc, the issue tracker, and the changelog.",
+  "length_budget_pages": [1, 2],
+  "sources": ["design_doc.md", "issue_tracker.md", "changelog.md"],
+  "nuggets": [
+    {"id": "A1", "text": "OMS orders writes using a per-device vector clock", "vital": false, "sources": ["design_doc.md"], "lead": "A1"},
+    {"id": "A2", "text": "the reference transport is QUIC (pluggable transport design)", "vital": true, "sources": ["design_doc.md"], "lead": "A2"},
+    {"id": "A3", "text": "conflict resolution is last-writer-wins by default with an optional merge hook", "vital": true, "sources": ["design_doc.md"], "lead": "A3"},
+    {"id": "A6", "text": "a cold-node mode is designed for devices offline more than 30 days", "vital": true, "sources": ["design_doc.md"], "lead": "A6"},
+    {"id": "B2", "text": "a fallback TCP transport is in progress and not yet released", "vital": true, "sources": ["issue_tracker.md"], "lead": "OMS-18"},
+    {"id": "B6", "text": "last-writer-wins drops concurrent edits in a known race, fix targeted for 1.1", "vital": true, "sources": ["issue_tracker.md"], "lead": "OMS-34"},
+    {"id": "C1", "text": "v0.9 was the first public release", "vital": false, "sources": ["changelog.md"], "lead": "C1"}
+  ],
+  "integration_facts": [
+    {"id": "INT1", "text": "on-prem deployment is not available: the design deferred key management, it is still backlog and blocks the regulated customers, and v1.0 states on-prem is not supported", "min_sources": 2, "sources": ["design_doc.md", "issue_tracker.md", "changelog.md"], "leads": ["A4", "OMS-23", "C5"]},
+    {"id": "INT2", "text": "the minimum device RAM requirement changed from 512 MB in the design to 256 MB in v1.0", "min_sources": 2, "sources": ["design_doc.md", "changelog.md"], "leads": ["A5", "C4"]},
+    {"id": "INT3", "text": "the merge hook went from optional and unstable to stable and frozen in v1.0", "min_sources": 2, "sources": ["design_doc.md", "issue_tracker.md", "changelog.md"], "leads": ["A3", "OMS-27", "C3"]},
+    {"id": "INT4", "text": "unbounded vector-clock growth on cold nodes was identified as an issue and addressed by the v1.0 compaction job", "min_sources": 2, "sources": ["issue_tracker.md", "changelog.md"], "leads": ["OMS-31", "C6"]},
+    {"id": "INT5", "text": "cold-node mode ships but is disabled by default pending field testing", "min_sources": 2, "sources": ["issue_tracker.md", "changelog.md"], "leads": ["OMS-12", "C2"]}
+  ],
+  "answer_key": [
+    {"q": "Is on-prem deployment available in v1.0?", "a": "No. The design deferred key management, it is still backlog (blocks three regulated customers), and the v1.0 notes say on-prem is not supported."},
+    {"q": "What is the current minimum device RAM and did it change?", "a": "256 MB as of v1.0, lowered from the 512 MB design target."},
+    {"q": "Is the merge hook stable enough to build on?", "a": "Yes as of v1.0 (promoted to stable and frozen); it was optional and unstable earlier."},
+    {"q": "Can you rely on cold-node mode out of the box?", "a": "No. It ships but is disabled by default pending field testing."},
+    {"q": "Is there a correctness risk with the default conflict resolution?", "a": "Yes. Last-writer-wins drops concurrent edits in a known race, with a fix targeted for 1.1."}
+  ],
+  "split": "dev"
+}

@@ -1,0 +1,11 @@
+{
+  "source": "github-releases",
+  "repos": [
+    "vllm-project/vllm",
+    "huggingface/transformers"
+  ],
+  "after": "2026-09-01",
+  "n": 6,
+  "oldest": "2026-09-09",
+  "newest": "2026-10-06"
+}

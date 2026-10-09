@@ -1,0 +1,295 @@
+{
+  "task": "Grade 1\u20133 page upgrade-impact briefs covering all six releases. Release indices: 1=vLLM v0.29.0; 2=Transformers v5.17.0; 3=vLLM v0.30.0; 4=Transformers v5.18.0; 5=vLLM v0.31.0; 6=Transformers v5.19.0.",
+  "nuggets": [
+    {
+      "id": "N1",
+      "text": "vLLM 0.29 makes Model Runner V2 the default for all models, including pooling; some ROCm models and unsupported features retain MRV1 fallbacks.",
+      "vital": true,
+      "sources": [
+        1
+      ]
+    },
+    {
+      "id": "N2",
+      "text": "vLLM 0.29 removes Arctic, Chameleon, Cheers, Fairseq2Llama, FireRedLID, GritLM, HCXVision, MPT, RWForCausalLM, StableLMEpochForCausalLM, and PrithviGeoSpatialMAE architectures/aliases; replace PrithviGeoSpatialMAE with Terratorch.",
+      "vital": true,
+      "sources": [
+        1
+      ]
+    },
+    {
+      "id": "N3",
+      "text": "vLLM 0.29 removes PyAV video decoding; migrate to OpenCV or Torchcodec.",
+      "vital": true,
+      "sources": [
+        1
+      ]
+    },
+    {
+      "id": "N4",
+      "text": "vLLM 0.29 changes SWA/SSM prefix_cache_retention_interval from dense retention to default 0; hybrid EAGLE/MTP models automatically regain dense retention.",
+      "vital": true,
+      "sources": [
+        1
+      ]
+    },
+    {
+      "id": "N5",
+      "text": "Transformers 5.17 requires custom vision models to move 2D/3D RoPE grid-interleaving logic into centralized modeling_rope_utils.py.",
+      "vital": true,
+      "sources": [
+        2
+      ]
+    },
+    {
+      "id": "N6",
+      "text": "Transformers 5.17 removes deprecated mask functions; the notes do not identify individual function names.",
+      "vital": true,
+      "sources": [
+        2
+      ]
+    },
+    {
+      "id": "N7",
+      "text": "vLLM 0.30 requires --enable-scale-out for /render, /derender, and /inference/v1/generate on plain vllm serve, removing VLLM_ENABLE_SCALE_OUT_ENDPOINTS; launch render and serve --tokens-only still register them automatically.",
+      "vital": true,
+      "sources": [
+        3
+      ]
+    },
+    {
+      "id": "N8",
+      "text": "vLLM 0.30 removes GPTQ group/dynamic activation ordering: g_idx is ignored and the associated kernels are removed.",
+      "vital": true,
+      "sources": [
+        3
+      ]
+    },
+    {
+      "id": "N9",
+      "text": "vLLM 0.30 removes ROCm's CUDA_VISIBLE_DEVICES fallback; deployments must use HIP_VISIBLE_DEVICES.",
+      "vital": true,
+      "sources": [
+        3
+      ]
+    },
+    {
+      "id": "N10",
+      "text": "vLLM 0.30 stops YaRN vendor aliases from double-scaling context limits: TeleChat3-36B-Thinking falls from 131072 to 32768 tokens, and sarvam-105b from 5242880 to 131072.",
+      "vital": true,
+      "sources": [
+        3
+      ]
+    },
+    {
+      "id": "N11",
+      "text": "vLLM 0.30 introduces HiSparseConnector to spill sparse-MLA KV pages into pinned host memory, with host-cache sharing across TP ranks.",
+      "vital": true,
+      "sources": [
+        3
+      ]
+    },
+    {
+      "id": "N12",
+      "text": "Transformers 5.18 makes a breaking change to ROCm GPT-OSS Flash Attention 3 routing, which now uses aiter-flash-attn.",
+      "vital": true,
+      "sources": [
+        4
+      ]
+    },
+    {
+      "id": "N13",
+      "text": "Transformers 5.18 corrects video-token counting in vLLM's Transformers backend, a breaking change to multimodal input accounting.",
+      "vital": true,
+      "sources": [
+        4
+      ]
+    },
+    {
+      "id": "N14",
+      "text": "vLLM 0.31 requires --trust-request-mm-kwargs for per-request mm_processor_kwargs and media_io_kwargs; server-level settings and offline LLM remain supported.",
+      "vital": true,
+      "sources": [
+        5
+      ]
+    },
+    {
+      "id": "N15",
+      "text": "vLLM 0.31 removes tokenizer_mode=\"slow\"; use \"hf\", which matches its effective behavior under Transformers v5.",
+      "vital": true,
+      "sources": [
+        5
+      ]
+    },
+    {
+      "id": "N16",
+      "text": "vLLM 0.31 removes /render's return_assistant_tokens_mask option and assistant_tokens_mask response field.",
+      "vital": true,
+      "sources": [
+        5
+      ]
+    },
+    {
+      "id": "N17",
+      "text": "vLLM 0.31 enables XPU graphs by default and removes VLLM_XPU_ENABLE_XPU_GRAPH.",
+      "vital": true,
+      "sources": [
+        5
+      ]
+    },
+    {
+      "id": "N18",
+      "text": "vLLM 0.31 adds the vllm preload daemon to preserve post-quantized GPU weights across engine restarts.",
+      "vital": true,
+      "sources": [
+        5
+      ]
+    },
+    {
+      "id": "N19",
+      "text": "Transformers 5.19 returns computed router logits when output_router_logits=True; consumers must handle MoeModelOutputWithPast and MoE causal-LM output types.",
+      "vital": true,
+      "sources": [
+        6
+      ]
+    },
+    {
+      "id": "N20",
+      "text": "Transformers 5.19 supports continuous batching through regular sdpa/flash_attention_2; deprecated paged|sdpa and paged|flash_attention_2 redirect to them, while eager still requires paged|eager.",
+      "vital": true,
+      "sources": [
+        6
+      ]
+    },
+    {
+      "id": "N21",
+      "text": "Transformers 5.19 adds EP token dispatch through ep_dispatch_experts, removing the requirement that expert-parallel size equal tensor-parallel size.",
+      "vital": true,
+      "sources": [
+        6
+      ]
+    },
+    {
+      "id": "N22",
+      "text": "Transformers 5.19 adds EmbeddingGemma2 for text/image/audio/video embeddings in a shared 768-dimensional space, truncatable to 512, 256, or 128 dimensions.",
+      "vital": true,
+      "sources": [
+        6
+      ]
+    }
+  ],
+  "integration_facts": [
+    {
+      "id": "I1",
+      "text": "MRV2 progressively closes MRV1 feature gaps: vLLM 0.29 makes it default and deprecates MRV1 with removal targeted for 0.32; 0.30 adds dual-batch overlap and PP speculation; 0.31 adds draft-model speculation and custom logits processors. MRV1 is not reported removed in these releases.",
+      "min_sources": 2,
+      "sources": [
+        1,
+        3,
+        5
+      ]
+    },
+    {
+      "id": "I2",
+      "text": "The prefix-retention environment-variable migration completes across releases: vLLM 0.29 deprecates VLLM_PREFIX_CACHE_RETENTION_INTERVAL in favor of the argument while changing the SWA/SSM default; 0.30 removes the variable, requiring configuration-field migration.",
+      "min_sources": 2,
+      "sources": [
+        1,
+        3
+      ]
+    },
+    {
+      "id": "I3",
+      "text": "The ROCm FP4 assembly-GEMM toggle reverses course: vLLM 0.29 removes VLLM_ROCM_USE_AITER_FP4_ASM_GEMM as the assembly path becomes default, but 0.31 restores the variable disabled by default.",
+      "min_sources": 2,
+      "sources": [
+        1,
+        5
+      ]
+    },
+    {
+      "id": "I4",
+      "text": "Startup reuse expands from vLLM 0.30 Fast Start via --load-format ipc_cache, supporting FP4 and multi-node TP, to the 0.31 preload daemon preserving post-quantized weights. Separately, 0.31 introduces experimental CRIU snapshot create/restore for a fully initialized TP1 engine.",
+      "min_sources": 2,
+      "sources": [
+        3,
+        5
+      ]
+    },
+    {
+      "id": "I5",
+      "text": "Hy4 support does not imply MTP parity between projects: vLLM 0.29 adds Hy4-preview with native MTP, whereas Transformers 5.17 adds HYV4/Hy4-Preview but ignores its MTP weights during loading.",
+      "min_sources": 2,
+      "sources": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "I6",
+      "text": "AutoRound precision support expands in both projects: Transformers 5.17 adds 5-, 6-, and 7-bit quantization, while vLLM 0.30 supports 2/3/5/6/7-bit AutoRound on CUDA.",
+      "min_sources": 2,
+      "sources": [
+        2,
+        3
+      ]
+    },
+    {
+      "id": "I7",
+      "text": "Transformers continuous batching evolves from async startup/synchronization fixes in 5.17, through pausing and mixed-attention cache support in 5.18, to regular attention backends, XPU support, and fused cache updates in 5.19. Custom callers of the formerly separate index/block-table update paths must adapt.",
+      "min_sources": 2,
+      "sources": [
+        2,
+        4,
+        6
+      ]
+    },
+    {
+      "id": "I8",
+      "text": "Both projects make parallelism dimensions more composable: Transformers 5.18 enables combined PP/TP and FSDP2 with EP; 5.19 decouples tp_plan/ep_plan and adds Trainer EP support. vLLM 0.30 combines sparse-MLA PCP+DCP, and 0.31 supports PCP with DP, EP, and MTP.",
+      "min_sources": 2,
+      "sources": [
+        3,
+        4,
+        5,
+        6
+      ]
+    }
+  ],
+  "answer_key": [
+    {
+      "q": "Is MRV1 already removed, and which MRV2 gaps close across these releases?",
+      "a": "No. MRV1 is deprecated in vLLM 0.29 with removal targeted for 0.32. MRV2 becomes default in 0.29, gains dual-batch overlap in 0.30, and adds draft-model speculation and custom logits processors in 0.31."
+    },
+    {
+      "q": "How must vLLM scale-out and multimodal clients migrate?",
+      "a": "In 0.30, plain serve needs --enable-scale-out for /render, /derender, and /inference/v1/generate. In 0.31, per-request multimodal processor/media options need --trust-request-mm-kwargs; remove return_assistant_tokens_mask and assistant_tokens_mask from render clients."
+    },
+    {
+      "q": "Which vLLM configuration removals and reversals need explicit review?",
+      "a": "Use HIP_VISIBLE_DEVICES and prefix-retention configuration fields from 0.30, and tokenizer_mode=\"hf\" from 0.31. GPTQ g_idx is ignored from 0.30. The ROCm FP4 assembly-GEMM flag is removed when its path becomes default in 0.29, then restored disabled in 0.31."
+    },
+    {
+      "q": "What should a Transformers 5.17\u20135.18 migration audit cover?",
+      "a": "Move custom vision RoPE grid logic to modeling_rope_utils.py and remove deprecated mask-function dependencies in 5.17. In 5.18, audit breaking DETR processing, indexer layer_type remapping, vLLM video-token counting, and ROCm GPT-OSS FA3 routing to aiter-flash-attn."
+    },
+    {
+      "q": "Which Transformers 5.19 interfaces affect batching and MoE consumers?",
+      "a": "Replace deprecated paged attention aliases with regular sdpa/flash_attention_2; eager still uses paged|eager. Adapt custom cache callers to fused updates, handle MoE router-logit output types, and review decoupled TP/EP plans and changed MoE EP defaults."
+    },
+    {
+      "q": "Which dependency baselines and unspecified details should a brief preserve?",
+      "a": "vLLM 0.30 specifies Transformers 5.16.1; 0.31 moves to 5.17.0 and adds an upper bound. All three vLLM releases default to CUDA 13.0 with 12.9 alternatives. Transformers 5.18 does not state a new PyTorch minimum, the new GGUF attention default, or the bumped kernels version."
+    }
+  ],
+  "vetting": {
+    "integration_dropped": 0
+  },
+  "provenance": {
+    "method": "map-reduce over the full corpus",
+    "slices": 6,
+    "corpus_chars": 191376,
+    "judge": "astra"
+  },
+  "split": "dev"
+}

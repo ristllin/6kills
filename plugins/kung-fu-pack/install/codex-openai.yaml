@@ -1,0 +1,17 @@
+# Codex adapter for kung-fu-pack. install.sh copies this to
+# ~/.codex/skills/kung-fu-pack/agents/openai.yaml so Codex can auto-discover the skill
+# and knows which MCP servers it benefits from. Edit the URLs/values to match your setup.
+interface:
+  display_name: "Kung-Fu Pack"
+  short_description: "Build a diagram-rich briefing page on a target"
+  default_prompt: "Use $kung-fu-pack to build an onboarding brief on <target>, pulling Notion, Linear, and the code, and publish it as <notion|html|md>."
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "notion"
+      description: "Notion MCP: read source pages and publish the result (optional)"
+    - type: "mcp"
+      value: "linear"
+      description: "Linear MCP: pull live projects, milestones, and issues (optional)"
+policy:
+  allow_implicit_invocation: true
