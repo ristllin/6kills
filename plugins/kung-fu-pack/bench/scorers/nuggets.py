@@ -1,6 +1,6 @@
 """Core discriminating scorers: eligibility gate + nugget recall + integration recall.
 
-Presence is decided by a JUDGE (astra by default), not heuristic string matching, because
+Presence is decided by a JUDGE (a Codex model by default), not heuristic string matching, because
 the earlier eval showed heuristic extraction is too formatting-sensitive to optimize against.
 The judge reads the brief and the gold list and returns which items are supported (the
 AutoNuggetizer AutoAssign step). A deterministic keyword fallback is used only if the judge
@@ -18,24 +18,20 @@ import json
 import re
 from pathlib import Path
 
+from scorers import brief as brief_mod
+
 from harnesses import llm
 
-JUDGE = "astra"
+JUDGE = "codex"
+# Cross-judge panel (debias): recall is the mean over judges; agreement is reported.
+JUDGES = [j for j in __import__("os").environ.get("KFP_JUDGES", "codex,claude").split(",") if j]
 MIN_WORDS = 150  # below this a "brief" is evasive/empty
+JUDGE_CHARS = 90000  # judge sees the whole brief incl. sub-pages (was 14k, which truncated nests)
 
 
 def _brief(pack: Path) -> str:
-    for rel in ("out/page.md", "out/index.md", "out/page.html", "page.md"):
-        p = pack / rel
-        if p.exists():
-            return p.read_text(errors="ignore")
-    # nested output: concatenate all markdown under out/
-    outdir = pack / "out"
-    if outdir.is_dir():
-        md = sorted(outdir.rglob("*.md"))
-        if md:
-            return "\n\n".join(p.read_text(errors="ignore") for p in md)
-    return ""
+    return brief_mod.read(pack)
+
 
 
 def _extract_json(text: str):
@@ -64,7 +60,7 @@ def eligibility(brief: str, task: str) -> dict:
     prompt = (
         "Is the following a substantive briefing that genuinely attempts the task, or is it "
         "evasive/empty/off-topic? Reply ONLY JSON {\"eligible\":true|false,\"reason\":\"...\"}.\n"
-        f"TASK: {task}\n=== BRIEF (start) ===\n{brief[:4000]}\n=== (end) ==="
+        f"TASK: {task}\n=== BRIEF (start) ===\n{brief[:8000]}\n=== (end) ==="
     )
     data = _extract_json(llm.call(JUDGE, prompt)) or {}
     if "eligible" in data:
@@ -72,16 +68,16 @@ def eligibility(brief: str, task: str) -> dict:
     return {"eligible": words >= MIN_WORDS, "reason": "judge-unavailable; word-count fallback"}
 
 
-def _assign(brief: str, items: list, kind: str) -> set:
+def _assign(brief: str, items: list, kind: str, judge: str = JUDGE) -> set:
     """Return the set of item ids the brief supports, judged by the model."""
     listing = "\n".join(f'{it["id"]}: {it["text"]}' for it in items)
     prompt = (
         f"For each {kind} below, decide if the BRIEF clearly states or supports it. Be strict: "
         "mark supported only if the brief actually conveys the fact (not just mentions the topic). "
         'Reply ONLY JSON: {"supported":["id1","id2",...]}.\n'
-        f"=== {kind.upper()} ===\n{listing}\n=== BRIEF ===\n{brief[:14000]}\n"
+        f"=== {kind.upper()} ===\n{listing}\n=== BRIEF ===\n{brief[:JUDGE_CHARS]}\n"
     )
-    data = _extract_json(llm.call(JUDGE, prompt))
+    data = _extract_json(llm.call(judge, prompt))
     if isinstance(data, dict) and isinstance(data.get("supported"), list):
         return set(str(x) for x in data["supported"])
     # fallback: deterministic keyword presence
@@ -104,20 +100,46 @@ def score(task: dict, pack_dir: Path) -> dict:
         return {"ran": True, "eligible": False, "reason": elig["reason"],
                 "vital_nugget_recall": 0.0, "all_nugget_recall": 0.0, "integration_recall": 0.0}
 
-    supported_n = _assign(brief, nuggets, "nugget") if nuggets else set()
-    supported_i = _assign(brief, integ, "integration fact") if integ else set()
     vital = [n for n in nuggets if n.get("vital")]
-    vital_hit = sum(1 for n in vital if n["id"] in supported_n)
-    all_hit = sum(1 for n in nuggets if n["id"] in supported_n)
-    int_hit = sum(1 for f in integ if f["id"] in supported_i)
-    return {
-        "ran": True, "eligible": True,
-        "vital_nugget_recall": round(vital_hit / len(vital), 3) if vital else 0.0,
-        "all_nugget_recall": round(all_hit / len(nuggets), 3) if nuggets else 0.0,
-        "integration_recall": round(int_hit / len(integ), 3) if integ else 0.0,
-        "n_vital": len(vital), "n_integration": len(integ),
-        "supported_nuggets": sorted(supported_n), "supported_integration": sorted(supported_i),
-    }
+    per_judge = {}
+    for j in JUDGES:
+        sn = _assign(brief, nuggets, "nugget", j) if nuggets else set()
+        si = _assign(brief, integ, "integration fact", j) if integ else set()
+        per_judge[j] = {
+            "vital_nugget_recall": _frac(vital, sn), "all_nugget_recall": _frac(nuggets, sn),
+            "integration_recall": _frac(integ, si),
+            "supported_nuggets": sorted(sn), "supported_integration": sorted(si),
+        }
+    keys = ("vital_nugget_recall", "all_nugget_recall", "integration_recall")
+    mean = {k: round(sum(v[k] for v in per_judge.values()) / len(per_judge), 3) for k in keys}
+    return {"ran": True, "eligible": True, **mean,
+            "n_vital": len(vital), "n_integration": len(integ),
+            "judges": per_judge, "agreement": _agreement(per_judge, nuggets + integ)}
+
+
+def _frac(items: list, supported: set) -> float:
+    return round(sum(1 for it in items if it["id"] in supported) / len(items), 3) if items else 0.0
+
+
+def _agreement(per_judge: dict, items: list) -> dict:
+    """Pairwise percent agreement and Cohen's kappa over all gold items (supported or not)."""
+    js = list(per_judge)
+    if len(js) < 2 or not items:
+        return {}
+    out = {}
+    for a in range(len(js)):
+        for b in range(a + 1, len(js)):
+            sa = set(per_judge[js[a]]["supported_nuggets"] + per_judge[js[a]]["supported_integration"])
+            sb = set(per_judge[js[b]]["supported_nuggets"] + per_judge[js[b]]["supported_integration"])
+            xa = [it["id"] in sa for it in items]
+            xb = [it["id"] in sb for it in items]
+            n = len(items)
+            po = sum(1 for x, y in zip(xa, xb) if x == y) / n
+            pa, pb = sum(xa) / n, sum(xb) / n
+            pe = pa * pb + (1 - pa) * (1 - pb)
+            kappa = (po - pe) / (1 - pe) if pe < 1 else 1.0
+            out[f"{js[a]}~{js[b]}"] = {"agree": round(po, 3), "kappa": round(kappa, 3)}
+    return out
 
 
 if __name__ == "__main__":

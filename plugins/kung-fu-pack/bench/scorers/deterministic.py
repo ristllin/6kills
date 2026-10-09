@@ -19,28 +19,15 @@ import json
 import re
 from pathlib import Path
 
+from scorers import brief as brief_mod
+
 WORDS_PER_PAGE = 500  # ~1 dense A4 page of briefing prose
 EM_EN = (chr(0x2014), chr(0x2013))  # em dash, en dash; from ordinals so this file is dash-free
 
 
 def _read_brief(pack: Path) -> str:
-    for rel in ("out/page.md", "out/index.md", "out/page.html", "page.md"):
-        p = pack / rel
-        if p.exists():
-            base = p.read_text(errors="ignore")
-            # nested output: an index plus sub-pages; include the sub-pages too
-            outdir = pack / "out"
-            if p.name in ("index.md",) and outdir.is_dir():
-                subs = [q.read_text(errors="ignore") for q in sorted(outdir.rglob("*.md"))
-                        if q != p]
-                return "\n\n".join([base] + subs)
-            return base
-    outdir = pack / "out"
-    if outdir.is_dir():
-        md = sorted(outdir.rglob("*.md"))
-        if md:
-            return "\n\n".join(q.read_text(errors="ignore") for q in md)
-    return ""
+    return brief_mod.read(pack)
+
 
 
 def _load_manifest(pack: Path) -> dict:

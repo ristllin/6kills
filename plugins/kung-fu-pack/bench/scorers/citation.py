@@ -13,21 +13,22 @@ import json
 import re
 from pathlib import Path
 
-LEAD_RE = re.compile(r"(https?://\S+|`[^`]+`|[\w./-]+\.\w+:\d+|[A-Z]{2,}-\d+|\b[0-9a-f]{8,}\b)")
+from scorers import brief as brief_mod
+
+LEAD_RE = re.compile(
+    r"(https?://\S+|`[^`]+`|[\w./-]+\.\w+:\d+|[A-Z]{2,}-\d+|\b[0-9a-f]{8,}\b"
+    r"|(?:arXiv:)?\b\d{4}\.\d{4,5}(?:v\d+)?\b"   # arXiv ids
+    r"|#\d{2,}"                                       # PR / issue numbers
+    r"|\bv\d+\.\d+(?:\.\d+)?\b"                   # release tags
+    r"|\[\d+\]"                                      # corpus index refs
+    r"|\(\s*[A-Z]\d{0,3}(?:\s*,\s*[A-Z]\d{0,3})*\s*\))"  # short source refs like (A1, C3)
+)
 FACT_LINE = re.compile(r"^\s*([-*]|\|)")
 
 
 def _brief(pack: Path) -> str:
-    for rel in ("out/page.md", "out/index.md", "page.md"):
-        p = pack / rel
-        if p.exists():
-            return p.read_text(errors="ignore")
-    outdir = pack / "out"
-    if outdir.is_dir():
-        md = sorted(outdir.rglob("*.md"))
-        if md:
-            return "\n\n".join(p.read_text(errors="ignore") for p in md)
-    return ""
+    return brief_mod.read(pack)
+
 
 
 def _corpus_tokens(pack: Path, task: dict) -> str:
@@ -53,6 +54,18 @@ def _corpus_tokens(pack: Path, task: dict) -> str:
     return "\n".join(parts)
 
 
+def _resolves(lead: str, corpus: str) -> bool:
+    """A lead resolves if every reference inside it appears in the frozen corpus."""
+    ld = re.sub(r"(?i)^arxiv:", "", lead.strip("()` ").strip())
+    refs = [r.strip() for r in ld.split(",") if r.strip()] or [ld]
+    def one(r: str) -> bool:
+        r = r.lower()
+        if r in corpus or r.split("/")[-1] in corpus:
+            return True
+        return re.search(rf"(?<![a-z0-9]){re.escape(r)}(?![a-z0-9])", corpus) is not None
+    return all(one(r) for r in refs)
+
+
 def score(task: dict, pack_dir: Path) -> dict:
     pack = Path(pack_dir)
     text = _brief(pack)
@@ -70,8 +83,7 @@ def score(task: dict, pack_dir: Path) -> dict:
             leads.add(m.strip("`"))
     corpus = _corpus_tokens(pack, task).lower()
     if leads and corpus:
-        resolvable = sum(1 for ld in leads
-                         if ld.lower() in corpus or ld.lower().split("/")[-1] in corpus)
+        resolvable = sum(1 for ld in leads if _resolves(ld, corpus))
         precision = round(resolvable / len(leads), 3)
     else:
         precision = 0.0 if leads else 1.0

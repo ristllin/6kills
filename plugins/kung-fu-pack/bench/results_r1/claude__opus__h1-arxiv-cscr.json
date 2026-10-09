@@ -1,0 +1,129 @@
+{
+  "cell": "claude__opus__h1-arxiv-cscr",
+  "instance_id": "h1-arxiv-cscr",
+  "version": "r1",
+  "split": "heldout",
+  "duration_s": 219.3,
+  "scores": {
+    "composite": 0.1561,
+    "floors_pass": false,
+    "parts": {
+      "integration_recall": 0.25,
+      "vital_nugget_recall": 0.719,
+      "all_nugget_recall": 0.521,
+      "citation": 0.982,
+      "nesting": 0.2,
+      "non_redundancy": 0.889
+    },
+    "source_coverage_f1": 1.0,
+    "detail": {
+      "deterministic": {
+        "em_dashes": 0,
+        "em_dash_ok": true,
+        "length_pages": 5.82,
+        "length_ok": false,
+        "lead_coverage": 0.5,
+        "source_coverage": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "n_gold": 1,
+          "n_reached": 1
+        },
+        "has_brief": true,
+        "has_manifest": true,
+        "floors_pass": false
+      },
+      "nuggets": {
+        "ran": true,
+        "eligible": true,
+        "vital_nugget_recall": 0.719,
+        "all_nugget_recall": 0.521,
+        "integration_recall": 0.25,
+        "n_vital": 16,
+        "n_integration": 8,
+        "judges": {
+          "codex": {
+            "vital_nugget_recall": 0.688,
+            "all_nugget_recall": 0.5,
+            "integration_recall": 0.375,
+            "supported_nuggets": [
+              "N1",
+              "N10",
+              "N11",
+              "N12",
+              "N16",
+              "N17",
+              "N2",
+              "N3",
+              "N4",
+              "N5",
+              "N6",
+              "N9"
+            ],
+            "supported_integration": [
+              "I2",
+              "I3",
+              "I4"
+            ]
+          },
+          "claude": {
+            "vital_nugget_recall": 0.75,
+            "all_nugget_recall": 0.542,
+            "integration_recall": 0.125,
+            "supported_nuggets": [
+              "N1",
+              "N10",
+              "N12",
+              "N13",
+              "N16",
+              "N17",
+              "N18",
+              "N2",
+              "N3",
+              "N4",
+              "N5",
+              "N6",
+              "N9"
+            ],
+            "supported_integration": [
+              "I4"
+            ]
+          }
+        },
+        "agreement": {
+          "codex~claude": {
+            "agree": 0.844,
+            "kappa": 0.685
+          }
+        }
+      },
+      "citation": {
+        "ran": true,
+        "recall": 0.982,
+        "resolvable_precision": 1.0,
+        "n_fact_lines": 218,
+        "n_leads": 223,
+        "note": "deterministic resolvability approximation of ALCE"
+      },
+      "coverage": {
+        "ran": true,
+        "non_redundancy": 0.889,
+        "n_sentences": 130
+      },
+      "nesting": {
+        "appropriateness": 0.2,
+        "note": "overflowed into a monolith instead of nesting",
+        "pages": 5.82,
+        "n_pages": 1,
+        "total_words": 2911,
+        "nested": false,
+        "index": "page.md",
+        "sub_pages": 0,
+        "index_links": 0
+      }
+    }
+  },
+  "composite": 0.1561,
+  "floors_pass": false
+}

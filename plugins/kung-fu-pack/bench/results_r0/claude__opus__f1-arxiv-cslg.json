@@ -1,0 +1,142 @@
+{
+  "cell": "claude__opus__f1-arxiv-cslg",
+  "instance_id": "f1-arxiv-cslg",
+  "version": "r0",
+  "split": "dev",
+  "duration_s": 382.1,
+  "scores": {
+    "composite": 0.177,
+    "floors_pass": false,
+    "parts": {
+      "integration_recall": 0.312,
+      "vital_nugget_recall": 0.812,
+      "all_nugget_recall": 0.771,
+      "citation": 0.911,
+      "nesting": 0.2,
+      "non_redundancy": 0.868
+    },
+    "source_coverage_f1": 1.0,
+    "detail": {
+      "deterministic": {
+        "em_dashes": 0,
+        "em_dash_ok": true,
+        "length_pages": 6.55,
+        "length_ok": false,
+        "lead_coverage": 0.008,
+        "source_coverage": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "n_gold": 1,
+          "n_reached": 1
+        },
+        "has_brief": true,
+        "has_manifest": true,
+        "floors_pass": false
+      },
+      "nuggets": {
+        "ran": true,
+        "eligible": true,
+        "vital_nugget_recall": 0.812,
+        "all_nugget_recall": 0.771,
+        "integration_recall": 0.312,
+        "n_vital": 16,
+        "n_integration": 8,
+        "judges": {
+          "codex": {
+            "vital_nugget_recall": 0.812,
+            "all_nugget_recall": 0.75,
+            "integration_recall": 0.25,
+            "supported_nuggets": [
+              "N1",
+              "N11",
+              "N12",
+              "N13",
+              "N15",
+              "N17",
+              "N19",
+              "N2",
+              "N21",
+              "N22",
+              "N23",
+              "N24",
+              "N4",
+              "N5",
+              "N6",
+              "N7",
+              "N8",
+              "N9"
+            ],
+            "supported_integration": [
+              "I2",
+              "I8"
+            ]
+          },
+          "claude": {
+            "vital_nugget_recall": 0.812,
+            "all_nugget_recall": 0.792,
+            "integration_recall": 0.375,
+            "supported_nuggets": [
+              "N1",
+              "N11",
+              "N12",
+              "N13",
+              "N15",
+              "N17",
+              "N18",
+              "N19",
+              "N2",
+              "N20",
+              "N21",
+              "N22",
+              "N23",
+              "N24",
+              "N5",
+              "N6",
+              "N7",
+              "N8",
+              "N9"
+            ],
+            "supported_integration": [
+              "I2",
+              "I5",
+              "I8"
+            ]
+          }
+        },
+        "agreement": {
+          "codex~claude": {
+            "agree": 0.875,
+            "kappa": 0.724
+          }
+        }
+      },
+      "citation": {
+        "ran": true,
+        "recall": 0.915,
+        "resolvable_precision": 0.996,
+        "n_fact_lines": 130,
+        "n_leads": 230,
+        "note": "deterministic resolvability approximation of ALCE"
+      },
+      "coverage": {
+        "ran": true,
+        "non_redundancy": 0.868,
+        "n_sentences": 198
+      },
+      "nesting": {
+        "appropriateness": 0.2,
+        "note": "overflowed into a monolith instead of nesting",
+        "pages": 6.55,
+        "n_pages": 1,
+        "total_words": 3274,
+        "nested": false,
+        "index": "page.md",
+        "sub_pages": 0,
+        "index_links": 0
+      }
+    }
+  },
+  "composite": 0.177,
+  "floors_pass": false
+}

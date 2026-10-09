@@ -1,279 +1,455 @@
 {
-  "task": "Synthesize the supplied arXiv abstracts into a 1\u20133 page research landscape.",
+  "task": "Grade a 1\u20133 page landscape of the full 220-paper corpus for coverage of recurring methods, major findings, cross-paper patterns and evidence limitations.",
   "nuggets": [
     {
       "id": "N1",
-      "text": "Exploration-Distillation separates novelty-rewarded RLVR exploration from student optimization by filtering explorer trajectories and distilling them into a student trained without novelty bonuses, avoiding degradation from aggressive exploration.",
+      "text": "Matched controls repeatedly weaken proposed explanations for performance gains or apparently meaningful mechanistic signals.",
       "vital": true,
       "sources": [
-        1
+        18,
+        32,
+        36,
+        126,
+        177,
+        199
       ]
     },
     {
       "id": "N2",
-      "text": "For smooth nonconvex objectives with bounded p-th-moment noise, 1 < p <= 2, clipped decentralized SGD achieves order-optimal convergence and linear speedup across agents; normalized decentralized SGD can fail to converge.",
-      "vital": false,
+      "text": "Strong aggregate or proxy scores can coexist with poor local behavior, trajectory fidelity, localization or downstream decision value.",
+      "vital": true,
       "sources": [
-        2
+        49,
+        52,
+        58,
+        67,
+        98,
+        111,
+        112,
+        169
       ]
     },
     {
       "id": "N3",
-      "text": "VLA success can depend sharply on instruction wording: on LIBERO, pi_0.5 succeeds 100% of the time for 'switch on the stove' but 2% for 'switch on the hot plate'.",
+      "text": "Structured compression exploits geometric alignment, low-rank structure and residual redundancy to reduce model or KV-cache costs.",
       "vital": true,
       "sources": [
-        3
+        28,
+        30,
+        96,
+        128,
+        140,
+        207
       ]
     },
     {
       "id": "N4",
-      "text": "Rewriting instructions once using 10\u201320 LLM-distilled phrasing rules improves frozen pi_0 success by 16\u201327% relative across twelve held-out tasks, without policy retraining or per-step verification.",
+      "text": "Realized efficiency depends on memory traffic, execution conditions, hardware topology and complete workflow costs.",
       "vital": true,
       "sources": [
-        3
+        20,
+        30,
+        140,
+        147,
+        175,
+        214,
+        215
       ]
     },
     {
       "id": "N5",
-      "text": "G^2MLP uses curvature-guided distillation to address sparse-graph spectral underfit and dense-graph spectral overfit, transferring teacher graph geometry into an MLP that requires no graph at inference.",
+      "text": "Frozen backbones support useful adaptation through instruction rewriting, activation transforms, belief updates, routed adapters or trained auxiliary models.",
       "vital": true,
       "sources": [
-        4
+        3,
+        19,
+        31,
+        38,
+        50,
+        129,
+        134
       ]
     },
     {
       "id": "N6",
-      "text": "Forget-only unlearning cannot always reproduce retraining because ordinary learning may discard information needed for deletion; supporting arbitrary deletions can require retaining information as large as the entire dataset.",
-      "vital": false,
+      "text": "Distillation quality depends on student-compatible supervision; privileged shortcuts, inherited base-policy bias and invalid teacher coordination can obstruct transfer.",
+      "vital": true,
       "sources": [
-        5
+        4,
+        11,
+        13,
+        95,
+        186
       ]
     },
     {
       "id": "N7",
-      "text": "SciExam for ENSO evaluates six-hour scientific model-building runs using frozen, agent-written diagnostics and hidden tests of climate statistics, unobserved-variable recovery, and forecasting of held-out years.",
-      "vital": true,
+      "text": "Conditioning exploration incentives on correctness or successful behavior improves useful diversity and generalization.",
+      "vital": false,
       "sources": [
-        6
+        1,
+        119
       ]
     },
     {
       "id": "N8",
-      "text": "Six of twelve agent systems in SciExam for ENSO produce models scoring above a published model, with advantages mainly in reconstruction and forecasting.",
-      "vital": false,
+      "text": "Intermediate or token-level credit and explicit correction of stale trajectories improve the efficiency of RL post-training.",
+      "vital": true,
       "sources": [
-        6
+        83,
+        124,
+        143,
+        184
       ]
     },
     {
       "id": "N9",
-      "text": "Gaussian Follow-The-Perturbed-Leader enables agnostic smoothed online learning with sublinear regret and one ERM oracle call per round, without knowing the base measure, smoothing parameter, or horizon.",
-      "vital": false,
+      "text": "Additional computation or updates have context-dependent value; frequent re-solving and unconditional refinement can worsen outcomes.",
+      "vital": true,
       "sources": [
-        7
+        27,
+        166,
+        187,
+        198,
+        206,
+        209
       ]
     },
     {
       "id": "N10",
-      "text": "Holding Sentinel-2 features and the lake-level split fixed, evolutionary architecture search raises held-out AUC from 0.790 to 0.820 with a 409-parameter classifier, using 26 times fewer parameters than the strongest hand-designed reference.",
+      "text": "Forecasting, sampling and asynchronous learning require treatment of accumulated, path-dependent errors beyond isolated one-step accuracy.",
       "vital": false,
       "sources": [
-        8
+        14,
+        34,
+        67,
+        70,
+        80,
+        184
       ]
     },
     {
       "id": "N11",
-      "text": "Adversarial common reward shifts can break GLRT-based best-arm stopping rules even when arm gaps remain fixed; importance-weighted ISM restores delta-correct identification with matching worst-case sample-complexity bounds under bounded means and sub-Gaussian rewards.",
-      "vital": false,
+      "text": "Physical equations, conservation laws, boundary conditions and symmetries are repeatedly embedded in scientific models to improve validity or extrapolation.",
+      "vital": true,
       "sources": [
-        9
+        12,
+        53,
+        118,
+        159,
+        164,
+        188,
+        213
       ]
     },
     {
       "id": "N12",
-      "text": "Standard two-level softmax sampling misweights clusters by ignoring size imbalance and within-cluster dispersion; S-2LS and SD-2LS correct these effects to improve approximation with little or no additional computation.",
-      "vital": false,
+      "text": "Transfer and adaptation benefits depend on the target task, representation and distribution shift; stronger source modeling or additional adaptation can hurt target performance.",
+      "vital": true,
       "sources": [
-        10
+        24,
+        59,
+        67,
+        72,
+        139,
+        148,
+        155,
+        160,
+        162
       ]
     },
     {
       "id": "N13",
-      "text": "Delta-MOPD transfers teacher-minus-base logit shifts anchored to the student's frozen initialization, isolating post-training changes from inherited teacher-base preferences in multi-teacher distillation.",
+      "text": "Flow and diffusion models recur as frameworks for probabilistic forecasting, spatial-field generation, multimodal generation and inverse-problem inference.",
       "vital": true,
       "sources": [
-        11
+        14,
+        16,
+        81,
+        131,
+        158,
+        219
       ]
     },
     {
       "id": "N14",
-      "text": "NeuralBES uses a shared building-metadata encoder to parameterize physically bounded resistance-capacitance thermal models, supporting differentiable annual simulations that preserve physical validity across heterogeneous buildings.",
-      "vital": true,
+      "text": "Covariance structure and coordinated latent randomness materially affect joint predictive likelihood and generation coherence.",
+      "vital": false,
       "sources": [
-        12
+        16,
+        95,
+        125,
+        131
       ]
     },
     {
       "id": "N15",
-      "text": "JOLT jointly trains a privileged self-teacher with rewards and KL regularization toward the student, and an unprivileged student with dense on-policy distillation, addressing harmful guidance from teacher shortcuts unavailable to the student.",
+      "text": "Uncertainty and safety assessment must match the deployment distribution and the relevant outcome region, selected subset or risk tail.",
       "vital": true,
       "sources": [
-        13
+        67,
+        85,
+        98,
+        114,
+        194,
+        202,
+        204
       ]
     },
     {
       "id": "N16",
-      "text": "Seq-Flow learns transport from the previous forecast distribution to its update, using self-rollout training to control errors introduced by repeatedly reusing model-generated forecasts as flow initializations.",
+      "text": "Identifiability and guaranteed decisions can fail when retained state or observations cannot distinguish alternatives relevant to the requested operation.",
       "vital": true,
       "sources": [
-        14
+        5,
+        25,
+        35,
+        55,
+        91,
+        126,
+        149,
+        153,
+        165,
+        211
       ]
     },
     {
       "id": "N17",
-      "text": "SQAM removes expensive per-step vector\u2013Jacobian products from flow-policy fine-tuning through a scalar adjoint, paired with a critic-value penalty at policy-generated actions.",
-      "vital": true,
+      "text": "Online-learning guarantees explicitly tie achievable rates to noise moments, distribution-change assumptions and available feedback.",
+      "vital": false,
       "sources": [
-        15
+        2,
+        7,
+        9,
+        40,
+        64,
+        89,
+        163
       ]
     },
     {
       "id": "N18",
-      "text": "Conditional flow matching generates stochastic three-dimensional urban wind and temperature fields in seconds, using overlapping regions with shared noise to reduce GPU memory demands while maintaining spatial continuity.",
+      "text": "Compact models and simpler baselines can outperform more elaborate comparators in small-data learning, forecasting and anomaly detection.",
       "vital": false,
       "sources": [
-        16
+        8,
+        125,
+        167,
+        169
       ]
     },
     {
       "id": "N19",
-      "text": "A derivative-GP approximation compresses gradients at m neighboring inputs in d dimensions from md coordinates to at most 2m directional derivatives, yielding O(m^3) dense factorization per prediction.",
+      "text": "Weak, self-supervised and unpaired methods reduce dependence on dense labels or paired observations for learning useful representations.",
       "vital": false,
       "sources": [
-        17
+        66,
+        130,
+        144,
+        145,
+        195,
+        211,
+        217
       ]
     },
     {
       "id": "N20",
-      "text": "In BehaviorTrace's three-seed Qwen2.5-1.5B GRPO study, gradient magnitude and fluency confound apparent training-rollout attribution; after fluency control, per-rollout results remain unstable across seeds and generation draws.",
+      "text": "Agentic search has produced useful scientific models, valid kernels, mathematical constructions and executable control programs under task-specific evaluation.",
       "vital": true,
       "sources": [
-        18
+        6,
+        26,
+        47,
+        75,
+        189
       ]
     },
     {
       "id": "N21",
-      "text": "SteerSpeech trains lightweight low-rank activation transforms for continuous emotion control while keeping the TTS backbone frozen and constraining changes to speaker identity and linguistic content.",
-      "vital": false,
+      "text": "Robot-agent reliability remains limited by instruction sensitivity and inaccurate or hallucinated task state.",
+      "vital": true,
       "sources": [
-        19
+        3,
+        21,
+        205
       ]
     },
     {
       "id": "N22",
-      "text": "Expected Decoding Rounds models parallel and semi-autoregressive speculative decoding as a Markov reward process, accounting for cross-round acceptance dependencies and exactly targeting the expected number of decoding rounds.",
+      "text": "Behavioral interventions need explicit preservation of benign or successful capabilities because broad benchmark stability can hide collateral damage.",
       "vital": true,
       "sources": [
-        20
+        58,
+        76,
+        205,
+        220
+      ]
+    },
+    {
+      "id": "N23",
+      "text": "Spectral rank is not a universal health or robustness score; its interpretation depends on architecture, training conditions and the representation measured.",
+      "vital": false,
+      "sources": [
+        116,
+        160,
+        171
+      ]
+    },
+    {
+      "id": "N24",
+      "text": "Feedback through agent interaction or recursive synthetic-data training can reinforce bias and reduce behavioral diversity.",
+      "vital": false,
+      "sources": [
+        141,
+        216,
+        218
       ]
     }
   ],
   "integration_facts": [
     {
       "id": "I1",
-      "text": "Distillation increasingly centers on selecting information appropriate for the student: ExpDis filters exploratory trajectories, G^2MLP preserves graph geometry, Delta-MOPD isolates post-training shifts, and JOLT adapts privileged teachers to student capabilities.",
+      "text": "Across distillation, contextual inputs, graph transfer and domain adaptation, stronger source performance or additional information can hurt when the transferred signal is incompatible with the downstream learner or task.",
       "min_sources": 2,
       "sources": [
-        1,
-        4,
-        11,
-        13
+        13,
+        23,
+        59,
+        72,
+        95,
+        155
       ]
     },
     {
       "id": "I2",
-      "text": "The theory papers extend learning guarantees under explicitly structured uncertainty: heavy-tailed decentralized noise, agnostic smoothed online inputs, and adversarial common reward shifts. Their guarantees depend on moment, smoothing, or stable-gap assumptions rather than unrestricted robustness.",
+      "text": "A recurring efficiency strategy moves expensive learning or search offline and reuses its results through graph-free students, compact decoders, adapters, stored experience or executable programs and priors.",
       "min_sources": 2,
       "sources": [
-        2,
-        7,
-        9
+        4,
+        28,
+        38,
+        94,
+        189,
+        212
       ]
     },
     {
       "id": "I3",
-      "text": "Flow-based models recur across forecasting, action policies, and turbulence generation. Their practical bottlenecks differ: Seq-Flow addresses repeated forecast updates, SQAM reduces policy-gradient computation, and urban flow matching reduces memory demands for three-dimensional generation.",
+      "text": "Safety, forecasting, anomaly detection and verification share a mismatch between aggregate success and operational reliability: local benign behavior, complete trajectories, localization and failures conditional on acceptance require separate evaluation.",
       "min_sources": 2,
       "sources": [
-        14,
-        15,
-        16
+        58,
+        98,
+        111,
+        112,
+        194,
+        202
       ]
     },
     {
       "id": "I4",
-      "text": "Evaluation extends beyond aggregate performance scores to tests matched to the claimed capability: SciExam uses hidden scientific checks, NeuralBES assesses physical validity, and BehaviorTrace uses planted causes and confound controls to interrogate attribution claims.",
+      "text": "Stateful systems require reasoning over whole trajectories: forecast initialization errors, numerical amplification, stale-policy errors and update schedules depend on accumulated state and future consequences.",
       "min_sources": 2,
       "sources": [
-        6,
-        12,
-        18
+        14,
+        20,
+        27,
+        70,
+        80,
+        184,
+        187
       ]
     },
     {
       "id": "I5",
-      "text": "Fast sampling and decoding expose problems with local approximations that omit global structure: two-level softmax ignores cluster mass and dispersion, while drafter-training surrogates ignore cross-round dependence. The proposed corrections improve distributional fidelity or directly optimize total expected rounds.",
+      "text": "Equations and symmetry improve several scientific surrogates, yet forward-model fidelity and physical consistency do not ensure accurate inverse estimates or forecasts; structural priors must suit the intended prediction problem.",
       "min_sources": 2,
       "sources": [
-        10,
-        20
+        12,
+        53,
+        67,
+        72,
+        118,
+        188,
+        200
       ]
     },
     {
       "id": "I6",
-      "text": "Control can improve while backbone weights remain frozen: VLA instruction rewriting changes the input, whereas SteerSpeech changes hidden activations. Their training requirements differ: rewriting needs no policy retraining, while SteerSpeech trains lightweight transforms.",
+      "text": "Unlearning, sensing, latent recovery and safety share an information-sufficiency boundary: guarantees require observations or retained state that distinguish the alternatives relevant to the requested operation.",
       "min_sources": 2,
       "sources": [
-        3,
-        19
+        5,
+        25,
+        35,
+        55,
+        91,
+        149,
+        153,
+        165,
+        211
       ]
     },
     {
       "id": "I7",
-      "text": "Scientific-model efficiency benefits from compact representations tailored to the task: architecture search finds a tiny spectral-feature classifier, NeuralBES encodes bounded thermal physics, and derivative GPs retain prediction-relevant gradient directions while reducing computation.",
+      "text": "Method rankings are conditional on data regime, evaluation target and resource model: compact models can win on constrained data, larger models benefit from diverse pretraining, and hardware or interaction costs can reverse apparent efficiency advantages.",
       "min_sources": 2,
       "sources": [
         8,
-        12,
-        17
+        24,
+        147,
+        175,
+        214,
+        215
+      ]
+    },
+    {
+      "id": "I8",
+      "text": "Diversity depends on the feedback mechanism: rewarding successful exploration helps, while interacting agents or self-consuming training can homogenize behavior. Reference-data injection stabilizes some analyzed synthetic-training dynamics, but these studies do not establish a universal remedy.",
+      "min_sources": 2,
+      "sources": [
+        1,
+        119,
+        141,
+        216,
+        218
       ]
     }
   ],
   "answer_key": [
     {
-      "q": "What common change is being made to distillation and RL post-training?",
-      "a": "Transfer is becoming selective and student-aware: ExpDis separates exploration, G^2MLP aligns graph geometry, Delta-MOPD transfers post-training logit shifts, and JOLT regularizes privileged teachers toward students."
+      "q": "What is the corpus's central evaluation lesson?",
+      "a": "Progress requires matched controls, strong baselines and deployment-relevant tests. Aggregate accuracy, likelihood or proxy improvements can conceal local regressions, conditional risk, poor trajectories or absent decision value."
     },
     {
-      "q": "How severe is VLA language sensitivity, and can control improve with a frozen backbone?",
-      "a": "A wording change produces a reported 100%-to-2% success swing. Policy-specific instruction rewrites improve frozen VLAs; speech emotion control similarly uses a frozen backbone, but trains small activation transforms."
+      "q": "What recurring strategies reduce model and inference costs?",
+      "a": "Structured compression and quantization, sparse retrieval, state reuse, frozen-backbone adaptation and offline distillation or program generation. Their value depends on retained capabilities and actual memory, latency, hardware and workflow costs."
     },
     {
-      "q": "Why do flow models recur, and how are their computational costs controlled?",
-      "a": "They represent rich forecast, action, and turbulent-field distributions. Seq-Flow transports prior forecasts with self-rollout training, SQAM eliminates per-step vector\u2013Jacobian products, and urban flow matching uses overlapping regions with shared noise."
+      "q": "What makes RL post-training and teacher transfer more effective?",
+      "a": "Student-compatible supervision, successful or quality-filtered diversity, useful intermediate credit, stale-trajectory correction and appropriate compute allocation. Better teachers, richer inputs and additional updates are not automatically beneficial."
     },
     {
-      "q": "What makes evaluation convincing for scientific models and learned behaviors?",
-      "a": "Use checks matched to the claim: hidden climate statistics, reconstruction, and forecasts in SciExam; physical validity in NeuralBES; and planted behaviors, confound controls, and repeated seeds in BehaviorTrace."
+      "q": "What unifies advances in scientific machine learning, and what limits their scope?",
+      "a": "Physics-aware structure, probabilistic flow/diffusion models and cross-domain training improve scientific surrogates. Claims still require validation on long rollouts, inverse tasks, new geometries and relevant distribution shifts, including independently varied climate forcings."
     },
     {
-      "q": "What do softmax sampling and speculative decoding reveal about efficiency objectives?",
-      "a": "Local shortcuts can miss global structure. Softmax approximations need cluster-size and dispersion corrections; drafter training needs cross-round acceptance dependencies. EDR exactly targets expected decoding rounds."
+      "q": "What common boundary appears in the theoretical results?",
+      "a": "Recoverability and achievable rates depend on available information and explicit noise, feedback and dynamics assumptions. Missing distinguishing information can make deletion, latent recovery or timely safe action impossible."
     },
     {
-      "q": "Which assumptions support the new theoretical guarantees, and what information limit remains?",
-      "a": "Clipped DSGD assumes bounded p-th moments; smoothed online learning retains a density-bound assumption; ISM requires stable arm gaps under common shifts. Forget-only unlearning can fail when training discarded information needed for deletion."
+      "q": "What does the corpus establish about autonomous agents and behavioral safety?",
+      "a": "Agents achieve useful task-specific discoveries and executable improvements, while grounding, state tracking and sustained execution remain fragile. Behavioral repairs require capability-retention checks and evaluation of local, conditional and tail risks."
     }
   ],
+  "vetting": {
+    "integration_dropped": 0
+  },
+  "provenance": {
+    "method": "map-reduce over the full corpus",
+    "slices": 8,
+    "corpus_chars": 336006,
+    "judge": "astra"
+  },
   "split": "dev"
 }

@@ -14,13 +14,15 @@ from pathlib import Path
 from scorers import deterministic, nuggets, citation, coverage, nesting
 
 WEIGHTS = {
-    "integration_recall": 0.35,   # the hard, unsaturated core
-    "vital_nugget_recall": 0.25,
-    "citation_recall": 0.15,
-    "source_coverage_f1": 0.10,
-    "nesting": 0.10,
+    "integration_recall": 0.40,   # the hard, unsaturated core
+    "vital_nugget_recall": 0.30,
+    "all_nugget_recall": 0.10,
+    "citation": 0.10,             # recall x resolvable precision; near-saturated, a guardrail
+    "nesting": 0.05,
     "non_redundancy": 0.05,
 }
+# source_coverage_f1 is reported but not weighted: on a frozen corpus every writer reads every
+# source, so it is trivially high and only adds noise to the composite.
 
 
 def score_all(task: dict, pack_dir: Path, with_models: bool = True) -> dict:
@@ -44,8 +46,8 @@ def score_all(task: dict, pack_dir: Path, with_models: bool = True) -> dict:
     parts = {
         "integration_recall": nug.get("integration_recall", 0.0),
         "vital_nugget_recall": nug.get("vital_nugget_recall", 0.0),
-        "citation_recall": cit.get("recall", 0.0),
-        "source_coverage_f1": det.get("source_coverage", {}).get("f1", 0.0),
+        "all_nugget_recall": nug.get("all_nugget_recall", 0.0),
+        "citation": cit.get("recall", 0.0) * cit.get("resolvable_precision", 0.0),
         "nesting": nst.get("appropriateness", 0.0),
         "non_redundancy": cov.get("non_redundancy", 0.0),
     }
@@ -55,6 +57,7 @@ def score_all(task: dict, pack_dir: Path, with_models: bool = True) -> dict:
         "composite": composite,
         "floors_pass": floors_pass,
         "parts": {k: round(v, 3) for k, v in parts.items()},
+        "source_coverage_f1": det.get("source_coverage", {}).get("f1", 0.0),
         "detail": {"deterministic": det, "nuggets": nug, "citation": cit,
                    "coverage": cov, "nesting": nst},
     }

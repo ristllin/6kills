@@ -12,3 +12,4 @@ __pycache__/
 *.pyc
 # local demo scratch (the bad sample intentionally contains dash chars to test the detector)
 tasks/fixtures/sample_packs/
+**/gold.map.txt

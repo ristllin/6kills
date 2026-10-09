@@ -12,18 +12,12 @@ import re
 from itertools import combinations
 from pathlib import Path
 
+from scorers import brief as brief_mod
+
 
 def _brief(pack: Path) -> str:
-    for rel in ("out/page.md", "out/index.md", "page.md"):
-        p = pack / rel
-        if p.exists():
-            return p.read_text(errors="ignore")
-    outdir = pack / "out"
-    if outdir.is_dir():
-        md = sorted(outdir.rglob("*.md"))
-        if md:
-            return "\n\n".join(p.read_text(errors="ignore") for p in md)
-    return ""
+    return brief_mod.read(pack)
+
 
 
 def _sentences(text: str):

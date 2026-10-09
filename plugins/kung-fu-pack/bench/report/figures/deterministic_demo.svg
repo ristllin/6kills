@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="720" height="380" viewBox="0 0 720 380">
-<rect width="720" height="380" fill="#1a1a19"/>
-<text x="50" y="30" fill="#fff" font-size="18" font-weight="700" font-family="system-ui">Deterministic guardrail scorers (real demo data)</text>
-<text x="50" y="50" fill="#898781" font-size="12" font-family="system-ui">green = good sample pack, red = bad sample pack; values normalized 0..1</text>
-<line x1="50" y1="330" x2="700" y2="330" stroke="#383835"/>
-<rect x="50" y="110" width="46" height="220" fill="#199e70"/><rect x="102" y="330" width="46" height="0" fill="#e66767"/><text x="96" y="348" fill="#c3c2b7" font-size="12" text-anchor="middle">em_dash_ok</text><rect x="170" y="330" width="46" height="0" fill="#199e70"/><rect x="222" y="330" width="46" height="0" fill="#e66767"/><text x="216" y="348" fill="#c3c2b7" font-size="12" text-anchor="middle">length_ok</text><rect x="290" y="110" width="46" height="220" fill="#199e70"/><rect x="342" y="330" width="46" height="0" fill="#e66767"/><text x="336" y="348" fill="#c3c2b7" font-size="12" text-anchor="middle">lead_cov</text><rect x="410" y="110" width="46" height="220" fill="#199e70"/><rect x="462" y="183" width="46" height="147" fill="#e66767"/><text x="456" y="348" fill="#c3c2b7" font-size="12" text-anchor="middle">src_f1</text><rect x="530" y="330" width="46" height="0" fill="#199e70"/><rect x="582" y="330" width="46" height="0" fill="#e66767"/><text x="576" y="348" fill="#c3c2b7" font-size="12" text-anchor="middle">floors_pass</text>
-</svg>

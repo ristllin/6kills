@@ -1,0 +1,333 @@
+{
+  "task": "Grade 1\u20133 page what-changed/migration briefs for upgrade impact across all supplied releases. Source indices identify distinct releases in first-appearance order, splitting co-listed packages and reusing indices for repeated history. Historical entries establish support, not necessarily introduction dates; langchain 1.4.0a4 is explicitly cumulative. Index: 1=langchain 1.4.0a3; 2=PyTorch 2.14.0; 3=langchain 1.4.0a4; 4=langchain 1.4.0; 5=langchain-anthropic 1.7.1; 6=langchain-core 1.6.2; 7=langchain-openai 1.6.1; 8=langchain-openai 1.6.2; 9=langchain-anthropic 1.7.2; 10=langchain-core 1.6.3; 11=langchain 1.4.1; 12=langchain-typesafe 0.0.1a2; 13=langchain-typesafe 0.0.1a1; 14=langchain 1.4.2; 15=langchain-typesafe 0.0.1a3; 16=langchain-openai 1.6.3; 17=langchain-core 1.6.4; 18=langchain-openrouter 0.2.9; 19=langchain-openai 1.6.4; 20=langchain-fireworks 1.6.2; 21=langchain-deepseek 1.1.1; 22=langchain-anthropic 1.7.3; 23=langchain-openai 1.6.5; 24=langchain-anthropic 1.7.4; 25=langchain-core 1.6.5; 26=langchain-openai 1.6.6; 27=langchain-fireworks 1.6.3; 28=langchain 1.4.3; 29=langchain-fireworks 1.7.0; 30=langchain-core 1.6.6; 31=langchain-anthropic 1.7.5; 32=PyTorch 2.14.1; 33=langchain-openai 1.6.7; 34=langchain-text-splitters 1.1.3; 35=langchain-core 1.6.7; 36=langchain-huggingface 1.2.3; 37=langchain-fireworks 1.7.1; 38=langchain 1.4.4; 39=langchain-openai 1.7.0; 40=langchain-core 1.6.9; 41=langchain-core 1.6.8.",
+  "nuggets": [
+    {
+      "id": "N1",
+      "text": "LangChain 1.4 adds native MCP tool integration through langchain.mcp.MCPAdapter, including multi-server configurations and FastMCP ClientGroup targets.",
+      "vital": true,
+      "sources": [
+        1,
+        3,
+        4
+      ]
+    },
+    {
+      "id": "N2",
+      "text": "The recorded LangChain agent migration replaces create_react_agent with create_agent, the consolidated factory supporting middleware customization.",
+      "vital": true,
+      "sources": [
+        3
+      ]
+    },
+    {
+      "id": "N3",
+      "text": "LangChain model middleware interception moves from earlier modify-model-request handling through on_model_call to wrap_model_call.",
+      "vital": true,
+      "sources": [
+        3
+      ]
+    },
+    {
+      "id": "N4",
+      "text": "LangChain's cumulative history records removal of Python 3.9 support, requiring affected environments to upgrade Python.",
+      "vital": true,
+      "sources": [
+        3
+      ]
+    },
+    {
+      "id": "N5",
+      "text": "langchain-openai 1.6.6 raises exceptions on streaming error events; streaming consumers must handle these failures.",
+      "vital": true,
+      "sources": [
+        26
+      ]
+    },
+    {
+      "id": "N6",
+      "text": "langchain-anthropic 1.7.3 automatically selects method='json_schema' for with_structured_output on Fable and Opus 5.5.",
+      "vital": true,
+      "sources": [
+        22
+      ]
+    },
+    {
+      "id": "N7",
+      "text": "langchain-huggingface 1.2.3 removes the retired IPEX backend, requiring configurations that select it to change.",
+      "vital": true,
+      "sources": [
+        36
+      ]
+    },
+    {
+      "id": "N8",
+      "text": "langchain-openai 1.7.0 adds Decisions API support.",
+      "vital": true,
+      "sources": [
+        39
+      ]
+    },
+    {
+      "id": "N9",
+      "text": "langchain-core 1.6.4 deprecates chat message history.",
+      "vital": false,
+      "sources": [
+        17
+      ]
+    },
+    {
+      "id": "N10",
+      "text": "PyTorch 2.14.0 removes torch.cholesky and Tensor.cholesky; migrate to torch.linalg.cholesky, using .mH to reproduce the former upper=True result.",
+      "vital": true,
+      "sources": [
+        2
+      ]
+    },
+    {
+      "id": "N11",
+      "text": "PyTorch 2.14.0 removes torch.qr and Tensor.qr; migrate to torch.linalg.qr with mode='reduced' or 'complete' instead of some.",
+      "vital": true,
+      "sources": [
+        2
+      ]
+    },
+    {
+      "id": "N12",
+      "text": "PyTorch 2.14.0 removes profiler use_cuda; use activities including ProfilerActivity.CUDA with torch.profiler, or use_device='cuda' with the autograd profiler.",
+      "vital": true,
+      "sources": [
+        2
+      ]
+    },
+    {
+      "id": "N13",
+      "text": "PyTorch 2.14.0 changes clamp boundary gradients: scalar-bound equality gives zero input gradient, while tensor-bound ties split gradients equally; fmin/fmax and forward AD follow these rules. Explicit torch.where conditions can express previous tie behavior.",
+      "vital": true,
+      "sources": [
+        2
+      ]
+    },
+    {
+      "id": "N14",
+      "text": "PyTorch 2.14.0 promotes bfloat16 with complex values to the limited-support torch.bcomplex32 shell dtype; explicitly cast to complex64 for previous precision and operator coverage.",
+      "vital": true,
+      "sources": [
+        2
+      ]
+    },
+    {
+      "id": "N15",
+      "text": "PyTorch 2.14.0 moves builds to scikit-build-core; use pip or python -m build --wheel --no-isolation. The setup.py transition forwards install/develop through 2.15, stops all commands in 2.16, and schedules file removal for 2.18.",
+      "vital": true,
+      "sources": [
+        2
+      ]
+    },
+    {
+      "id": "N16",
+      "text": "PyTorch 2.14.0 automatically selects eligible fused backends for dense rank-3 SDPA, potentially changing numerics, dropout RNG, views and higher-order gradients; explicitly select SDPBackend.MATH when the math backend is required.",
+      "vital": true,
+      "sources": [
+        2
+      ]
+    },
+    {
+      "id": "N17",
+      "text": "PyTorch 2.14.0 always validates sparse invariants during torch.load(weights_only=True), regardless of the global setting; this adds an O(nnz) scan and rejects malformed checkpoints.",
+      "vital": true,
+      "sources": [
+        2
+      ]
+    },
+    {
+      "id": "N18",
+      "text": "PyTorch 2.14.0 supplies Python 3.15/3.15t wheels on the listed platforms, while torch.compile remains unsupported on Python 3.15.",
+      "vital": true,
+      "sources": [
+        2
+      ]
+    },
+    {
+      "id": "N19",
+      "text": "PyTorch 2.14.0 makes experimental nccl2 opt-in behind the 'nccl' backend with TORCH_DIST_USE_NCCL2=1; 'nccl-legacy' explicitly selects the existing backend.",
+      "vital": true,
+      "sources": [
+        2
+      ]
+    },
+    {
+      "id": "N20",
+      "text": "PyTorch 2.14.1 corrects MPS torch.linalg.svd results with non-orthogonal U or inaccurate small singular values on rank-deficient or ill-conditioned inputs.",
+      "vital": true,
+      "sources": [
+        32
+      ]
+    },
+    {
+      "id": "N21",
+      "text": "PyTorch 2.14.1 upgrades CUDA 13.2 Linux binaries to CUDA 13.2.2, fixing ignored NVFP4 tensor-wide scaling in cublasLtMatmul and register corruption from failed thread reconvergence.",
+      "vital": true,
+      "sources": [
+        32
+      ]
+    },
+    {
+      "id": "N22",
+      "text": "langchain-core 1.6.8 hardens SSRF checks for scoped and compatible IPv6 addresses.",
+      "vital": true,
+      "sources": [
+        41
+      ]
+    }
+  ],
+  "integration_facts": [
+    {
+      "id": "I1",
+      "text": "MCP evolves from alpha integration to a revised stable interface and dependency floor. The a4 record documents get_tools\u2192list_tools, conversion\u2192as_langchain_tool and metadata under mcp; it removes MCPAdapter.aclose, the adapter elicitation flag and the MCPAdapterTarget export, and restricts string targets to HTTP(S). Elicitation continues through LangGraph interrupts. Stable 1.4.0 ships MCP, 1.4.1 preserves open object arguments, and 1.4.4 raises minimum FastMCP from the initial 4.0.0 floor to 4.0.11.",
+      "min_sources": 2,
+      "sources": [
+        1,
+        3,
+        4,
+        11,
+        38
+      ]
+    },
+    {
+      "id": "I2",
+      "text": "PyTorch 2.14.0 expands native MPS linear algebra, making 2.14.1's follow-up correctness fixes especially relevant: complex batched underdetermined lstsq, ill-conditioned/rank-deficient SVD, pipeline failures above 8192 input elements in svd/svdvals/lstsq, and complex torch.svd(out=...) assertions.",
+      "min_sources": 2,
+      "sources": [
+        2,
+        32
+      ]
+    },
+    {
+      "id": "I3",
+      "text": "The TypeSafe sequence already contains TypeSafeClassifier in 0.0.1a1 and experimental AutoModeMiddleware/ModelRouterMiddleware in 0.0.1a2; 0.0.1a3 makes classifier questions invocation-scoped. The a3 'initial release' wording must be reconciled with those earlier recorded tags.",
+      "min_sources": 2,
+      "sources": [
+        12,
+        13,
+        15
+      ]
+    },
+    {
+      "id": "I4",
+      "text": "Message and tool-call fidelity improves across execution, editing and replay: core 1.6.2 avoids mutating conversion inputs and 1.6.7 retains Bedrock redacted_content; Anthropic 1.7.2 preserves invalid tool-use blocks and 1.7.5 serializes invalid calls for replay; Fireworks 1.6.3 retains malformed arguments diagnostically and 1.7.1 preserves reasoning. LangChain 1.4.2 preserves model-generated calls during HITL edits, while 1.4.3 repairs invalid calls in create_agent.",
+      "min_sources": 2,
+      "sources": [
+        6,
+        9,
+        14,
+        27,
+        28,
+        31,
+        35,
+        37
+      ]
+    },
+    {
+      "id": "I5",
+      "text": "Model compatibility evolves through both provider code and repeatedly refreshed profiles across OpenAI, Anthropic, OpenRouter, Fireworks, DeepSeek and Hugging Face. OpenAI progresses from gpt-5.6-sol Responses routing in 1.6.1 to GPT-6 Astra reasoning efforts in 1.6.2 and GPT-6 request constraints plus visible inferred routing in 1.6.3. Anthropic adds Fable 5.1, then Opus 5.5 capabilities and Sonnet 5.5 compatibility shared with core 1.6.6. LangChain 1.4.3 also recognizes GPT-6 structured output without profiles.",
+      "min_sources": 2,
+      "sources": [
+        5,
+        7,
+        8,
+        16,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        27,
+        28,
+        29,
+        30,
+        31,
+        33,
+        36,
+        37
+      ]
+    },
+    {
+      "id": "I6",
+      "text": "Failure handling becomes more explicit and configurable across the LangChain stack: cumulative middleware history restricts retries to retryable exceptions and propagates interrupts; OpenAI 1.6.6 raises streaming errors; Fireworks 1.7.0 classifies mid-stream read timeouts; LangChain 1.4.4 retries summarization after context overflow; core 1.6.9 accepts a callable in with_retry.",
+      "min_sources": 2,
+      "sources": [
+        3,
+        26,
+        29,
+        38,
+        40
+      ]
+    },
+    {
+      "id": "I7",
+      "text": "Observability gains metadata controls while some captured or rendered payloads shrink. Cumulative history adds middleware trace_policy; LangChain 1.4.0 and Anthropic 1.7.1 omit middleware trace inputs; core 1.6.3 permits gateway overrides of model/provider tracing identity, and 1.6.5 abbreviates long tool IDs in XML buffer strings. TypeSafe fixes usage tracing, while DeepSeek/Hugging Face shared history adds and renames package-version metadata. Trace consumers and text parsers should accommodate these representation changes.",
+      "min_sources": 2,
+      "sources": [
+        3,
+        4,
+        5,
+        10,
+        12,
+        15,
+        21,
+        25,
+        36
+      ]
+    },
+    {
+      "id": "I8",
+      "text": "Both projects tighten input and security boundaries. PyTorch strengthens sparse checkpoint validation and adds opt-in restricted object-collective deserialization, whose default remains unchanged. LangChain history restricts Classic serialization and requires Pygments >=2.20.0; later packages harden IPv6 SSRF checks, hide Hugging Face tokens from repr, and make RecursiveJsonSplitter reject non-dict, non-convertible inputs while requiring lxml >=6.1.3,<7.0.",
+      "min_sources": 2,
+      "sources": [
+        2,
+        3,
+        34,
+        36,
+        41
+      ]
+    }
+  ],
+  "answer_key": [
+    {
+      "q": "What is the MCP migration path through LangChain 1.4.4?",
+      "a": "Install langchain[mcp] with FastMCP >=4.0.11 for 1.4.4; use MCPAdapter.list_tools and as_langchain_tool with metadata under mcp. String targets must be HTTP(S); remove obsolete adapter lifecycle/elicitation options. Elicitation uses LangGraph interrupts, and default cache_mode='use' honors server TTL hints."
+    },
+    {
+      "q": "Which PyTorch 2.14.0 removals and build changes require migration?",
+      "a": "Replace cholesky/qr with torch.linalg equivalents and profiler use_cuda with activities or use_device. Replace LinearCrossEntropyOptions acc_policy='balanced' with 'compact', migrate TVM Relay integrations to Relax, and use pip/build with scikit-build-core. C++ headers require C++20; setup.py commands end in 2.16 before file removal in 2.18."
+    },
+    {
+      "q": "Which PyTorch numerical changes can affect previously valid workloads?",
+      "a": "Clamp scalar-bound ties now give zero input gradient, tensor-bound ties split gradients, bfloat16 complex promotion produces bcomplex32, and dense rank-3 SDPA may select fused kernels. Use explicit torch.where rules, complex64 casts or SDPBackend.MATH where the corresponding previous behavior is required."
+    },
+    {
+      "q": "Why should affected users prioritize PyTorch 2.14.1?",
+      "a": "It fixes MPS SVD/lstsq numerical errors, failures above 8192 input elements and a complex torch.svd(out=...) assertion. CUDA 13.2 Linux binaries move to 13.2.2 to correct NVFP4 scaling and reconvergence-related register corruption."
+    },
+    {
+      "q": "Which LangChain agent and provider behavior changes need migration testing?",
+      "a": "Migrate to create_agent and wrap_model_call/wrap_tool_call; ToolNode moves to the tools namespace and cannot be passed directly to create_agent. Test HITL edit notices, Anthropic's json_schema default, SystemMessage tool changes in OpenAI 1.6.5/Anthropic 1.7.4, and OpenAI streaming exceptions; remove Hugging Face IPEX selections."
+    },
+    {
+      "q": "Which release-history claims would misrepresent introduction or deprecation dates?",
+      "a": "LangChain 1.4.0a4 contains cumulative history. Core 1.6.3 only adds tests for the already-deprecated .text(); chat message history is deprecated in 1.6.4. TypeSafe a1 already includes the classifier and a2 the experimental middleware; a3 adds invocation-scoped classifier questions."
+    }
+  ],
+  "vetting": {
+    "integration_dropped": 0
+  },
+  "provenance": {
+    "method": "map-reduce over the full corpus",
+    "slices": 4,
+    "corpus_chars": 186239,
+    "judge": "astra"
+  },
+  "split": "dev"
+}

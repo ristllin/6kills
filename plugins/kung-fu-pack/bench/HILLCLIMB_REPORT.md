@@ -1,92 +1,94 @@
-# kung-fu-pack benchmark v2: a hard, unsaturated synthesis eval, and one gated hill-climb cycle
+# kung-fu-pack synthesis benchmark: design, a corrected baseline, and what it says next
 
-The first eval was saturated (a self-reported comprehension quiz ceilinged at 1.0) and could not
-drive improvement. This rebuilds the benchmark around published, reimplementable methods so it is
-genuinely hard and unsaturated, then runs one full gated hill-climb cycle. All numbers below are real;
-nothing is fabricated.
+The first eval was saturated (a self-reported comprehension quiz ceilinged at 1.0). This benchmark
+replaces it with published, reimplementable methods so it can drive improvement. All numbers below
+are real. An earlier version of this report claimed a large v0 to v1 gain; an audit showed that claim
+came from scorer and gold bugs, so it is retracted here and the comparison is re-run (section 3).
 
-## 1. What the benchmark measures
-Three task families, each "many sources -> a tight brief", with frozen post-cutoff corpora so the
-answer cannot come from parametric memory:
-- **F1 arxiv-landscape:** compress ~220 recent cs.LG abstracts into a landscape (hard compression +
-  distinct coverage).
-- **F2 release-digest:** digest several vLLM/Transformers versions into a what-changed brief (nesting
-  + cross-version integration).
-- **F3 distributed-evidence:** a 3-source corpus (design doc, issue tracker, changelog) where key
-  facts require combining 2+ sources (Loong-style "no single source has the answer").
+## 1. Tasks
+"Many sources into a tight brief", with frozen post-training-cutoff corpora so answers cannot come
+from parametric memory. Three dev tasks and two held-out tasks (held-out guards against overfitting
+the skill text to the dev set):
 
-Grading stack (`scorers/`), composite with hard floors, built from proven methods:
-- **eligibility gate** (FACTS-style): rejects evasive/empty briefs before scoring.
-- **nugget recall + integration recall** (AutoNuggetizer AutoAssign, model-judged not heuristic):
-  fraction of gold vital nuggets, and of integration-facts that each need 2+ sources, that the brief
-  conveys. Integration recall is the hard, unsaturated core.
-- **citation** (ALCE-inspired): leads present and resolving to the frozen corpus.
-- **anti-redundancy** and **tool-agnostic source-coverage** (anti-overfit routing).
-- **nesting-appropriateness:** rewards an index + linked sub-pages when the corpus truly warrants it,
-  penalizes a monolith overflow, rewards a tight single page when that fits.
-- Floors: eligibility, em-dashes == 0, and a length rule that a nest-expected task passes only by
-  actually nesting or staying within budget.
-
-Writer: Claude (opus). Judge: astra (gpt-6, independent of the writer). ML4 was blocked on a stale
-Mistral key, so this run is single-judge; cross-judge with opus is the documented next step.
-
-## 2. Unsaturation (the gate the old eval failed)
-Baseline v0 composite by task: **F1 0.072, F2 0.143, F3 0.702.** A wide spread with large headroom,
-and F1/F2 fail the floors (they overflowed to 3.8 and 3.6 pages). Integration recall at baseline is
-**0.0 / 0.167 / 0.8**. This is the opposite of the old 1.0 ceiling: the benchmark discriminates and
-leaves plenty to climb.
-
-## 3. Iteration v1 (the two reported skill bugs), measured
-Applied as the first iteration: (1) clarifying questions made parameter-shaped (never invent specific
-project names); (2) a nesting methodology (index + linked sub-pages on genuine overflow instead of a
-monolith). Same scorer for both versions.
-
-| task | v0 | v1 | delta |
+| id | family | corpus | split |
 |---|---|---|---|
-| F1 arxiv-landscape | 0.072 | 0.248 | +0.176 (now nests: index + 7 theme sub-pages; floors pass) |
-| F2 release-digest | 0.143 | 0.478 | +0.335 (nests: index + per-project sub-pages) |
-| F3 distributed-evidence | 0.702 | 0.706 | +0.004 (correctly stays a single page; no regression) |
-| **avg** | **0.306** | **0.477** | **+0.171** |
+| f1-arxiv-cslg | landscape | 220 cs.LG abstracts (336k chars) | dev |
+| f2-releases | what-changed digest | 6 vLLM + Transformers releases (193k chars) | dev |
+| f3-multitool | distributed evidence | design doc + issue tracker + changelog; key facts need 2+ sources | dev |
+| h1-arxiv-cscr | landscape | 200 cs.CR abstracts | held-out |
+| h2-releases | what-changed digest | 41 PyTorch + LangChain releases | held-out |
 
-See `report/figures/v2_v0_v1.svg`. The benchmark detected the real fix: nesting resolved the overflow
-on the big-corpus tasks and did not fragment the small one.
+Task scopes describe only the goal. They do not say whether to nest; deciding structure is the
+skill's job.
 
-**Peer review (astra):** returned **revise**, flagging that a rigid page-count trigger could fragment
-readable briefs and duplicate overview prose. Addressed before accepting: nesting is now a complexity
-judgment, the index links to sub-pages and does not duplicate them, and a brief that reads well as one
-page is never fragmented. Re-ran F2 with the revised wording: still nests, composite 0.478 (held).
+## 2. Grading stack (`scorers/`)
+- **Gold** (`gold/author.py`): map-reduce over the whole corpus. A model summarizes each ~45k-char
+  slice, then builds corpus-level nuggets (vital/okay) and 6 to 8 integration facts that each need
+  2+ sources. Integration facts citing fewer than 2 distinct sources are dropped automatically.
+- **Eligibility gate** (FACTS-style): evasive or empty briefs score zero.
+- **Nugget and integration recall** (AutoNuggetizer-style, model-judged): judged by a two-model
+  panel (Codex and Claude); recall is the panel mean and inter-judge agreement (Cohen's kappa) is
+  recorded per brief.
+- **Citation** (ALCE-inspired, deterministic): share of fact lines with a lead x share of leads that
+  resolve to the frozen corpus.
+- **Anti-redundancy** and **nesting appropriateness** (structural).
+- **Composite** = 0.40 integration + 0.30 vital nuggets + 0.10 all nuggets + 0.10 citation + 0.05
+  nesting + 0.05 non-redundancy. **Floors:** eligible, zero em/en dashes, and length (a large task
+  passes only by nesting into an index plus sub-pages or by staying within 3 pages). A floor breach
+  multiplies the composite by 0.3.
 
-**Gatekeeper decision: ACCEPT v1.** Composite up on the overflow tasks, no regression on the flat
-task, peer-review concern resolved.
+## 3. Audit and correction
+Before a second iteration, the benchmark itself was audited. Four defects were found and fixed:
+1. **Gold covered a slice, not the corpus.** F1 gold came from the first ~20 of 220 abstracts, F2
+   gold from 2 of 6 releases. Now map-reduce over everything (F1 gold cites 121 distinct papers).
+2. **The writer saw half the corpus.** A 160k-char cap cut F1 in half. Now the whole corpus is sent.
+3. **Scorers disagreed on what the brief is.** The nugget judge read only `index.md` of a nested
+   pack, and the v0 run was scored before a reader fix while v1 was scored after it. One shared
+   reader (`scorers/brief.py`) now feeds every scorer.
+4. **Citation leads were not recognized.** `arXiv:2610.10381`, `#53183`, and `(C1, C3)` styles all
+   scored as uncited. The lead pattern and the resolver now handle them.
 
-## 4. Honest findings
-- **Integration recall barely moved** (F1 still 0.0, F2 0.167). Nesting fixes structure, not the hard
-  compression/synthesis core. That core is the real remaining headroom and the next hill-climb target,
-  and its persistence is evidence the benchmark is not gameable by formatting alone.
-- **A scorer bug was found and fixed mid-cycle:** the deterministic scorer only read `out/page.md`, so
-  nested packs looked empty and failed floors. Fixed to read `index.md` + sub-pages. v0 (monoliths)
-  was unaffected, so the v0-vs-v1 comparison stays fair.
-- **Judge stochasticity:** F3 integration recall varied 0.8 to 1.0 across identical re-runs
-  (single-judge). Deltas under ~0.05 are noise; the v1 nesting gains (+0.18, +0.34) are well beyond it.
+The task scopes also told the writer to nest, which made nesting a property of the prompt, not of
+the skill. That hint is removed. The retracted headline (v0 0.306 to v1 0.477) is superseded by:
 
-## 5. Threats to validity
-n = 3 dev tasks; single judge (astra), cross-judge pending ML4; gold for F1/F2 proposed by a model
-then vetted (integration-facts confirmed to need 2+ sources); F1 writing is slow (8 files) and timed
-out once during production (re-scored from the produced pack). Widen tasks, add the opus cross-judge,
-and harden the nugget match before strong claims.
+## 4. Corrected baseline: v0 vs v1 (same scorer, same gold, fresh packs)
+Writer: Claude. Judges: Codex + Claude. "raw" is the composite before the floor multiplier.
 
-## 6. Reproduce
+| task | v0 | v1 | v0 raw | v1 raw | pages v0 / v1 | kappa range |
+|---|---|---|---|---|---|---|
+| f1-arxiv-cslg | 0.177 | 0.195 | 0.59 | 0.65 | 6.6 / 4.6 (flat) | 0.72 to 0.86 |
+| f2-releases | 0.176 | 0.204 | 0.59 | 0.68 | 4.6 / 5.1 (flat) | 0.38 to 0.66 |
+| f3-multitool | 0.962 | 0.964 | 0.96 | 0.96 | 1 page, correct | n/a |
+| h1-arxiv-cscr | 0.166 | 0.156 | 0.55 | 0.52 | 5.8 / 5.8 (flat) | 0.50 to 0.69 |
+| h2-releases | 0.157 | 0.203 | 0.52 | 0.68 | 4.5 / 5.5 (flat) | 0.44 to 0.82 |
+
+Integration recall ranges 0.25 to 0.56 on the four large tasks; vital-nugget recall 0.68 to 0.86.
+
+## 5. Findings
+- **The length problem is not solved.** With no nesting hint in the prompt, neither v0 nor v1 nests;
+  every large task becomes a 4.5 to 6.6 page monolith and fails the length floor. The v1 nesting
+  rule, softened into "a judgment call" after peer review, is too permissive to change behavior.
+  This is the first target of the next iteration: a concrete trigger (draft over ~3 pages means nest)
+  while keeping the "do not fragment a brief that fits" guard.
+- **v1 content is modestly better** on 3 of 4 large tasks (raw +0.06 to +0.16) and slightly worse on
+  h1 (-0.03), at n=1 per cell. Treat as suggestive, not significant.
+- **The benchmark is unsaturated where it matters.** Integration recall tops out at 0.56, and the
+  floors still bite. **F3 is saturated** (0.96 for both versions) and needs a harder variant.
+- **Judges mostly agree** (kappa 0.38 to 0.86, mostly substantial), so a two-judge mean is a reasonable
+  signal; single-run variance is still the main threat.
+- The v1 interview fix (parameter-shaped questions, no invented names) is not exercised by these
+  frozen-corpus tasks; it is checked in the harness QA run instead (see the repo AGENTS.md).
+
+## 6. Threats to validity
+n=1 run per cell; gold is model-authored then auto-vetted (spot-checked by hand, not fully
+human-verified); F3 is synthetic and saturated; the writer is a single model family.
+
+## 7. Reproduce
 ```
 cd plugins/kung-fu-pack/bench && export PYTHONPATH=$PWD
-# rebuild corpora (post-cutoff): python3 corpora/arxiv.py ... ; python3 corpora/releases.py ...
-# baseline and iteration:
-python3 drive_synth.py --results v0 --writer claude --ids f1-arxiv-cslg,f2-releases,f3-multitool
-python3 drive_synth.py --results v1 --writer claude --ids f1-arxiv-cslg,f2-releases,f3-multitool
-# deterministic-only scoring needs no keys: python3 scorers/deterministic.py <pack_dir>
+python3 gold/author.py --corpus tasks/fixtures/f1_arxiv_cslg --kind landscape   # rebuild gold
+python3 drive_synth.py --results r1 --workers 5     # produce + score all tasks with the current skill
+python3 drive_synth.py --results r1 --rescore       # rescore existing packs (e.g. after a scorer change)
 ```
-
-## 7. Bottom line
-A hard, unsaturated benchmark exists and is verified to discriminate (spread 0.07 to 0.70, integration
-recall as low as 0.0). One full gated cycle ran: baseline, a measured fix, independent peer review,
-a revision, and an evidence-based accept, with the net skill genuinely improved on structure while the
-hard synthesis core remains open as the next lever.
+Set `KFP_CODEX_PROFILE` if your Codex judge needs a named profile. Raw packs and logs go to
+`~/kung-fu-pack-eval` (outside the repo); curated results land in `results_r0/` and `results_r1/`.

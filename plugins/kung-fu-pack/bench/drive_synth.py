@@ -20,7 +20,7 @@ from harnesses import llm, manifest as manifest_mod
 from scorers import compose
 
 BENCH = Path(__file__).resolve().parent
-MAX_CORPUS_CHARS = int(__import__("os").environ.get("KFP_MAX_CORPUS", "160000"))
+MAX_CORPUS_CHARS = int(__import__("os").environ.get("KFP_MAX_CORPUS", "400000"))
 
 CONTRACT = """
 OUTPUT CONTRACT (write files in your current directory, structured per the skill method):
@@ -47,7 +47,7 @@ def _load_corpus(task: dict) -> str:
 
 
 def build_prompt(task: dict, skill_text: str, corpus: str) -> str:
-    skill = skill_text.strip()[:14000]
+    skill = skill_text.strip()[:40000]
     return (
         "You are executing the kung-fu-pack skill. Follow its method.\n\n===== SKILL METHOD =====\n"
         + skill + "\n===== END METHOD =====\n\n"
@@ -63,8 +63,11 @@ def main() -> None:
     ap.add_argument("--tasks", default=str(BENCH / "tasks/synth_tasks.jsonl"))
     ap.add_argument("--ids", default="")
     ap.add_argument("--writer", default="claude")
-    ap.add_argument("--model", default="opus")
+    ap.add_argument("--model", default="opus", help="cell label only; set KFP_CLAUDE_MODEL to change the model")
     ap.add_argument("--results", default="v0")
+    ap.add_argument("--workers", type=int, default=3)
+    ap.add_argument("--produce-only", action="store_true", help="write packs, score later")
+    ap.add_argument("--rescore", action="store_true", help="score existing packs, do not regenerate")
     a = ap.parse_args()
 
     skill_text = Path(a.skill).read_text()
@@ -76,34 +79,42 @@ def main() -> None:
     results.mkdir(parents=True, exist_ok=True)
     packs_root = config.WORKSPACE / "packs"
 
-    for t in tasks:
+    def run(t: dict) -> None:
         tid = t["instance_id"]
         cell = f"{a.writer}__{a.model}__{tid}"
         pack = packs_root / f"{a.results}__{cell}"
-        (pack / "out").mkdir(parents=True, exist_ok=True)
-        # make gold + sources available inside the pack for scoring
         fx = BENCH / t["corpus_path"]
+        t0 = time.time()
+        if not a.rescore:
+            if pack.exists():
+                shutil.rmtree(pack)  # a fresh pack per run; stale sub-pages would leak into scoring
+            (pack / "out").mkdir(parents=True)
+            prompt = build_prompt(t, skill_text, _load_corpus(t))
+            (pack / "agent.log").write_text(llm.call(a.writer, prompt, cwd=str(pack)))
+            manifest_mod.build(pack)
+            if a.produce_only:
+                print(f"{a.results} {cell}: produced ({round(time.time() - t0, 1)}s)", flush=True)
+                return
+        # gold + sources travel with the pack for scoring (refreshed so rescoring uses current gold)
         if (fx / "gold.json").exists():
             shutil.copy(fx / "gold.json", pack / "gold.json")
         if (fx / "sources").is_dir() and not (pack / "sources").exists():
             shutil.copytree(fx / "sources", pack / "sources")
-        corpus = _load_corpus(t)
-        prompt = build_prompt(t, skill_text, corpus)
-        t0 = time.time()
-        log = llm.call(a.writer, prompt, cwd=str(pack))
-        (pack / "agent.log").write_text(log)
-        manifest_mod.build(pack)
         t_task = dict(t)
         t_task["corpus_path"] = str(fx)
         sc = compose.score_all(t_task, pack, with_models=True)
-        rec = {"cell": cell, "instance_id": tid, "version": a.results,
+        rec = {"cell": cell, "instance_id": tid, "version": a.results, "split": t.get("split"),
                "duration_s": round(time.time() - t0, 1), "scores": sc,
                "composite": sc["composite"], "floors_pass": sc["floors_pass"]}
         (results / f"{cell}.json").write_text(json.dumps(rec, indent=2))
         p = sc["parts"]
-        print(f"{cell}: composite={sc['composite']} floors={sc['floors_pass']} "
+        print(f"{a.results} {cell}: composite={sc['composite']} floors={sc['floors_pass']} "
               f"integ={p['integration_recall']} vital={p['vital_nugget_recall']} "
-              f"cite={p['citation_recall']} ({rec['duration_s']}s)", flush=True)
+              f"cite={p['citation']} ({rec['duration_s']}s)", flush=True)
+
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max(1, a.workers)) as ex:
+        list(ex.map(run, tasks))
 
 
 if __name__ == "__main__":
