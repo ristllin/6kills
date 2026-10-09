@@ -107,7 +107,7 @@ riskiest claims and a "what is missing" completeness pass.
 ### 4. Consolidate and plan
 Read every `research/` file. Reconcile conflicts (prefer live over cached, newest over oldest, code
 over doc for "what exists"). Pull out the **non-obvious insights and corrections**, not just a
-summary. Write `plan.md`: the section order, which claims need a lead, and which 1 to 3 diagrams
+summary. Always write `plan.md` in the pack folder (it records the structure decision): the section order, which claims need a lead, and which 1 to 3 diagrams
 carry real information. **Decide structure by complexity, not a hard page count.** Keep a single tight
 page when the material reads well as one 1 to 3 page brief; that is the default and the goal. Nest only
 when genuine breadth would otherwise force a cramped monolith or lose navigability: then write a short
@@ -146,7 +146,9 @@ with relative links; **preview server** = serve the directory so the index and s
 Verify every inter-page link resolves.
 
 ### 7. Verify
-Re-open or fetch the result: diagrams render, sections hold, tables intact. **Grep the final text
+Re-open or fetch the result: diagrams render, sections hold, tables intact. Confirm `plan.md` exists. **Count
+the words of every page: a single page over ~1500 words (3 A4 pages) is out of bounds**; cut it, or
+nest it if the material is genuinely broad. For a nested pack, the index stays within that budget. **Grep the final text
 for em and en dashes (U+2014, U+2013); must be zero** (titles included, a common miss). If
 `writing_standard` is `asd-ste100`, run the lint in `references/asd-ste100.md` (sentence length, the
 "-ing" form, passive voice, 4+ word noun clusters, one-term-per-concept) and fix the hits, and add

@@ -51,7 +51,7 @@ concrete project, product, team, or person names as suggestions. Reply with one 
 FAIL, then a short reason.
 
 === REPLY ===
-$(head -c 12000 "$t")" --output-format text 2>/dev/null | head -1
+$(tail -c 12000 "$t")" --output-format text 2>/dev/null | head -1
 }
 
 {
