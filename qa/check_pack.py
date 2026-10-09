@@ -84,11 +84,19 @@ def show_checks(pack: Path, texts: dict, main: Path, links: list,
     # A screenshot is raster; an SVG is a drawn diagram even without an .html source.
     real_imgs = [i for i in imgs if Path(i).stem not in diagrams and not i.startswith("file-upload:")
                  and Path(i).suffix.lower() in (".png", ".jpg", ".jpeg", ".gif", ".webp")]
-    # a block labelled "Illustrative" just above or below it is crafted, not captured
-    output = [m for t in texts.values() for m in FENCE_RE.finditer(t)
-              if (m.group(1).strip().lower() in OUTPUT_LANGS or m.group(2).startswith("$ "))
-              and "illustrative" not in (t[max(0, m.start() - 300):m.start()]
-                                         + t[m.end():m.end() + 200]).lower()]
+    # a block labelled "Illustrative" just above or below it is crafted, not captured; the label
+    # belongs to the nearest block, so the window stops at the neighbouring fences
+    def labelled(t: str, fences: list, i: int) -> bool:
+        m = fences[i]
+        lo = max(m.start() - 300, fences[i - 1].end() if i else 0)
+        hi = min(m.end() + 200, fences[i + 1].start() if i + 1 < len(fences) else len(t))
+        return "illustrative" in (t[lo:m.start()] + t[m.end():hi]).lower()
+    output = []
+    for t in texts.values():
+        fences = list(FENCE_RE.finditer(t))
+        output += [m for i, m in enumerate(fences)
+                   if (m.group(1).strip().lower() in OUTPUT_LANGS or m.group(2).startswith("$ "))
+                   and not labelled(t, fences, i)]
     checks = {
         "example_choice_planned": bool(re.search(r"example choice", plan, re.I)),
         "see_it_in_action": sect is not None and (bool(blocks) or bool(IMG_RE.search(sect))),
