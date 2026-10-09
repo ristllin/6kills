@@ -89,7 +89,7 @@ them; strict certification needs a licensed STE checker.
 | 2. Capability check | Confirm which enabled sources resolve right now; state the mode; degrade on gaps. |
 | 3. Fan out | Parallel exploration agents, one per source/subtopic, each caching findings to `research/`. Pull live data, flag staleness. |
 | 4. Consolidate + plan | Reconcile conflicts, surface insights and corrections, write `plan.md`. Keep one tight 1 to 3 page brief when it fits; nest into an index plus linked sub-pages when breadth would force a monolith. For a product or tool, name the load-bearing mechanism and choose the example from a scored shortlist; products nest a usage sub-page by default. |
-| 5. Diagrams + screenshots | Author the 1 to 3 information-carrying diagrams, render to PNG (headless Chrome), eyeball each. Products also get at least one real view (screenshot or captured output) with its source; never a fake UI. |
+| 5. Diagrams + screenshots | Author the 1 to 3 information-carrying diagrams, render to PNG (headless Chrome), eyeball each. Products also get at least one real view (screenshot or captured output) with its exact source URL; from a demo GIF or video, a settled frame picked from a contact sheet; never a fake UI. |
 | 6. Publish | Notion (upload PNGs, draft unless a destination is named), HTML, Markdown, or local server. Nested packs publish as a tree: Notion sub-pages, a wiki-like HTML set, or linked Markdown files. |
 | 7. Verify | Re-open the result, confirm diagrams and structure, grep for dashes (zero), spot-check claims, report with leads. |
 

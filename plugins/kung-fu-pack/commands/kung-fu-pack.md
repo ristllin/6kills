@@ -44,7 +44,8 @@ Technical English per `references/asd-ste100.md`). In short:
 5. **Diagrams and screenshots.** Identify the 1 to 3 diagrams that carry real information, generate
    them from the dataviz template, render to PNG with headless Chrome, and eyeball each before using
    it. For a show-it target, also capture at least one real view of the thing (screenshot or output)
-   with its source; never draw a fake UI.
+   with its exact source URL (from a demo GIF or video, a settled frame picked from a contact sheet,
+   not one mid-transition); never draw a fake UI.
 6. **Publish** to the chosen output: Notion (upload PNGs, create or update the page; draft unless a
    destination is named; confirm before overwriting), self-contained HTML, local Markdown, or the
    local preview server.
