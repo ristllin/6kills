@@ -145,7 +145,7 @@ example and visuals per `references/examples-and-visuals.md`.
 
 ### 6. Publish
 Follow the house page style in `references/page-style.md` (framing callout, tight sections, tables,
-a "See it in action" example for show-it targets, every claim with a lead, a sources/leads section at
+a "See it in action" section on the main page for show-it targets, every claim with a lead, a sources/leads section at
 the end). Apply the configured
 `writing_standard`: `default` (dense peer-level prose) or `asd-ste100` (Simplified Technical English
 per `references/asd-ste100.md`; short single-idea sentences, active voice, one term per concept, no
@@ -168,7 +168,8 @@ Verify every inter-page link resolves.
 Re-open or fetch the result: diagrams render, sections hold, tables intact. Confirm `plan.md` exists. **Count
 the words of every page: a single page over ~1500 words (3 A4 pages) is out of bounds**; cut it, or
 nest it if the material is genuinely broad. For a nested pack, the index stays within that budget.
-For a show-it target, confirm the example passes its own tests (shows the mechanism, about 15 lines
+For a show-it target, confirm the main page (the index, not the usage sub-page) has a section titled
+"See it in action" holding the example and one real visual, and that the example passes its own tests (shows the mechanism, about 15 lines
 or one screen, lead or `Illustrative` label) and at least one real visual is embedded (an image in `assets/` or a pasted output block; a description
 or a path to a screenshot does not count). Look at each embedded screenshot once more: it must show
 the product's result (findings, a filled detail pane, output), not a loading state, a transition,
