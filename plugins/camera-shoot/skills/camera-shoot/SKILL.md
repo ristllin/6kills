@@ -299,6 +299,22 @@ balance. Without it, frames come out black or badly underexposed.
    fallback (rerun steps 5 and 5b) and tell the user.
 4. Never open the photo in an image viewer or send it to the user unless they ask.
 
+## Photographing screens and LEDs
+
+Read this before drawing any conclusion from a photo of a lit display.
+
+- **Backlit screens clip the webcam.** At normal brightness a lit screen photographs
+  as near-white whatever it shows; a coloured halo around a white patch means
+  clipping, not a wrong colour. Before judging colours, lower the screen's brightness
+  (on a dev board 3-10 % backlight works well) and check the screen region isn't
+  clipped (channel means near 255).
+- **A webcam is not a colorimeter.** Auto exposure and white balance adapt to the
+  room, so tints, gamma and exact hues in a photo say little about the screen. Use
+  photos to judge what is shown, where, orientation, colour order and obvious
+  defects. Never tune a display's colours from webcam photos.
+- **Framing can change between sessions.** Re-locate the subject each time (a photo
+  with the screen dark minus one with it lit isolates the screen).
+
 ## Photo series / timelapse
 
 Loop single captures with a fresh timestamped filename each time. Don't use a tool's
@@ -316,6 +332,11 @@ series longer than a few minutes or more than about 50 frames.
   and rerun.
 - **Helper log says "refused"**: the command didn't start with `imagesnap`/`ffmpeg`,
   or contained `; & | $ ( ) < >` or a backtick. Rewrite it as one plain command.
+- **`"method": "direct"` worked before but now fails, hangs or gives black
+  frames**: camera grants belong to the app that launched you (a terminal, a desktop
+  app, a background job), so a method saved in one context can be wrong in another.
+  Re-run step 3 in this context and use the helper. Don't improvise other capture
+  paths such as driving a browser.
 - **Device busy or capture hangs**: another app (video call, Photo Booth) holds the
   camera. Ask the user to close it.
 - **Camera not listed**: unplug and replug it, then list devices again. If the
