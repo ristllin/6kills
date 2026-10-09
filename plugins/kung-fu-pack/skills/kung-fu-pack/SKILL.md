@@ -138,7 +138,9 @@ dark-mode palette, `node gen.js`, then render each to PNG with headless Chrome (
 `references/render-and-publish.md`) and **Read the PNG to eyeball it** before using it. No em dashes
 in diagram text either. Diagrams explain; screenshots prove. A show-it target also gets at
 least one real view of the thing (UI screenshot, results view, captured output), saved in `assets/`
-with its source URL as the lead and read back before use. Never draw a fake UI. Choose and place the
+with its exact image or page URL as the lead and read back before use. From a GIF or video, pick a
+settled frame that shows the result (a contact sheet of sampled frames first; no spinner, loading
+or empty pane, transition, or overlay). Never draw a fake UI. Choose and place the
 example and visuals per `references/examples-and-visuals.md`.
 
 ### 6. Publish
@@ -168,7 +170,9 @@ the words of every page: a single page over ~1500 words (3 A4 pages) is out of b
 nest it if the material is genuinely broad. For a nested pack, the index stays within that budget.
 For a show-it target, confirm the example passes its own tests (shows the mechanism, about 15 lines
 or one screen, lead or `Illustrative` label) and at least one real visual is embedded (an image in `assets/` or a pasted output block; a description
-or a path to a screenshot does not count). A missing
+or a path to a screenshot does not count). Look at each embedded screenshot once more: it must show
+the product's result (findings, a filled detail pane, output), not a loading state, a transition,
+an overlay, or an empty panel; otherwise pick another frame or image. A missing
 real visual is a gap to close, not to report: go back, fetch a docs or README image (or run the code
 if you are already in a container or sandbox), then publish; for a product
 target, also that the usage sub-page exists and is linked. **Grep the final text

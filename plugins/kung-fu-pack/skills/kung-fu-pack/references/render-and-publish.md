@@ -46,6 +46,32 @@ as the lead under the image on the page. Read the PNG; crop or re-shoot if it sh
 a login wall, or text too small to read. For a CLI or library you can run, paste the real terminal
 output as a code block instead of a screenshot.
 
+### A frame from a GIF or video (contact sheet first)
+Do not take frame 0 or a random frame: demo recordings are mostly motion. Sample frames into one
+small sheet, Read the sheet, then save only the settled frame you chose:
+
+```bash
+python3 - raw.gif 12-sheet.png <<'PY'   # needs Pillow; prints the frame index of each tile
+import sys
+from PIL import Image
+im = Image.open(sys.argv[1]); n = getattr(im, "n_frames", 1)
+idx = sorted({round(i * (n - 1) / 5) for i in range(6)})  # 6 evenly spaced, last included
+sheet = Image.new("RGB", (1200, 600), "white")
+for k, i in enumerate(idx):
+    im.seek(i); t = im.convert("RGB"); t.thumbnail((400, 300))
+    sheet.paste(t, ((k % 3) * 400, (k // 3) * 300))
+sheet.save(sys.argv[2]); print("tiles, left to right, top to bottom:", idx)
+PY
+# after reading the sheet, save the chosen frame N, then shrink it (<=1600 px, ~500 KB):
+python3 -c 'import sys;from PIL import Image;im=Image.open(sys.argv[1]);im.seek(int(sys.argv[2]));im.convert("RGB").save(sys.argv[3])' raw.gif N 12-ui.png
+```
+
+For a video, `ffmpeg -i raw.mp4 -vf "fps=1/5,scale=400:-1,tile=3x2" -frames:v 1 12-sheet.png`
+builds the sheet (one tile every 5 s; adjust to the length), and
+`ffmpeg -ss <seconds> -i raw.mp4 -frames:v 1 12-ui.png` saves the chosen frame. Delete the raw file
+after. If no sampled frame is settled, sample more densely near the end, where demos usually rest on
+the result.
+
 ## Publish to Notion (upload PNGs, embed, create/update)
 
 1. For each PNG, ask for an upload URL with the `notion-create-file-upload` MCP tool

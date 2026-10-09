@@ -72,6 +72,16 @@ contrast shows what the mechanism buys, which a single happy-path run does not.
   wide and about 500 KB (`sips -Z 1600` on macOS, ImageMagick `convert -resize 1600x`, or Pillow;
   or open it in headless Chrome at a fixed window size and screenshot that), Read only the small
   PNG, and delete the raw download. Large images also bloat the self-contained HTML.
+- **Pick a settled frame, not the first one.** A demo GIF or video spends many frames in motion: a
+  loading spinner, a panel sliding in, a zoom or magnifier overlay, a cursor mid-click, an empty
+  pane before the results arrive. Sample about six frames (evenly spaced, the last one included)
+  into one small contact sheet, look at the sheet, and keep the frame that shows the result itself:
+  findings listed, the detail pane filled, the fix diff visible. Reject any frame with a spinner,
+  a "loading" or empty state, a transition, or an overlay covering the content. Recipe:
+  `render-and-publish.md`.
+- **The visual matches the page.** Prefer the frame or image that shows the same kind of result as
+  the chosen example (a taint-flow example wants a finding with its data flow, not a settings
+  screen). The lead is the exact image or page URL it came from, not the repo or the docs home.
 - If the product UI is gated and no public image exists, say so in one line and use real output or a
   clearly labelled illustrative example instead. Never draw a fake UI.
 
