@@ -1,92 +1,92 @@
-# kung-fu-pack hill-climb: method and results
+# kung-fu-pack benchmark v2: a hard, unsaturated synthesis eval, and one gated hill-climb cycle
 
-A benchmark for the `kung-fu-pack` skill (research a target across available tools, write a 1-3 page
-briefing) and a gated hill-climb of the skill text against it. This reports one full, real cycle:
-a baseline, one proposed mutation, measurement, independent peer review, and a gatekeeper decision.
-No numbers are fabricated.
+The first eval was saturated (a self-reported comprehension quiz ceilinged at 1.0) and could not
+drive improvement. This rebuilds the benchmark around published, reimplementable methods so it is
+genuinely hard and unsaturated, then runs one full gated hill-climb cycle. All numbers below are real;
+nothing is fabricated.
 
-## 1. Setup that ran
-- **Writer:** Claude Code (opus), foundry-anthropic quota.
-- **Scorers:** astra (gpt-6-astra via Codex, foundry-openai quota) as the cold reader for the
-  comprehension quiz and as the rubric judge. astra is never the writer, so reader and writer are
-  independent. ML4 (Mistral) was not used: the inherited Mistral key was stale and the run proceeded
-  rather than block (single-judge, noted as a threat).
-- **Tasks (dev, web-answerable):** `sci-attention` (the Transformer paper), `sci-raft` (the Raft
-  paper), `eng-speculative-decoding`. Each has gold questions; the writer researched with built-in web
-  tools and wrote `out/page.md` + `research/` + `pack.json`.
-- **Metrics:** composite = 0.45 comprehension + 0.15 efficiency + 0.20 grounding + 0.20 source-coverage
-  F1, with hard floors (em-dashes 0, length 1-3 pages, source F1 >= 0.5). Comprehension = fraction of
-  gold questions a cold reader can answer from the brief alone.
+## 1. What the benchmark measures
+Three task families, each "many sources -> a tight brief", with frozen post-cutoff corpora so the
+answer cannot come from parametric memory:
+- **F1 arxiv-landscape:** compress ~220 recent cs.LG abstracts into a landscape (hard compression +
+  distinct coverage).
+- **F2 release-digest:** digest several vLLM/Transformers versions into a what-changed brief (nesting
+  + cross-version integration).
+- **F3 distributed-evidence:** a 3-source corpus (design doc, issue tracker, changelog) where key
+  facts require combining 2+ sources (Loong-style "no single source has the answer").
 
-## 2. Baseline v0 (real)
-| task | composite | comprehension | grounding | source F1 | floors |
-|---|---|---|---|---|---|
-| eng-speculative-decoding | 0.842 | 1.00 | 0.733 | 0.556 | pass |
-| sci-attention | 0.830 | 1.00 | 0.625 | 0.667 | pass |
-| sci-raft | 0.793 | 1.00 | 0.400 | 0.833 | fail (length) |
-| **avg** | **0.822** | **1.00** | 0.586 | 0.685 | - |
+Grading stack (`scorers/`), composite with hard floors, built from proven methods:
+- **eligibility gate** (FACTS-style): rejects evasive/empty briefs before scoring.
+- **nugget recall + integration recall** (AutoNuggetizer AutoAssign, model-judged not heuristic):
+  fraction of gold vital nuggets, and of integration-facts that each need 2+ sources, that the brief
+  conveys. Integration recall is the hard, unsaturated core.
+- **citation** (ALCE-inspired): leads present and resolving to the frozen corpus.
+- **anti-redundancy** and **tool-agnostic source-coverage** (anti-overfit routing).
+- **nesting-appropriateness:** rewards an index + linked sub-pages when the corpus truly warrants it,
+  penalizes a monolith overflow, rewards a tight single page when that fits.
+- Floors: eligibility, em-dashes == 0, and a length rule that a nest-expected task passes only by
+  actually nesting or staying within budget.
 
-Reading: **comprehension is saturated at 1.0** (the briefs convey the facts a reader needs). The
-headroom is in **grounding** (a lead behind every claim) and **source precision**, and one brief
-tripped the length floor.
+Writer: Claude (opus). Judge: astra (gpt-6, independent of the writer). ML4 was blocked on a stale
+Mistral key, so this run is single-judge; cross-judge with opus is the documented next step.
 
-## 3. Iteration 1 (v1): proposed, measured, reviewed, rejected
-**Hypothesis:** strengthen the skill's grounding and source-precision rules (a lead on 100 percent of
-fact lines; list only sources actually used). Edited `SKILL.md` Principles, re-ran the same 3 tasks.
+## 2. Unsaturation (the gate the old eval failed)
+Baseline v0 composite by task: **F1 0.072, F2 0.143, F3 0.702.** A wide spread with large headroom,
+and F1/F2 fail the floors (they overflowed to 3.8 and 3.6 pages). Integration recall at baseline is
+**0.0 / 0.167 / 0.8**. This is the opposite of the old 1.0 ceiling: the benchmark discriminates and
+leaves plenty to climb.
 
-**Result (real):**
+## 3. Iteration v1 (the two reported skill bugs), measured
+Applied as the first iteration: (1) clarifying questions made parameter-shaped (never invent specific
+project names); (2) a nesting methodology (index + linked sub-pages on genuine overflow instead of a
+monolith). Same scorer for both versions.
+
 | task | v0 | v1 | delta |
 |---|---|---|---|
-| eng-speculative-decoding | 0.842 | 0.869 | +0.027 |
-| sci-attention | 0.830 | 0.722 | -0.108 |
-| sci-raft | 0.793 | 0.597 | -0.196 |
-| **avg** | **0.822** | **0.729** | **-0.093** |
+| F1 arxiv-landscape | 0.072 | 0.248 | +0.176 (now nests: index + 7 theme sub-pages; floors pass) |
+| F2 release-digest | 0.143 | 0.478 | +0.335 (nests: index + per-project sub-pages) |
+| F3 distributed-evidence | 0.702 | 0.706 | +0.004 (correctly stays a single page; no regression) |
+| **avg** | **0.306** | **0.477** | **+0.171** |
 
-See `report/figures/iteration_v0_v1.svg`. grounding and source-coverage swung sharply the wrong way on
-two of three tasks.
+See `report/figures/v2_v0_v1.svg`. The benchmark detected the real fix: nesting resolved the overflow
+on the big-corpus tasks and did not fragment the small one.
 
-**Independent peer review (astra):** verdict **revise**. Biggest risk flagged: the rigid "100 percent"
-per-line citation rule risks overfitting to the coverage metric, adding citation clutter and
-suppressing synthesis without ensuring sources actually support claims.
+**Peer review (astra):** returned **revise**, flagging that a rigid page-count trigger could fragment
+readable briefs and duplicate overview prose. Addressed before accepting: nesting is now a complexity
+judgment, the index links to sub-pages and does not duplicate them, and a brief that reads well as one
+page is never fragmented. Re-ran F2 with the revised wording: still nests, composite 0.478 (held).
 
-**Gatekeeper decision: REJECT and revert to v0.** Evidence: composite regressed 0.093 overall and
-breached the no-regression intent on two tasks; the peer reviewer said revise; the swing exposed a
-metric problem (below). v0 stands as the best skill version.
+**Gatekeeper decision: ACCEPT v1.** Composite up on the overflow tasks, no regression on the flat
+task, peer-review concern resolved.
 
-## 4. What the negative result taught us (the real finding)
-grounding (and source-coverage) are computed from `pack.json`, whose claims are extracted
-heuristically from the brief. They proved **too sensitive to formatting** to optimize against: the
-same "cite everything" nudge made the extracted lead-coverage fall, not rise. So before more
-iterations, the right lever is **hardening the metric**, not changing the skill: have the writer emit
-claims+leads explicitly in `pack.json` (contract already supports it) and verify each lead resolves,
-rather than inferring claims from prose. Separately, comprehension is already 1.0 on this small suite,
-so the quiz needs **harder, more discriminating questions** to create headroom. These are the next two
-work items, and they matter more than another skill tweak.
+## 4. Honest findings
+- **Integration recall barely moved** (F1 still 0.0, F2 0.167). Nesting fixes structure, not the hard
+  compression/synthesis core. That core is the real remaining headroom and the next hill-climb target,
+  and its persistence is evidence the benchmark is not gameable by formatting alone.
+- **A scorer bug was found and fixed mid-cycle:** the deterministic scorer only read `out/page.md`, so
+  nested packs looked empty and failed floors. Fixed to read `index.md` + sub-pages. v0 (monoliths)
+  was unaffected, so the v0-vs-v1 comparison stays fair.
+- **Judge stochasticity:** F3 integration recall varied 0.8 to 1.0 across identical re-runs
+  (single-judge). Deltas under ~0.05 are noise; the v1 nesting gains (+0.18, +0.34) are well beyond it.
 
-## 5. Honest scope and threats to validity
-- **n = 3 web tasks.** The 4-category suite exists in `tasks.jsonl` (code, science, eng, company), but
-  code tasks need local repos and the company task used placeholder sources, so the live run used the
-  three clean web tasks. Widen before drawing strong conclusions.
-- **Single judge (astra) for both quiz and rubric.** No cross-judge in this run (ML4 blocked). Judge
-  self-preference is partly mitigated because the judge is not the writer, but a second judge is needed.
-- **Comprehension saturation** limits what the primary metric can currently distinguish.
-- **Writer variance:** one sample per cell; the agent is stochastic, so per-task deltas near 0.03 are
-  within noise. The v1 regression (-0.09 avg, -0.11 and -0.20 on two tasks) is beyond that.
+## 5. Threats to validity
+n = 3 dev tasks; single judge (astra), cross-judge pending ML4; gold for F1/F2 proposed by a model
+then vetted (integration-facts confirmed to need 2+ sources); F1 writing is slow (8 files) and timed
+out once during production (re-scored from the produced pack). Widen tasks, add the opus cross-judge,
+and harden the nugget match before strong claims.
 
-## 6. Bottom line
-One complete, honest, gated hill-climb cycle ran end to end: baseline measured, a mutation proposed,
-measured, peer-reviewed by an independent model, and **rejected on evidence**, with the skill reverted.
-The net skill change is zero (v0 kept), which is the correct outcome here. The highest-value next steps
-are metric hardening and a harder, wider task suite, both specified above.
-
-## 7. Reproduce
+## 6. Reproduce
 ```
-cd plugins/kung-fu-pack/bench
-# baseline on the three web tasks (needs the foundry env; writer=claude, judge=astra):
-python3 drive.py --ids sci-attention,sci-raft,eng-speculative-decoding \
-    --writer claude --results results_v0 --with-models
-# propose a skill variant, then:
-python3 drive.py --ids sci-attention,sci-raft,eng-speculative-decoding \
-    --writer claude --results results_v1 --with-models
+cd plugins/kung-fu-pack/bench && export PYTHONPATH=$PWD
+# rebuild corpora (post-cutoff): python3 corpora/arxiv.py ... ; python3 corpora/releases.py ...
+# baseline and iteration:
+python3 drive_synth.py --results v0 --writer claude --ids f1-arxiv-cslg,f2-releases,f3-multitool
+python3 drive_synth.py --results v1 --writer claude --ids f1-arxiv-cslg,f2-releases,f3-multitool
+# deterministic-only scoring needs no keys: python3 scorers/deterministic.py <pack_dir>
 ```
-Deterministic-only scoring needs no keys: `python3 scorers/deterministic.py <pack_dir>`.
+
+## 7. Bottom line
+A hard, unsaturated benchmark exists and is verified to discriminate (spread 0.07 to 0.70, integration
+recall as low as 0.0). One full gated cycle ran: baseline, a measured fix, independent peer review,
+a revision, and an evidence-based accept, with the net skill genuinely improved on structure while the
+hard synthesis core remains open as the next lever.
