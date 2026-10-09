@@ -2,7 +2,7 @@
 
 **Turn a target into a tight, diagram-rich briefing page, sourced from everything you can reach.**
 
-Point it at a target (a system, a codebase, an account, a set of engagements, a person, a topic) with
+Point it at a target (a system, a codebase, an account, a set of engagements, a topic) with
 a scope and some links. It fans out parallel exploration across every source you have (Notion, Linear,
 local code, the web), caches the raw findings in a local workspace, pulls live data and flags
 staleness, consolidates into a planned structure, generates real architecture diagrams, and publishes

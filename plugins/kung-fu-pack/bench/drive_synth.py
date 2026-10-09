@@ -2,15 +2,16 @@
 
 For each task: feed the FROZEN corpus to a writer harness running the kung-fu-pack method, have
 it write out/page.md + pack.json, then score with the full stack (compose.score_all). Results are
-archived per version (results_vN/<cell>.json) for the hill-climb curve.
+archived per run (results_rN/<cell>.json) for the hill-climb curve.
 
     PYTHONPATH=. python3 drive_synth.py --skill ../skills/kung-fu-pack/SKILL.md \
-        --results v0 --writer claude --ids f3-multitool
+        --results r0 --writer claude --ids f3-multitool
 """
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import time
 from pathlib import Path
@@ -20,7 +21,7 @@ from harnesses import llm, manifest as manifest_mod
 from scorers import compose
 
 BENCH = Path(__file__).resolve().parent
-MAX_CORPUS_CHARS = int(__import__("os").environ.get("KFP_MAX_CORPUS", "400000"))
+MAX_CORPUS_CHARS = int(os.environ.get("KFP_MAX_CORPUS", "400000"))
 
 CONTRACT = """
 OUTPUT CONTRACT (write files in your current directory, structured per the skill method):
@@ -37,8 +38,7 @@ Reply with just: BRIEF_DONE.
 
 
 def _load_corpus(task: dict) -> str:
-    base = BENCH / task["corpus_path"] if not Path(task["corpus_path"]).is_absolute() \
-        else Path(task["corpus_path"])
+    base = BENCH / task["corpus_path"]  # an absolute corpus_path overrides BENCH
     if task.get("corpus_dir"):
         parts = [p.read_text(errors="ignore") for p in sorted((base / task["corpus_dir"]).glob("*"))
                  if p.is_file()]
@@ -64,7 +64,7 @@ def main() -> None:
     ap.add_argument("--ids", default="")
     ap.add_argument("--writer", default="claude")
     ap.add_argument("--model", default="opus", help="cell label only; set KFP_CLAUDE_MODEL to change the model")
-    ap.add_argument("--results", default="v0")
+    ap.add_argument("--results", default="r0")
     ap.add_argument("--workers", type=int, default=3)
     ap.add_argument("--produce-only", action="store_true", help="write packs, score later")
     ap.add_argument("--rescore", action="store_true", help="score existing packs, do not regenerate")
@@ -91,7 +91,8 @@ def main() -> None:
             (pack / "out").mkdir(parents=True)
             prompt = build_prompt(t, skill_text, _load_corpus(t))
             (pack / "agent.log").write_text(llm.call(a.writer, prompt, cwd=str(pack)))
-            manifest_mod.build(pack)
+            if not (pack / "pack.json").exists():  # keep the writer's own manifest
+                manifest_mod.build(pack)
             if a.produce_only:
                 print(f"{a.results} {cell}: produced ({round(time.time() - t0, 1)}s)", flush=True)
                 return

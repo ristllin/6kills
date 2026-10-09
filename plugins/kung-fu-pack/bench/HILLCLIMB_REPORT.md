@@ -87,7 +87,8 @@ human-verified); F3 is synthetic and saturated; the writer is a single model fam
 ```
 cd plugins/kung-fu-pack/bench && export PYTHONPATH=$PWD
 python3 gold/author.py --corpus tasks/fixtures/f1_arxiv_cslg --kind landscape   # rebuild gold
-python3 drive_synth.py --results r1 --workers 5     # produce + score all tasks with the current skill
+python3 drive_synth.py --results r2 --workers 5     # produce + score all tasks with the current skill (new run id;
+                                                     # r0/r1 are the curated runs, do not overwrite)
 python3 drive_synth.py --results r1 --rescore       # rescore existing packs (e.g. after a scorer change)
 ```
 Set `KFP_CODEX_PROFILE` if your Codex judge needs a named profile. Raw packs and logs go to

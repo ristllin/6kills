@@ -42,7 +42,7 @@
     {
       "name": "kung-fu-pack",
       "source": "./plugins/kung-fu-pack",
-      "description": "Turn a target (a system, codebase, account, or set of engagements) into a tight, high-signal briefing page. Interviews you once to wire up every source you have access to (Notion, Linear, local repos, web) and save your defaults, then on each run it fans out parallel exploration agents into a cached local workspace, pulls live data, consolidates and plans the page, generates real architecture diagrams (dataviz dark-mode, rendered to PNG via headless Chrome), and publishes a styled page to Notion, a self-contained HTML file, local Markdown, or a local preview server. Every claim carries a deep-dive lead, staleness is flagged, and it never uses em dashes. Exposes /kung-fu-pack and /kung-fu-pack-init."
+      "description": "Turn a target (a system, codebase, account, set of engagements, or topic) into a tight, high-signal briefing page. Interviews you once to wire up every source you have access to (Notion, Linear, local repos, web) and save your defaults, then on each run it fans out parallel exploration agents into a cached local workspace, pulls live data, consolidates and plans the page, generates real architecture diagrams (dataviz dark-mode, rendered to PNG via headless Chrome), and publishes a styled page to Notion, a self-contained HTML file, local Markdown, or a local preview server. Large topics become a short index plus linked sub-pages. Every claim carries a deep-dive lead, staleness is flagged, and it never uses em dashes. Also installs on Mistral Vibe and OpenAI Codex. Exposes /kung-fu-pack and /kung-fu-pack-init."
     }
   ]
 }

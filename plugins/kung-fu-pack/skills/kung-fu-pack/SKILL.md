@@ -60,7 +60,7 @@ are cheap:
 <workspace-root>/packs/<slug>/
   research/     one intermediate file per source or subtopic (raw findings + SOURCES)
   assets/       diagram gen.js, the .html, and rendered .png files
-  out/          local output (page.md / page.html) when not publishing to Notion
+  out/          local output (page.md / page.html, or index.md plus <section>.md when nested)
   plan.md       the planned page structure, written before publishing
 ```
 

@@ -33,9 +33,9 @@ bench/
 ## Run
 ```
 cd plugins/kung-fu-pack/bench && export PYTHONPATH=$PWD
-python3 drive_synth.py --results r1 --workers 5                       # current SKILL.md
-python3 drive_synth.py --skill path/to/SKILL.md --results r2 --ids f1-arxiv-cslg
-python3 drive_synth.py --results r1 --rescore                         # rescore only
+python3 drive_synth.py --results r2 --workers 5                       # current SKILL.md, new run id
+python3 drive_synth.py --skill path/to/SKILL.md --results r3 --ids f1-arxiv-cslg
+python3 drive_synth.py --results r1 --rescore                         # rescore existing packs only
 python3 scorers/deterministic.py <pack_dir>                           # floors, no keys
 ```
 Needs the `claude` and `codex` CLIs authenticated. Set `KFP_CODEX_PROFILE` for a named Codex

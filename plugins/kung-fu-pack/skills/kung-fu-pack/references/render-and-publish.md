@@ -65,7 +65,7 @@ Write `../out/page.md` with the body, referencing diagrams relatively
 Serve the pack for live viewing:
 
 ```bash
-cd ../out && python3 -m http.server 8787   # then open http://localhost:8787/page.html
+cd ../out && python3 -m http.server 8787 --bind 127.0.0.1   # then open http://localhost:8787/page.html
 ```
 
 ## Nested packs (index plus sub-pages)
@@ -80,7 +80,7 @@ mental model, and one line plus a link per sub-page. Never repeat sub-page conte
   "Back to index" link on every section page. Inline diagrams as base64 per page, or share one
   `assets/` dir if the set is served together.
 - **Markdown:** write `out/index.md` plus `out/<section>.md`, linked as `[Section](section.md)`.
-- **Preview server:** serve `out/` (`python3 -m http.server 8787`) and open `index.html`.
+- **Preview server:** serve `out/` (`python3 -m http.server 8787 --bind 127.0.0.1`) and open `index.html`.
 
 Verify: every link in the index resolves to a page that exists, and every sub-page links back.
 

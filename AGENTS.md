@@ -26,13 +26,18 @@ accepted and written in the PR body.
      Codex and Vibe: `install.sh`);
    - **scenario A**, a thin request ("build me an onboarding brief"): the skill must ask general,
      parameter-shaped questions and must not invent concrete names (model-graded);
-   - **scenario B**, a real-world pack on a public repo (default `fastapi/typer`): the workspace is
-     used (research files + plan), output exists, zero em/en dashes, length rule holds (one page
-     within ~3 A4 pages, or a short index plus linked sub-pages whose links resolve), at least 60%
-     of fact lines carry a lead, and code leads resolve to real files (`qa/check_pack.py`).
+   - **scenario B**, a real-world pack on a public repo (`KFP_QA_TARGET_REPO`, `owner/repo` or a
+     git URL, default `fastapi/typer`), checked by `qa/check_pack.py`: the workspace is used
+     (research files + `plan.md`), output exists, zero em/en dashes, the length rule holds (a
+     single page within 1500 words, about 3 A4 pages at 500 words each; or an index within that
+     budget plus linked sub-pages whose links resolve), at least 60% of fact lines carry a lead, and
+     at least 80% of path-shaped leads resolve to a real file in the target repo or the pack.
    Credentials pass by env var name only. Harness configs (Codex provider, Vibe model) are supplied
-   from a directory outside the repo via `KFP_QA_CFG`. Read `$KFP_QA_OUT/summary.md`, and open at
-   least one produced pack to judge it by eye; the checks are a floor, not a quality bar.
+   from a directory outside the repo via `KFP_QA_CFG`. Scenario A is graded by the host `claude`
+   CLI, so it must be installed and authenticated. The script exits nonzero if any harness fails
+   any column. Read `$KFP_QA_OUT/summary.md`, and open at least one produced pack to judge it by
+   eye; the checks are a floor, not a quality bar. Agent runs are nondeterministic: a single flaky
+   failure may be re-run once, but record it in the PR.
 3. **Prism** on the final diff (`prism pr`), then fix what it finds and re-run any affected QA.
 4. **Sanitize** the full diff against `main`, because the repo is public:
    - no secrets, tokens, or keys; no internal hostnames, proxy or tailnet URLs, or local paths;

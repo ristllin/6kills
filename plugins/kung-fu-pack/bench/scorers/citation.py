@@ -26,9 +26,7 @@ LEAD_RE = re.compile(
 FACT_LINE = re.compile(r"^\s*([-*]|\|)")
 
 
-def _brief(pack: Path) -> str:
-    return brief_mod.read(pack)
-
+TABLE_SEP = re.compile(r"\|[\s:|-]+\|")
 
 
 def _corpus_tokens(pack: Path, task: dict) -> str:
@@ -49,7 +47,8 @@ def _corpus_tokens(pack: Path, task: dict) -> str:
     cp = task.get("corpus_path")
     if cp and Path(cp).exists():
         for f in Path(cp).rglob("*"):
-            if f.is_file() and f.suffix in (".txt", ".json", ".md"):
+            # never the answer key: leads must resolve against sources, not gold
+            if f.is_file() and f.suffix in (".txt", ".json", ".md") and not f.name.startswith("gold"):
                 parts.append(f.read_text(errors="ignore"))
     return "\n".join(parts)
 
@@ -58,20 +57,22 @@ def _resolves(lead: str, corpus: str) -> bool:
     """A lead resolves if every reference inside it appears in the frozen corpus."""
     ld = re.sub(r"(?i)^arxiv:", "", lead.strip("()` ").strip())
     refs = [r.strip() for r in ld.split(",") if r.strip()] or [ld]
+    def found(r: str) -> bool:  # whole-token match; an arXiv id may carry a vN suffix
+        return bool(r) and re.search(rf"(?<![a-z0-9]){re.escape(r)}(?:v\d+)?(?![a-z0-9])", corpus) is not None
+
     def one(r: str) -> bool:
-        r = r.lower()
-        if r in corpus or r.split("/")[-1] in corpus:
-            return True
-        return re.search(rf"(?<![a-z0-9]){re.escape(r)}(?![a-z0-9])", corpus) is not None
+        r = r.lower().rstrip("/")
+        return found(r) or found(r.split("/")[-1])
     return all(one(r) for r in refs)
 
 
 def score(task: dict, pack_dir: Path) -> dict:
     pack = Path(pack_dir)
-    text = _brief(pack)
+    text = brief_mod.read(pack)
     if not text:
         return {"ran": False, "reason": "no brief"}
-    fact_lines = [l for l in text.splitlines() if FACT_LINE.match(l) and len(l.strip()) > 8]
+    fact_lines = [l for l in text.splitlines() if FACT_LINE.match(l) and len(l.strip()) > 8
+                  and not TABLE_SEP.fullmatch(l.strip())]
     if not fact_lines:
         return {"ran": True, "recall": 0.0, "resolvable_precision": 0.0, "n_fact_lines": 0}
     with_lead = [l for l in fact_lines if LEAD_RE.search(l)]

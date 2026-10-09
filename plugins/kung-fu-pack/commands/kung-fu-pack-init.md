@@ -49,7 +49,8 @@ questions.
 
 **D. Workspace root.** Where the cached per-target workspaces live. Default `~/kung-fu-pack`
   (each target gets `packs/<slug>/` with `research/`, `assets/`, `out/`, `plan.md`). Accept an
-  override.
+  override, but tell the user that runs find the config through `KUNG_FU_PACK_ROOT`, so a custom
+  root needs `export KUNG_FU_PACK_ROOT=<root>` in their shell profile.
 
 **E. Depth + model.** Default depth "standard" (a handful of parallel explorers); offer "deep"
   (larger fan-out, adversarial cross-check) for audits. Model: default to inheriting the session

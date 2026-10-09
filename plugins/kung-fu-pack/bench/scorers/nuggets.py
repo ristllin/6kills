@@ -15,6 +15,7 @@ Metrics per task:
 from __future__ import annotations
 
 import json
+import os
 import re
 from pathlib import Path
 
@@ -24,14 +25,9 @@ from harnesses import llm
 
 JUDGE = "codex"
 # Cross-judge panel (debias): recall is the mean over judges; agreement is reported.
-JUDGES = [j for j in __import__("os").environ.get("KFP_JUDGES", "codex,claude").split(",") if j]
+JUDGES = [j for j in os.environ.get("KFP_JUDGES", "codex,claude").split(",") if j]
 MIN_WORDS = 150  # below this a "brief" is evasive/empty
 JUDGE_CHARS = 90000  # judge sees the whole brief incl. sub-pages (was 14k, which truncated nests)
-
-
-def _brief(pack: Path) -> str:
-    return brief_mod.read(pack)
-
 
 
 def _extract_json(text: str):
@@ -65,11 +61,13 @@ def eligibility(brief: str, task: str) -> dict:
     data = _extract_json(llm.call(JUDGE, prompt)) or {}
     if "eligible" in data:
         return {"eligible": bool(data["eligible"]), "reason": data.get("reason", "")}
-    return {"eligible": words >= MIN_WORDS, "reason": "judge-unavailable; word-count fallback"}
+    return {"eligible": words >= MIN_WORDS, "judge_failed": True,
+            "reason": "judge-unavailable; word-count fallback"}
 
 
-def _assign(brief: str, items: list, kind: str, judge: str = JUDGE) -> set:
-    """Return the set of item ids the brief supports, judged by the model."""
+def _assign(brief: str, items: list, kind: str, judge: str = JUDGE) -> set | None:
+    """Return the set of item ids the brief supports, or None if the judge gave no usable verdict
+    (a failed judge must not be scored under its own name)."""
     listing = "\n".join(f'{it["id"]}: {it["text"]}' for it in items)
     prompt = (
         f"For each {kind} below, decide if the BRIEF clearly states or supports it. Be strict: "
@@ -80,7 +78,11 @@ def _assign(brief: str, items: list, kind: str, judge: str = JUDGE) -> set:
     data = _extract_json(llm.call(judge, prompt))
     if isinstance(data, dict) and isinstance(data.get("supported"), list):
         return set(str(x) for x in data["supported"])
-    # fallback: deterministic keyword presence
+    return None
+
+
+def _keyword_assign(brief: str, items: list) -> set:
+    """Last-resort deterministic match, used only when every judge failed (and labelled as such)."""
     return {it["id"] for it in items if _keyword_present(brief, it["text"])}
 
 
@@ -88,7 +90,7 @@ def score(task: dict, pack_dir: Path) -> dict:
     pack = Path(pack_dir)
     gold_path = pack / "gold.json"
     gold = json.loads(gold_path.read_text()) if gold_path.exists() else task.get("gold", {})
-    brief = _brief(pack)
+    brief = brief_mod.read(pack)
     task_desc = gold.get("task", task.get("scope", ""))
     if not brief:
         return {"ran": False, "reason": "no brief"}
@@ -101,11 +103,23 @@ def score(task: dict, pack_dir: Path) -> dict:
                 "vital_nugget_recall": 0.0, "all_nugget_recall": 0.0, "integration_recall": 0.0}
 
     vital = [n for n in nuggets if n.get("vital")]
-    per_judge = {}
+    per_judge, failed = {}, []
     for j in JUDGES:
         sn = _assign(brief, nuggets, "nugget", j) if nuggets else set()
         si = _assign(brief, integ, "integration fact", j) if integ else set()
+        if sn is None or si is None:
+            failed.append(j)
+            continue
         per_judge[j] = {
+            "vital_nugget_recall": _frac(vital, sn), "all_nugget_recall": _frac(nuggets, sn),
+            "integration_recall": _frac(integ, si),
+            "supported_nuggets": sorted(sn), "supported_integration": sorted(si),
+        }
+    method = "judges"
+    if not per_judge:  # every judge failed: score by keyword, never under a judge's name
+        method = "keyword-fallback"
+        sn, si = _keyword_assign(brief, nuggets), _keyword_assign(brief, integ)
+        per_judge["keyword"] = {
             "vital_nugget_recall": _frac(vital, sn), "all_nugget_recall": _frac(nuggets, sn),
             "integration_recall": _frac(integ, si),
             "supported_nuggets": sorted(sn), "supported_integration": sorted(si),
@@ -114,7 +128,8 @@ def score(task: dict, pack_dir: Path) -> dict:
     mean = {k: round(sum(v[k] for v in per_judge.values()) / len(per_judge), 3) for k in keys}
     return {"ran": True, "eligible": True, **mean,
             "n_vital": len(vital), "n_integration": len(integ),
-            "judges": per_judge, "agreement": _agreement(per_judge, nuggets + integ)}
+            "method": method, "failed_judges": failed, "judges": per_judge,
+            "agreement": _agreement(per_judge, nuggets + integ)}
 
 
 def _frac(items: list, supported: set) -> float:

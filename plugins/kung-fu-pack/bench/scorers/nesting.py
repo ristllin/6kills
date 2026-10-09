@@ -35,14 +35,19 @@ def _structure(pack: Path):
             break
     # a nested structure = an index plus >=2 other pages, with the index linking to them
     sub = [p for p in pages if p != index]
-    index_links = 0
+    links, index_words = [], 0
     if index is not None:
         itext = index.read_text(errors="ignore")
-        index_links = len(re.findall(r"\]\(([^)]+\.(?:md|html))\)", itext))
-    nested = index is not None and len(sub) >= 2 and index_links >= 2
+        links = re.findall(r"\]\(([^)#\s]+\.(?:md|html))\)", itext)
+        index_words = len(re.findall(r"\S+", itext))
+    links_resolve = all((index.parent / ln).exists() for ln in links) if links else False
+    # nested only counts if the index itself stays within budget and every link resolves; a long
+    # index with dangling links is a monolith wearing a nest's clothes
+    nested = (index is not None and len(sub) >= 2 and len(links) >= 2 and links_resolve
+              and index_words <= MAX_FLAT_PAGES * WORDS_PER_PAGE)
     return {"n_pages": len(pages), "total_words": total_words, "nested": nested,
             "index": index.name if index else None, "sub_pages": len(sub),
-            "index_links": index_links}
+            "index_links": len(links), "index_words": index_words, "links_resolve": links_resolve}
 
 
 def score(task: dict, pack_dir: Path) -> dict:

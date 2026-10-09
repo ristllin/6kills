@@ -7,7 +7,8 @@ set -uo pipefail
 H="${1:?usage: in-container.sh <claude|codex|vibe>}"
 OUT="/out/$H"; mkdir -p "$OUT"
 REF="${KFP_QA_REF:-HEAD}"
-TARGET_REPO="${KFP_QA_TARGET_REPO:-https://github.com/fastapi/typer}"
+TARGET_REPO="${KFP_QA_TARGET_REPO:-fastapi/typer}"
+[[ "$TARGET_REPO" == *://* ]] || TARGET_REPO="https://github.com/$TARGET_REPO"  # owner/repo or a URL
 TARGET_NAME="$(basename "$TARGET_REPO")"
 log(){ echo "[$H] $*" | tee -a "$OUT/steps.log"; }
 
@@ -20,8 +21,8 @@ case "$H" in
   claude)
     claude plugin marketplace add "$HOME/6kills" >>"$OUT/install.log" 2>&1
     claude plugin install kung-fu-pack@6kills >>"$OUT/install.log" 2>&1
-    claude plugin list >>"$OUT/install.log" 2>&1
-    grep -q "kung-fu-pack" "$OUT/install.log" && log "PASS install" || log "FAIL install" ;;
+    claude plugin list 2>&1 | tee -a "$OUT/install.log" | grep -q "kung-fu-pack" \
+      && log "PASS install" || log "FAIL install" ;;
   codex|vibe)
     bash "$HOME/6kills/plugins/kung-fu-pack/install.sh" "$H" >>"$OUT/install.log" 2>&1
     test -f "$HOME/.$H/skills/kung-fu-pack/SKILL.md" && log "PASS install" || log "FAIL install" ;;
@@ -35,14 +36,16 @@ if [ "$H" = vibe ] && [ -f /cfg/vibe.config.toml ]; then
   mkdir -p "$HOME/.vibe" && cp /cfg/vibe.config.toml "$HOME/.vibe/config.toml"
 fi
 
-# --- 2. a real-world target and a seeded config (the init interview is exercised separately) ---
+# --- 2. a real-world target and a seeded config (same schema /kung-fu-pack-init writes) ---
 mkdir -p "$HOME/work" && git clone -q --depth 1 "$TARGET_REPO" "$HOME/work/$TARGET_NAME"
 mkdir -p "$HOME/kung-fu-pack/packs"
 cat > "$HOME/kung-fu-pack/config.json" <<JSON
-{"version": 1, "workspace_root": "$HOME/kung-fu-pack", "default_output": "md",
- "notion_destination": "draft", "sources": {"code": true, "web": true, "notion": false,
+{"version": 1, "output_default": "md", "notion_destination": "draft",
+ "workspace_root": "$HOME/kung-fu-pack", "sources": {"code": true, "web": true, "notion": false,
  "linear": false, "beeper": false}, "code_roots": ["$HOME/work"], "depth": "standard",
- "writing_standard": "default", "house_rules": ["no em dashes", "lead behind every claim"]}
+ "model": "inherit", "writing_standard": "default",
+ "house_rules": {"no_em_dashes": true, "every_claim_has_a_lead": true, "flag_staleness": true,
+  "confirm_before_overwrite": true, "default_audience": "", "extra": []}}
 JSON
 
 run(){  # prompt -> transcript file
@@ -51,7 +54,7 @@ run(){  # prompt -> transcript file
     claude) claude -p "$prompt" --permission-mode bypassPermissions --output-format text ;;
     codex)  codex exec --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox \
               ${KFP_QA_CODEX_MODEL:+-m "$KFP_QA_CODEX_MODEL"} "$prompt" ;;
-    vibe)   vibe -p "$prompt" --trust --output text --max-turns 60 ;;
+    vibe)   vibe -p "$prompt" --trust --output text --max-turns 150 ;;
   esac >"$file" 2>&1
 }
 

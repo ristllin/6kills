@@ -20,7 +20,7 @@ SRC_RE = re.compile(r"(https?://\S+|[A-Z]+-\d+|`[^`]+`|[\w./-]+#[\w./-]+)")
 
 
 def _brief(pack: Path) -> tuple[Path | None, str]:
-    for rel in ("out/page.md", "out/page.html", "page.md"):
+    for rel in ("out/index.md", "out/page.md", "out/page.html", "page.md"):
         p = pack / rel
         if p.exists():
             return p, p.read_text(errors="ignore")

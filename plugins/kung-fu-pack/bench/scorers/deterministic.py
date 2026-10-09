@@ -4,12 +4,12 @@ These need NO model calls, so they are fast, cheap, and reproducible. They form 
 guardrail metrics and the hard floors:
   - em_dashes:        count of em/en dashes in the brief (hard floor: must be 0)
   - length_pages:     estimated A4 pages (hard floor: within [1, 3])
-  - lead_coverage:    fraction of claims that carry a resolvable lead
+  - lead_coverage:    fraction of claims that carry a lead
   - source_coverage:  precision/recall/F1 of sources reached vs the task gold set
                       (the anti-overfit routing metric: did it use the right sources,
                       regardless of which concrete tool/provider supplied them)
 
-A "pack" is the kung-fu-pack workspace dir: out/page.md (the brief), research/*
+A "pack" is the kung-fu-pack workspace dir: out/ (the brief: page.md, or index.md plus sub-pages), research/*
 (audit trail), and pack.json (machine-readable manifest; see harnesses/manifest.py).
 Scorers degrade gracefully: a missing manifest falls back to parsing the brief.
 """

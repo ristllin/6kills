@@ -20,7 +20,9 @@ MAX_PAGES = 3
 DASHES = (chr(0x2014), chr(0x2013))
 LINK_RE = re.compile(r"\]\(([^)#\s]+\.(?:md|html))\)")
 PATH_LEAD_RE = re.compile(r"`?([\w./-]+/[\w.-]+\.\w+)(?::\d+(?:-\d+)?)?`?")
-LEAD_RE = re.compile(r"(https?://|`[^`]+`|[\w./-]+\.\w+:\d+|[\w-]+/[\w./-]+\.\w+)")
+# A lead is a URL, a file:line, a path, or inline code that names something locatable (a path,
+# a dotted symbol, a #ref). A bare backticked word is not a lead.
+LEAD_RE = re.compile(r"(https?://|`[^`\s]*[./:#][^`]*`|[\w./-]+\.\w+:\d+|[\w-]+/[\w./-]+\.\w+)")
 
 
 def words(text: str) -> int:
@@ -72,10 +74,17 @@ def check(root: Path, repo: Path) -> dict:
 
     # Version strings like 3.10/3.12 are not paths; pack-relative leads (research/, plan.md) are
     # valid and resolve against the pack itself.
-    paths = {m.group(1).lstrip("./") for ln in with_lead for m in PATH_LEAD_RE.finditer(ln)
+    paths = {m.group(1).removeprefix("./") for ln in with_lead
+             for m in PATH_LEAD_RE.finditer(re.sub(r"https?://\S+", "", ln))
              if not m.group(1).startswith(("http", "www.")) and not m.group(1)[0].isdigit()}
-    resolved = [p for p in paths if (repo / p).exists() or (pack / p).exists()
-                or any(repo.rglob(Path(p).name))]
+
+    def resolves(p: str) -> bool:
+        # exact path in the repo or pack, else a repo file whose path ends with the lead
+        # (leads are often written relative to a package dir); never a bare basename match
+        if (repo / p).exists() or (pack / p).exists() or (pack / "out" / p).exists():
+            return True
+        return "/" in p and any(str(f).endswith("/" + p) for f in repo.rglob(Path(p).name))
+    resolved = [p for p in paths if resolves(p)]
     res["code_leads"] = {"distinct": len(paths), "resolved": len(resolved),
                          "unresolved_sample": sorted(paths - set(resolved))[:10]}
     c["code_leads_resolve"] = not paths or len(resolved) / len(paths) >= 0.8
