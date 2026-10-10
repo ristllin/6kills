@@ -167,7 +167,7 @@ Verify every inter-page link resolves.
 
 ### 7. Verify
 Re-open or fetch the result: diagrams render, sections hold, tables intact. Confirm `plan.md` exists and `research/` holds a findings file per source. **Count
-the words of every page: a single page over ~1500 words (3 A4 pages) is out of bounds**; cut it, or
+the words of every page with a tool (`wc -w`), not by estimate: a single page over ~1500 words (3 A4 pages) is out of bounds**; cut it, or
 nest it if the material is genuinely broad. For a nested pack, the index stays within that budget.
 For a show-it target, confirm the main page (the index, not the usage sub-page) has a section titled
 "See it in action" holding the example and one real visual, and that the example passes its own tests (shows the mechanism, about 15 lines
