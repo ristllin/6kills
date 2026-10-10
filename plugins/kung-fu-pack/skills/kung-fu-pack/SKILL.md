@@ -171,7 +171,7 @@ the words of every page: a single page over ~1500 words (3 A4 pages) is out of b
 nest it if the material is genuinely broad. For a nested pack, the index stays within that budget.
 For a show-it target, confirm the main page (the index, not the usage sub-page) has a section titled
 "See it in action" holding the example and one real visual, and that the example passes its own tests (shows the mechanism, about 15 lines
-or one screen, lead or `Illustrative` label) and at least one real visual is embedded (an image in `assets/` or a pasted output block; a description
+and no block over 25, lead or `Illustrative` label) and at least one real visual is embedded (an image in `assets/` or a pasted output block; a description
 or a path to a screenshot does not count). Look at each embedded screenshot once more: it must show
 the product's result (findings, a filled detail pane, output), not a loading state, a transition,
 an overlay, or an empty panel; otherwise pick another frame or image. A missing

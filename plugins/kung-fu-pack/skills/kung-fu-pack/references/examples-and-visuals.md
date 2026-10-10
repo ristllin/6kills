@@ -24,7 +24,9 @@ If you cannot write this sentence, the research is not done; go back to the sour
 List 2 or 3 candidate examples under `## Example choice` in `plan.md` and score each:
 - **Load-bearing:** remove the mechanism and the example's outcome changes. If it would look the
   same on a competitor or a toy, reject it.
-- **Readable:** a peer gets it in under a minute: about 15 lines of code or output, or one screen.
+- **Readable:** a peer gets it in under a minute: about 15 lines of code or output, and never more
+  than 25 lines in one block. A real file that runs longer gets trimmed (imports, blank lines, the
+  `__main__` guard, repeated cases), marked "trimmed", with the full file behind its lead.
 - **Honest:** real (from docs, a public repo, a demo, captured output) with a lead, or crafted from
   documented behavior and labelled as such.
 - **Not category noise:** no setup, install, login, or hello-world that every tool in the category shares.
