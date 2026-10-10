@@ -29,6 +29,8 @@ LINK_RE = re.compile(r"\]\((?![A-Za-z][\w+.-]*:|/)([^)#\s]+\.(?:md|html))(?:#[^)
 PATH_LEAD_RE = re.compile(r"`?([\w./-]+/[\w.-]+\.[A-Za-z]\w*)(?::\d+(?:-\d+)?)?`?")
 IMG_RE = re.compile(r"!\[[^\]]*\]\(([^)\s]+)\)")
 FENCE_RE = re.compile(r"```([^\n]*)\n(.*?)```", re.S)
+# a fenced block as a Markdown reader sees it: fences open and close at a line start
+BLOCK_FENCE_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})[^\n]*\n.*?^ {0,3}\1", re.S | re.M)
 # Captured output: an untagged or text/console/shell-style fence, or any fence whose body starts
 # with a shell prompt (a python or mermaid block is not output).
 OUTPUT_LANGS = {"", "text", "txt", "console", "shell", "shell-session", "output", "terminal", "http"}
@@ -62,7 +64,7 @@ def newest_pack(root: Path) -> Path | None:
 def section(text: str, title: str) -> str | None:
     """The body of the first heading named `title` (optionally numbered), up to the next heading
     of the same or a higher level. A "#" line inside a fenced block is a code comment, not a heading."""
-    fences = [f.span() for f in FENCE_RE.finditer(text)]
+    fences = [f.span() for f in BLOCK_FENCE_RE.finditer(text)]
 
     def headings(pattern: str, start: int = 0):
         return (h for h in re.finditer(pattern, text[start:], re.I | re.M)
