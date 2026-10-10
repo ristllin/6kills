@@ -168,9 +168,13 @@ def check(root: Path, repo: Path, show: bool = False, product: bool = False,
     c["leads_present"] = res["lead_ratio"] >= 0.6
 
     # Version strings like 3.10/3.12 are not paths; pack-relative leads (research/, plan.md) are
-    # valid and resolve against the pack itself.
+    # valid and resolve against the pack itself. A path inside a longer code span (a command such
+    # as `http --download host/file.zip`, an item such as `cv@./cv.pdf`) is example content, not a
+    # lead; a lead is a span holding just the path (and line).
+    def example_spans(ln: str) -> str:
+        return re.sub(r"`([^`]*)`", lambda m: m.group(0) if PATH_LEAD_RE.fullmatch(m.group(1)) else "", ln)
     paths = {m.group(1).removeprefix("./") for ln in with_lead
-             for m in PATH_LEAD_RE.finditer(re.sub(r"(https?://|(?<![\w/.])[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}/)\S+", "", ln))
+             for m in PATH_LEAD_RE.finditer(re.sub(r"(https?://|(?<![\w/.])[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}/)\S+", "", example_spans(ln)))
              if not m.group(1).startswith(("http", "www.")) and not m.group(1)[0].isdigit()}
 
     def resolves(p: str) -> bool:
