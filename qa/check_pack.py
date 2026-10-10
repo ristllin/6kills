@@ -61,12 +61,17 @@ def newest_pack(root: Path) -> Path | None:
 
 def section(text: str, title: str) -> str | None:
     """The body of the first heading named `title` (optionally numbered), up to the next heading
-    of the same or a higher level."""
-    m = re.search(rf"^(#+)\s*(?:\d+[.)]\s*)?{title}.*$", text, re.I | re.M)
+    of the same or a higher level. A "#" line inside a fenced block is a code comment, not a heading."""
+    fences = [f.span() for f in FENCE_RE.finditer(text)]
+
+    def headings(pattern: str, start: int = 0):
+        return (h for h in re.finditer(pattern, text[start:], re.I | re.M)
+                if not any(a <= start + h.start() < b for a, b in fences))
+    m = next(headings(rf"^(#+)\s*(?:\d+[.)]\s*)?{title}.*$"), None)
     if not m:
         return None
-    end = re.compile(rf"^#{{1,{len(m.group(1))}}}\s", re.M).search(text, m.end())
-    return text[m.start():end.start() if end else len(text)]
+    end = next(headings(rf"^#{{1,{len(m.group(1))}}}\s", m.end()), None)
+    return text[m.start():m.end() + end.start() if end else len(text)]
 
 
 def show_checks(pack: Path, texts: dict, main: Path, links: list,
