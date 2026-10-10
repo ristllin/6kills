@@ -2,7 +2,7 @@
 
 A public [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) **plugin marketplace**.
 
-Seven plugins:
+Eight plugins:
 
 | Plugin | What it is |
 |--------|------------|
@@ -12,6 +12,7 @@ Seven plugins:
 | 🎼 [**orchestrate**](plugins/orchestrate) | Opening bracket to a fleet of autonomous work. Turns a raw requirements list into a running multi-lane program: interrogates the owner on every ambiguity, writes a PRD, splits it into waves of parallel non-conflicting lanes with frozen Definitions of Done, launches each lane as a detached headless `claude -p` worker running relentless, supervises on a loop with evidence-based lane state, merges finished lanes within the window, gates with per-lane and program-level prism, and ships pre-authorized releases between waves. Exposes `/orchestrate`. |
 | 🌀 [**collapse**](plugins/collapse) | Closing bracket to a fan-out of autonomous work. Converges many parallel lanes (worktrees, branches, sessions) into one clean `main`: waits out lanes that are still moving, excludes stalled ones, merges every finished lane with a green check after each merge, refracts the combined diff through prism, then either holds with a decision report or ships a staged clean-slate release and QAs the live deployment. Exposes `/collapse`. |
 | 📥 [**linkedin-triage**](plugins/linkedin-triage) | Auto-triage your unread LinkedIn DMs, sandboxed in a throwaway Docker container. Reads DMs through the [Beeper](https://beeper.com) Desktop app, categorizes each one, replies from templates you control, and leaves personal/strategic chats unread. The AI sees only the Beeper tools and your rules file. Exposes `/linkedin-triage`. |
+| 🥋 [**kung-fu-pack**](plugins/kung-fu-pack) | Turns a target (a system, codebase, account, set of engagements, or topic) into a tight briefing page. A one-time interview detects which sources you can reach (Notion, Linear, local code, web) and saves your defaults. Each run then fans out parallel research into a cached workspace, pulls live data, generates real diagrams, shows products in action (a carefully chosen example plus real screenshots or output), and publishes to Notion, HTML, Markdown, or a local server. Large topics become an index plus linked sub-pages. Every claim carries a lead. Also installs on Mistral Vibe and OpenAI Codex. Exposes `/kung-fu-pack` and `/kung-fu-pack-init`. |
 | 📷 [**camera-shoot**](plugins/camera-shoot) | Give your agent eyes: it takes photos with your machine's cameras and looks at them. Ships with an empty config: on first use the agent discovers the cameras and capture tool, sorts out camera permissions, asks you two setup questions (default camera, what it'll be looking at), verifies a test shot, and saves the answers for later runs. Works in Claude Code and other skill-loading harnesses like Mistral Vibe. Exposes `/camera-shoot`. |
 
 ## Install
@@ -24,6 +25,7 @@ Seven plugins:
 /plugin install orchestrate@6kills
 /plugin install collapse@6kills
 /plugin install linkedin-triage@6kills
+/plugin install kung-fu-pack@6kills
 /plugin install camera-shoot@6kills
 ```
 
@@ -151,6 +153,19 @@ Foundry/gateway proxy (`CLAUDE_CODE_USE_FOUNDRY=1` + `ANTHROPIC_FOUNDRY_BASE_URL
 /linkedin-triage        # run the triage
 ```
 
+## kung-fu-pack: quick start
+
+```
+/kung-fu-pack-init                                  # once: detect sources, save defaults
+/kung-fu-pack "<target> - <scope, audience, links>"  # build a pack
+/kung-fu-pack "<target>" --output=html --depth=deep --style=asd-ste100
+```
+
+On Mistral Vibe or OpenAI Codex, install the portable skill with
+`bash plugins/kung-fu-pack/install.sh <vibe|codex|all>`; it self-initializes on first use. The
+`bench/` directory holds the synthesis benchmark used to hill-climb the skill. Full guide:
+[plugins/kung-fu-pack](plugins/kung-fu-pack).
+
 ## camera-shoot: quick start
 
 ```
@@ -168,7 +183,7 @@ grant, the skill builds a small helper app and asks you to click OK once. Detail
 
 ```
 6kills/
-├── .claude-plugin/marketplace.json   # marketplace manifest (lists all seven plugins)
+├── .claude-plugin/marketplace.json   # marketplace manifest (lists all eight plugins)
 └── plugins/
     ├── prism/                        # orchestrator command + skill, 5 lens skills, 7 sec agents
     ├── deep-research/                # /research command + deep-researcher agent + Tavily MCP
@@ -176,6 +191,7 @@ grant, the skill builds a small helper app and asks you to click OK once. Detail
     ├── orchestrate/                  # /orchestrate command + orchestrate program skill (opening bracket)
     ├── collapse/                     # /collapse command + collapse convergence/release skill (closing bracket)
     ├── linkedin-triage/              # /linkedin-triage command + Docker sandbox (Beeper DM triage)
+    ├── kung-fu-pack/                 # /kung-fu-pack + init, portable skill, Vibe/Codex installer, bench/
     └── camera-shoot/                 # /camera-shoot command + self-configuring camera skill + macOS helper
 ```
 
@@ -185,6 +201,11 @@ Each plugin has its own `.claude-plugin/plugin.json`. Skills live under `plugins
 <name>/SKILL.md`; commands under `commands/`; subagents under `agents/`. Skill descriptions are
 what Claude matches against to decide when to trigger, so keep them specific and
 trigger-phrase-rich.
+
+## Contributing
+
+Release flow for agents and humans (Docker QA on Claude Code, Codex, and Vibe, then prism,
+sanitize, and README update before any PR to `main`): see [AGENTS.md](AGENTS.md).
 
 ## License
 

@@ -1,0 +1,488 @@
+{
+  "task": "Gold answer key for a 1\u20133-page landscape of the full 200-paper corpus on cybersecurity, AI and agent security, privacy, cryptography, and assurance.",
+  "nuggets": [
+    {
+      "id": "N1",
+      "text": "Agent containment repeatedly uses explicit scopes, least-capability permissions, and deterministic checks at tool or execution boundaries.",
+      "vital": true,
+      "sources": [
+        1,
+        41,
+        67,
+        89,
+        147,
+        149
+      ]
+    },
+    {
+      "id": "N2",
+      "text": "Prompt injection and source manipulation exploit untrusted retrieval, webpages, tool outputs, and skill inputs to alter AI answers or actions.",
+      "vital": true,
+      "sources": [
+        12,
+        13,
+        19,
+        92,
+        93,
+        126,
+        149,
+        186
+      ]
+    },
+    {
+      "id": "N3",
+      "text": "AI supply-chain attacks extend to executable model files, Python bytecode, dependencies, and auxiliary model components.",
+      "vital": true,
+      "sources": [
+        49,
+        86,
+        92,
+        199
+      ]
+    },
+    {
+      "id": "N4",
+      "text": "Attacker influence can persist beyond its initial introduction through conversation history, cached representations, learned skills, or subsequent post-training.",
+      "vital": true,
+      "sources": [
+        98,
+        144,
+        148,
+        158
+      ]
+    },
+    {
+      "id": "N5",
+      "text": "Functional success and aggregate benchmark scores repeatedly conceal security failures, including unsafe repairs, unsupported reasoning, and compromised models.",
+      "vital": true,
+      "sources": [
+        50,
+        55,
+        59,
+        102,
+        107,
+        122,
+        187,
+        191,
+        194,
+        199
+      ]
+    },
+    {
+      "id": "N6",
+      "text": "Adaptive attacks and distribution shifts repeatedly expose weaknesses hidden by conventional or known-attack evaluations.",
+      "vital": true,
+      "sources": [
+        24,
+        48,
+        55,
+        76,
+        94,
+        146,
+        161,
+        181
+      ]
+    },
+    {
+      "id": "N7",
+      "text": "Security benchmarks increasingly emphasize independently checked execution outcomes and distinguish successful attacks from successful legitimate tasks.",
+      "vital": true,
+      "sources": [
+        59,
+        141,
+        149,
+        153,
+        181
+      ]
+    },
+    {
+      "id": "N8",
+      "text": "Safety-aware training and selective interventions can improve measured safety while largely preserving benign utility.",
+      "vital": true,
+      "sources": [
+        4,
+        19,
+        47,
+        53,
+        70,
+        77,
+        130,
+        186
+      ]
+    },
+    {
+      "id": "N9",
+      "text": "Fine-grained operational context improves security prioritization and triage beyond static severity or aggregate verdicts.",
+      "vital": true,
+      "sources": [
+        109,
+        116,
+        133,
+        164,
+        168
+      ]
+    },
+    {
+      "id": "N10",
+      "text": "Valid individual evidence items can leave assurance failures when source or object bindings are incorrect or required obligations are missing.",
+      "vital": true,
+      "sources": [
+        72,
+        83,
+        99,
+        104,
+        171,
+        197,
+        200
+      ]
+    },
+    {
+      "id": "N11",
+      "text": "The timing and retention of security evidence can determine whether a system detects or prevents harm.",
+      "vital": false,
+      "sources": [
+        69,
+        71,
+        105,
+        137,
+        143,
+        169,
+        191
+      ]
+    },
+    {
+      "id": "N12",
+      "text": "Sensitive information can leak through routing metadata and physical execution traces despite restrictions on ordinary content or model-output access.",
+      "vital": true,
+      "sources": [
+        44,
+        65,
+        82,
+        175
+      ]
+    },
+    {
+      "id": "N13",
+      "text": "Task-specific differential privacy mechanisms improve utility or efficiency through sensitivity calibration, noise accounting, release design, and tailored training.",
+      "vital": true,
+      "sources": [
+        15,
+        33,
+        61,
+        62,
+        80,
+        112,
+        113,
+        174,
+        180,
+        193
+      ]
+    },
+    {
+      "id": "N14",
+      "text": "Data privacy, final-model secrecy, and aggregation integrity are distinct protection goals in federated learning.",
+      "vital": false,
+      "sources": [
+        23,
+        51,
+        112,
+        121,
+        185
+      ]
+    },
+    {
+      "id": "N15",
+      "text": "Watermark robustness depends on the representation and the transformations applied to it, across text, audio, images, action trajectories, and proteins.",
+      "vital": true,
+      "sources": [
+        8,
+        16,
+        26,
+        32,
+        88,
+        108,
+        118,
+        123,
+        189
+      ]
+    },
+    {
+      "id": "N16",
+      "text": "Successful watermark detection or payload recovery does not establish authenticated provenance or resistance to forgery and replay.",
+      "vital": true,
+      "sources": [
+        8,
+        108,
+        125
+      ]
+    },
+    {
+      "id": "N17",
+      "text": "Practical post-quantum migration targets communication and hardware costs through protocol redesign, compact proofs, and optimized implementations.",
+      "vital": true,
+      "sources": [
+        10,
+        25,
+        39,
+        135,
+        138,
+        198
+      ]
+    },
+    {
+      "id": "N18",
+      "text": "Source inspection or enclave attestation alone can miss attacks introduced through executable artifacts, compilation, or the surrounding host application.",
+      "vital": false,
+      "sources": [
+        86,
+        138,
+        152,
+        197
+      ]
+    },
+    {
+      "id": "N19",
+      "text": "Formal guarantees depend on the stated adversary access, trust assumptions, exposed information, and system model.",
+      "vital": true,
+      "sources": [
+        3,
+        10,
+        34,
+        74,
+        80,
+        95,
+        101,
+        178,
+        190,
+        200
+      ]
+    },
+    {
+      "id": "N20",
+      "text": "Information and oracle-query bounds provide a recurring theoretical foundation for security limits, quantum separations, and randomness certification.",
+      "vital": false,
+      "sources": [
+        3,
+        6,
+        178,
+        179
+      ]
+    },
+    {
+      "id": "N21",
+      "text": "Hardware and software co-design enables cryptographic operations and neural intrusion detection on constrained microcontrollers or FPGAs.",
+      "vital": false,
+      "sources": [
+        119,
+        138,
+        159,
+        198
+      ]
+    },
+    {
+      "id": "N22",
+      "text": "Compliance and certification approaches emphasize traceable connections among requirements, controls, obligations, and evidence across the product lifecycle.",
+      "vital": false,
+      "sources": [
+        57,
+        66,
+        134,
+        136,
+        189,
+        200
+      ]
+    },
+    {
+      "id": "N23",
+      "text": "Model audits use calibrated response statistics or direct weight analysis to investigate identity, leakage, and malicious modification.",
+      "vital": false,
+      "sources": [
+        7,
+        17,
+        37,
+        157,
+        165
+      ]
+    },
+    {
+      "id": "N24",
+      "text": "Economic security models use incentives and expected losses to analyze deterrence, independent execution diversity, and migration priorities.",
+      "vital": false,
+      "sources": [
+        5,
+        54,
+        68,
+        97
+      ]
+    }
+  ],
+  "integration_facts": [
+    {
+      "id": "I1",
+      "text": "Agent defenses separate interpretation from authority at different layers: input delimiters distinguish instructions from data, while tool gates and constrained action vocabularies limit execution. Low violation rates for structural gates and high bypass rates for scanner ensembles concern different mechanisms and evaluations, so they establish no direct contradiction.",
+      "min_sources": 2,
+      "sources": [
+        1,
+        19,
+        41,
+        48,
+        67,
+        89,
+        147,
+        149
+      ]
+    },
+    {
+      "id": "I2",
+      "text": "Persistent attacks and stateful defenses make history a shared security concern. Cached or learned malicious influence can outlive its source, while safe decisions depend on retained state, ordered evidence, and complete lineage; inspecting only the latest input or final output can miss the consequential failure.",
+      "min_sources": 2,
+      "sources": [
+        72,
+        98,
+        143,
+        144,
+        148,
+        158,
+        169,
+        171,
+        191,
+        194
+      ]
+    },
+    {
+      "id": "I3",
+      "text": "Across code generation, vulnerability analysis, and release assurance, apparent correctness can coexist with insecure behavior or invalid support. Executable tests, structured reasoning records, and evidence-coverage checks address different parts of this gap and cannot be replaced by a single aggregate success score.",
+      "min_sources": 2,
+      "sources": [
+        50,
+        59,
+        83,
+        122,
+        141,
+        149,
+        153,
+        187,
+        194,
+        200
+      ]
+    },
+    {
+      "id": "I4",
+      "text": "Several selective or safety-aware defenses retain utility, while other interventions impede legitimate work or lower detection when reducing audit cost. These findings support evaluating security, benign utility, and operational cost jointly rather than assuming either an unavoidable trade-off or universally free improvement.",
+      "min_sources": 2,
+      "sources": [
+        4,
+        41,
+        47,
+        50,
+        53,
+        130,
+        141,
+        172,
+        186
+      ]
+    },
+    {
+      "id": "I5",
+      "text": "Privacy guarantees depend on the protected unit and released interface: prompt-level DP, final-statistic release, and encrypted-model access protect different information. Routing, hardware, and multilingual extraction studies examine other exposure boundaries and do not directly refute the separately scoped DP guarantees.",
+      "min_sources": 2,
+      "sources": [
+        23,
+        44,
+        65,
+        82,
+        113,
+        121,
+        174,
+        175,
+        176,
+        193,
+        196
+      ]
+    },
+    {
+      "id": "I6",
+      "text": "Semantic text aggregation and codec-aware audio watermarking show robustness to targeted transformations, while blind removal, image-geometry limits, and replay attacks expose weaknesses under other constructions or threats. Editing robustness, payload recovery, and authenticated provenance therefore require separate evaluation.",
+      "min_sources": 2,
+      "sources": [
+        8,
+        16,
+        26,
+        32,
+        108,
+        123,
+        125,
+        189
+      ]
+    },
+    {
+      "id": "I7",
+      "text": "Cryptographic deployment benefits from protocol and hardware co-design, but the limiting resource varies: accelerated HQC can remain bandwidth-bound, encrypted inference can remain slow after communication reductions, and secure federation can be limited by key supply. Primitive speedups alone do not establish system feasibility.",
+      "min_sources": 2,
+      "sources": [
+        10,
+        25,
+        39,
+        119,
+        121,
+        138,
+        185,
+        198
+      ]
+    },
+    {
+      "id": "I8",
+      "text": "Runtime monitors, agent-memory controls, enclave attestation, and compliance checks converge on a system-level requirement: evidence must be available, complete, authorized, and bound to the correct source or object. Valid individual checks can coexist with unsafe overall decisions when these connections are missing.",
+      "min_sources": 2,
+      "sources": [
+        57,
+        66,
+        72,
+        99,
+        104,
+        136,
+        169,
+        170,
+        171,
+        197,
+        200
+      ]
+    }
+  ],
+  "answer_key": [
+    {
+      "q": "What is the recurring design response to prompt injection and agent misuse?",
+      "a": "Separate untrusted content from authority and enforce explicit scope, least-capability permissions, and validated actions at execution boundaries. Extend protection to tools, skills, auxiliary components, and persistent state."
+    },
+    {
+      "q": "Why are ordinary benchmark scores insufficient evidence of security?",
+      "a": "High functionality can coexist with unsafe behavior, unsupported reasoning, or localized failures. Credible evaluation checks actual outcomes independently, includes adaptive and unseen attacks, and measures benign utility and cost separately."
+    },
+    {
+      "q": "How do the privacy papers improve usefulness without establishing universal privacy?",
+      "a": "Task-specific DP and encrypted federation improve particular utility or resource trade-offs. Their guarantees cover specified records and interfaces; metadata, physical traces, and memorized-data extraction expose other privacy boundaries."
+    },
+    {
+      "q": "What does a robust watermark establish?",
+      "a": "Evidence of detectability or payload recovery under specified transformations. It does not automatically establish authenticated provenance, ownership, or resistance to forgery and replay."
+    },
+    {
+      "q": "What determines whether cryptographic protections are deployable?",
+      "a": "The actual bandwidth, latency, memory, energy, or key-supply bottleneck. Protocol redesign and hardware/software co-design help, while security guarantees remain specific to each construction's assumptions."
+    },
+    {
+      "q": "What distinguishes system assurance from passing individual checks?",
+      "a": "Complete, authorized, timely evidence bound to the correct sources, objects, and obligations, supported by reliable state and delivery. Valid components or certificates alone do not establish that coverage."
+    }
+  ],
+  "vetting": {
+    "integration_dropped": 0
+  },
+  "provenance": {
+    "method": "map-reduce over the full corpus",
+    "slices": 8,
+    "corpus_chars": 326618,
+    "judge": "astra"
+  },
+  "split": "dev"
+}

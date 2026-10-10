@@ -5,8 +5,8 @@
     "url": "https://github.com/ristllin"
   },
   "metadata": {
-    "description": "Public collection of Claude Code plugins: prism (mode-aware code review/hardening orchestrator), deep-research, relentless (autonomous long-task ship charter), linkedin-triage (sandboxed LinkedIn DM triage via Beeper), collapse (converge parallel lanes into one clean, reviewed, deployed main), orchestrate (plan and launch a multi-lane autonomous program from a raw requirements list), and camera-shoot (take photos with your machine's cameras, self-configuring on first use).",
-    "version": "0.6.0"
+    "description": "Public collection of Claude Code plugins: prism (mode-aware code review/hardening orchestrator), deep-research, relentless (autonomous long-task ship charter), linkedin-triage (sandboxed LinkedIn DM triage via Beeper), collapse (converge parallel lanes into one clean, reviewed, deployed main), orchestrate (plan and launch a multi-lane autonomous program from a raw requirements list), kung-fu-pack (turn a target into a styled, diagram-rich briefing page sourced from Notion, Linear, code, and the web), and camera-shoot (take photos with your machine's cameras, self-configuring on first use).",
+    "version": "0.8.0"
   },
   "plugins": [
     {
@@ -40,6 +40,11 @@
       "description": "Opening bracket to a fleet of autonomous work. Turns a raw requirements list into a running multi-lane program: interrogates the owner on every ambiguity before planning, writes a thorough PRD, converts it into a dependency-ordered tracker split into waves of parallel non-conflicting lanes with frozen Definitions of Done and evidence requirements (plan approval as the only default human gate), launches each lane as a detached headless claude -p process with a pinned model and recorded session id running relentless to a file-based handback, supervises from its own resident session on two in-session crons armed before the first launch (a 10-minute lane heartbeat and an hourly cap-resume fallback, never a scheduled task) with evidence-based lane state read from logs and progress markers, never pid-liveness and never a lane message, merges finished lanes within one window, validates with per-lane prism plus personal visual QA and a program-level prism gate, and ships pre-authorized releases between waves with fresh-context post-deploy QA."
     },
     {
+      "name": "kung-fu-pack",
+      "source": "./plugins/kung-fu-pack",
+      "description": "Turn a target (a system, codebase, account, set of engagements, or topic) into a tight, high-signal briefing page. Interviews you once to wire up every source you have access to (Notion, Linear, local repos, web) and save your defaults, then on each run it fans out parallel exploration agents into a cached local workspace, pulls live data, consolidates and plans the page, generates real architecture diagrams (dataviz dark-mode, rendered to PNG via headless Chrome), and publishes a styled page to Notion, a self-contained HTML file, local Markdown, or a local preview server. Product and tool targets get a carefully chosen example of the load-bearing mechanism, real screenshots or output, and a usage sub-page; large topics become a short index plus linked sub-pages. Every claim carries a deep-dive lead, staleness is flagged, and it never uses em dashes. Also installs on Mistral Vibe and OpenAI Codex. Exposes /kung-fu-pack and /kung-fu-pack-init."
+      },
+      {
       "name": "camera-shoot",
       "source": "./plugins/camera-shoot",
       "description": "Give your agent eyes: it takes photos with the cameras attached to your computer and looks at them. Ships with an empty config: on first use the agent discovers the platform, capture tool and cameras, sorts out camera permissions (building a tiny macOS helper app when needed), asks you for a default camera and what it'll be looking at, verifies a test shot, and saves it all to the skill's config.json. Later uses go straight to the capture. Exposes /camera-shoot."

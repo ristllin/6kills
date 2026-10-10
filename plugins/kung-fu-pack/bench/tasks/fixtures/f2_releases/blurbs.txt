@@ -1,0 +1,1516 @@
+[1] vllm-project/vllm v0.29.0 (2026-09-09)
+https://github.com/vllm-project/vllm/releases/tag/v0.29.0
+# v0.29.0
+
+## Highlights
+
+This release features 594 commits from 277 contributors (91 new)!
+
+* **Model Runner V2 is now the default for all models** (#53183), completing the rollout that began with pooling models (#48290). MRV2 also gained CUDA graph memory profiling for KV cache auto-sizing (#53306), batch-sharded sampling that cuts per-step logits memory by 1/TP (#50465), prompt embeds (#42963), `extract_hidden_states` speculation (#49811), padded FULL cudagraph dispatch for uniform decode under spec decode (#53407), and DP-sync skipping before EAGLE/MTP draft prefill (#53694). MRV1 remains in use for a few ROCm models and features MRV2 does not yet support.
+* **New models**: Hy4-preview, Tencent's 770B/49B-active MoE with Gated DeepSeek Sparse Attention and native MTP (#54160); Qwen3.8-Flash-Next with BF16/FP8/NVFP4 and MTP (#53896); GraniteSWA and GraniteMoeSWA (#52706); NemotronH_Omni_Reasoning_V3 with MTP (#52929, #53121); Kimi K3 NVFP4 checkpoints (#53132).
+* **Kimi-K3 and DeepSeek V4 performance**: fused MXFP4 top-k finalization in the K3 latent tail (about 5% E2E latency, #53152), K3 Mamba metadata preparation in one Triton launch (6.6-7.6x kernel speedup, #52388), tuned Hopper low-latency GEMM (#54088) now also dispatched on SM100 (#53534) and used for `eh_proj` (12.9-25.2% kernel speedup, #53942), GEMM-RS extended to GEMM-AR (#53053), MLA gate merged into the QKV-A projection (#54015), K3 DCP with DSpark (#52188) and DCP partial prefix cache hits (#50493); DeepSeek V4 shared experts fused into MegaMoE (#53040), adaptive top-k width re-landed (#52823), a native SwiGLU clamp kernel for Humming MoE (#53685), and an opt-in FlashInfer `moe_ep` expert backend (#49636).
+* **Speculative decoding**: per-request acceptance stats in OpenAI API responses via `--per-request-spec-decode-metrics` (#48915), adaptive verification extended to logprobs (#52242), SM100 sparse MLA for GLM-5.2 (#52783) and DeepSeek V4 on SM90 (#52795), Qwen3-Omni DSpark drafts (#52560), PLaMo3 EAGLE-3/DFlash (#54239), and DFlash2 loading from speculators format (#53797).
+* **RL weight sync**: a new `sharded_rdt` P2P backend where each worker pulls only its TP/EP slice over NIXL or Ray Direct Transport (#43375), rank-local IPC weight updates (#52497), sparse checkpoint-coordinate updates through native weight loaders (#50723, #53751), and routed expert loading for gpt-oss (#52209).
+* **Mamba prefix caching**: internal prefill checkpoints deliver a 9%-25% TTFT improvement (#52789); `prefix_cache_retention_interval` is now a CLI argument defaulting to 0 (#52216), with dense retention automatically restored for hybrid models using EAGLE/MTP (#55760, #55861).
+* **New defaults**: FlashInfer all-reduce enabled by default for TP CUDA groups, opt out with `VLLM_ALLREDUCE_USE_FLASHINFER=0` (#52998); prefix-cache `NONE_HASH` is deterministic by default so distributed KV cache users no longer need to pin `PYTHONHASHSEED` (#51875); new `--max-num-queued-reqs` / `--max-num-queued-tokens` admission-control flags (#49445).
+* **Breaking changes**: ten deprecated model architectures removed (#53608); FlexOlmo, Olmo3 and Hunyuan V1/VL migrated to the Transformers modeling backend (#53615); PyAV video decoder backend removed (#54231); `python -m vllm.entrypoints.openai.api_server` deprecated in favor of `vllm serve` (#52131); `VLLM_TEST_FORCE_FP8_MARLIN` (#52182) and `VLLM_ROCM_USE_AITER_FP4_ASM_GEMM` (#53141) removed.
+
+## :warning: Model Runner V1 Deprecation
+
+Now that Model Runner V2 is used by default, we are considering Model Runner V1 deprecated and are targeting v0.32 for its removal. We do not intend to accept any more MRV1-specific improvements or optimizations.
+
+Some [features](https://github.com/vllm-project/vllm/issues/47172) are not yet supported in MRV2 but we are planning for these gaps to be closed within the next 2-3 weeks. These include sequence parallelism, dual-batch overlap, elastic expert parallellism, custom logits processors and certain speculative decoding methods. For now, vLLM will still fall back to use MRV1 if any of these features are configured.
+
+## Release Artifacts
+
+### Python Wheels
+
+| Platform | Install |
+|---|---|
+| PyPI (CUDA 13.0) | `pip install vllm` |
+| PyPI (CUDA 13.0, uv) | `uv pip install vllm --torch-backend=auto` |
+| ROCm | `pip install vllm --extra-index-url https://wheels.vllm.ai/rocm/0.29.0/rocm723` |
+| XPU | `uv pip install vllm --extra-index-url https://wheels.vllm.ai/0.29.0/xpu --extra-index-url https://download.pytorch.org/whl/xpu --index-strategy unsafe-best-match` |
+
+### Docker Images
+
+| Platform | Docker Image |
+|---|---|
+| CUDA 13.0 (Default) | `docker pull vllm/vllm-openai:v0.29.0` (`v0.29.0-cu130` also works) |
+| CUDA 12.9 | `docker pull vllm/vllm-openai:v0.29.0-cu129` |
+| CUDA 13.0 + Ubuntu 24.04 | `docker pull vllm/vllm-openai:v0.29.0-ubuntu2404` |
+| CUDA 12.9 + Ubuntu 24.04 | `docker pull vllm/vllm-openai:v0.29.0-cu129-ubuntu2404` |
+| ROCm | `docker pull vllm/vllm-openai-rocm:v0.29.0` |
+| CPU | `docker pull vllm/vllm-openai-cpu:v0.29.0` |
+| XPU | `docker pull vllm/vllm-openai-xpu:v0.29.0` |
+
+### Other Artifacts
+
+Pre-built release artifacts are available in the **Assets** section at the bottom of this page, including:
+- Source distribution tarball
+- CUDA 12.9 Python wheels for x86_64 and arm64
+- CUDA 13.0 Python wheels for x86_64 and arm64
+- CPU Python wheels for x86_64, arm64, and macOS
+- XPU Python wheel for x86_64
+
+## Model Support
+* **New models**: Hy4-preview (#54160), Qwen3.8-Flash-Next (#53896), GraniteSWA and GraniteMoeSWA via the existing Granite implementation (#52706), NemotronH_Omni_Reasoning_V3 (#52929) with MTP for Nemotron VL models (#53121), bidirectional attention for DeepSeek-backbone embedding models (#52948), FP8 ModernBERT (#53101), and Kimi K3 NVFP4 checkpoints (#53132).
+* **Transformers modeling backend**: FlexOlmo, Olmo3 and Hunyuan V1/VL migrated off native implementations (#53615), multimodal path hardened (#51827), and `RMSNormFuser.fuse` performance fixed (#52766).
+* **Weight loading**: weight tying now inspects the checkpoint so a real `lm_head` is loaded even when the config claims tied embeddings (#51665, #53170).
+* **LoRA**: DeepSeek V4 (#53361), Qwen3-Omni multimodal LoRA (#52786, #53557), tower/connector LoRA for LLaVA-NeXT (#49788) and LFM2-VL (#51498), plus fixes for Muse-Glimmer (#53513), Qwen3.5 embedding modules (#48850), partial LoRA on Qwen3.5/3.6 GatedDeltaNet (#47640), int32 overflow in punica kernels at long context (#53034), false target matches on unsupported module types (#52313), and base-layer/routed-expert prefix ordering (#52552).
+* **Multimodal performance**: ViT full CUDA graph for Idefics3 and SmolVLM (#47625), packed encoder attention for Pixtral (#52185), fused Kimi vision Q/K RoPE kernel (#50400), Dots3 NOTE runtime (#53517) and Omni encoder optimizations (#53460), MM tensors no longer broadcast to workers for prefix-cache-covered items (#52041), redundant placeholder scans skipped (#52925), common token sequences cached (#53560), async media resolved concurrently across modalities (#54537), and H2D copies pinned to avoid stream stalls (#53412, #54292, #54299).
+* **Multimodal inputs**: video embeds accepted by the Python frontend (#54242), modality-scoped `mm_processor_kwargs` honored (#53808), Qwen3-VL profiling honors `cap_pixels_per_frame` (#54380), video frame sampling respects MP4 edit-list trims (#48608), oversized items skip the MM processor cache instead of crashing (#53016), encoder cache entries survive until their last use (#54284), and repeated multimodal requests with the SHM cache no longer terminate the engine (#54994).
+* **Correctness**: PaliGemma stale image scaling removed (#52692), Mistral3 placeholder grid with processor size overrides (#52874), MiniCPM-o on Transformers v5 (#54501), JinaVL cache order (#53553), mixed CLIP/SigLIP pooling batches (#53165), XD-RoPE models on prefix-cache hits (#53456), Qwen3-Omni audio encoder with non-divisible TP (#50858), GLM-5.2 no longer uses dense MHA (#52512), Moondream3 MoE all-reduce (#54152), deepseek-vl2 config defaults (#51302), HY-V3 compressed-tensors ignore matching (#48682), MiniMax-M3 FP8 query allocation under CUDA graph replay (#51203), and GraniteMoeHybrid quantized expert loading (#54052).
+
+## Engine Core
+* **Model Runner V2**: default for all models (#53183) and pooling models (#48290), CUDA graph memory reservation (#53306), batch-sharded sampling (#50465), prompt embeds (#42963), `extract_hidden_states` (#49811), padded FULL cudagraph dispatch (#53407), DP-sync skipping for drafts (#53694), decoupled draft/target gumbel noise streams (#54282), encoder-only path split out (#53176), and memory released correctly on shutdown and sleep (#53508, #54246, #54162, #53955, #53682).
+* **Speculative decoding**: per-request acceptance stats (#48915), adaptive verification with logprobs (#52242), on SM100 sparse MLA (#52783) and DSv4 + SM90 (#52795), varlen trtllm-gen decode (#52157), FlashInfer MLA for DSpark drafting under DCP (#54277), fused GDN MTP for all Qwen head ratios (#52539), widest uniform decode batch captured by default (#50488) with memory-safe graph sizes (#54418), and fixes for short_conv/LFM2 targets (#50272), speculators-format config overrides (#42376), DFlash draft RoPE layout (#54373), draft models with a different GQA ratio (#53002), draft models with a larger hidden size under TP (#52193), DSpark backend inheritance scoped to DeepSeek V4 (#52809), generic `DSparkDraftModel` configs for Qwen3 (#52197), and Gemma4 MTP under CUDA graphs (#53884).
+* **Prefix caching & scheduling**: Mamba internal prefill checkpoints (#52789), `prefix_cache_retention_interval` argument (#52216, #55760, #55861), deterministic `NONE_HASH` (#51875), queue admission control (#49445), KV null block reserved when validating `max_model_len` (#47272), spec decode no longer padded up to `max_model_len` (#53962), and negative external block allocation prevented (#52707).
+* **RL workflows**: `sharded_rdt` P2P weight sync (#43375), rank-local IPC updates (#52497), sparse checkpoint updates (#50723, #53751), gpt-oss routed expert loading (#52209), stable DeepSeek V4 mHC broadcast buffers across weight sync (#52626), and packed weight transfer stream reuse capping reserved-memory waste (#52951).
+* **Determinism**: `trace_decode_token_ids` for deterministic decode replay (#46701), per-arch tuned batch-invariant matmul configs (about 3x decode kernels on RTX 4090D/H20, #53247), Blackwell autotuning with 33.6% E2E latency reduction (#53649), deterministic MoE combine under DP+EP (#45683), and `fuse_allreduce_rms` disabled under batch invariance (#51292).
+* **Kernels**: fused embedding kernel (#53677), FA4 re-enabled for head_size=256 on Blackwell (#52980), vectorized sparse MLA mask loads (#52217), masked MHA prefill for GLM-5 head dimensions (#53785), GLM-5.2 sparse MLA Q concatenation fused with head padding (#53878), fused QK-norm + partial MRoPE + gate for Qwen3.6 (#52676), FlashInfer CuTeDSL BF16 low-latency GEMM as opt-in `--linear-backend flashinfer_cutedsl` (#50572), replicated embedding and norm fusion for DSV3 flat models (#48484), standardized fused shared-expert selection (#51695), GPT-OSS MoE topk metadata reuse (#45457), tuned cooperative topk (#53382), and tuned FP8 fused_moe for Qwen3.5 on L40S (+7%, #53819).
+* **Robustness**: KV cache layout standardized under a `KVCacheLayout` enum (#51718), JIT warmup provider registry (#50174), `--cpu-offload-params` now reaches vision/audio towers (#53120), attention backend probe failures no longer crash init (#51703), FlashInfer XQA falls back on unsupported head_dim (#53111), FlashInfer prefill LSE normalized before merging to fix prefix-cache logits divergence (#52796), seed preserved when a batch mixes seeded and unseeded requests (#51866), startup thread allocation accounts for local DP workers (#52385), int32 overflow fixes in fused SiLU block quant (#53409) and LoRA kernels (#53034), a shared-memory race in fused groupwise RMSNorm quantization (#54111), BLHNC addressing for FlashInfer sparse MLA (#54465), Mamba state copy race (#50729), and a `start_profile` no-op after auto-stop (#51839).
+
+## Hardware & Performance
+* **NVIDIA**: DeepSeek V3.2 / GLM-5.2 DSA routed to the optimized CUDA path on all GPUs (#52861), PCP for DSv3.2 sparse MLA (#52046), cuBLAS out_dtype router GEMM on all archs including GB10 (#54048), FlashInfer all-reduce tuning on SM103 (#53318, #53606), FA4 hdim256 on SM100 (#52980), SM120 sparse MLA fixes (#51395, #53574), DeepSeek V3.2 fused kernel grids hardened for 65k+ token launches (#52381), FlashMLA sparse decode workspace fix (#53755), MNNVL Lamport corruption fix (#53000), and opt-in Rubin Docker builds for CUDA 13.4/13.5 (#53443).
+* **AMD ROCm**: dual-stream decode with hipgraphs (#52033), W4A4 preshuffled asm GEMM by default (+15% throughput on Llama-3.3-70B MXFP4, #53141), ROCr/CLR update fixing graph replay segfaults with up to about 20% TPOT improvement (#53712), fused KDA decode on MI325X (#52293), FULL cudagraphs for AITER MLA spec decode (#51171), FP8 asm MLA prefill for non-divisor head counts (#51040), DCP causal multi-token verification (#51705) and prefix cache hits for Kimi-K3 (#53598), AITER PA gluon decode for MiniMax-M3 (#52849), DeepSeek-V4 fusions for mHC/RMSNorm (#52737), C4A top-k (#52882), C4 compressor GEMMs (#53838) and SWA q/kv norm + FP8 quant (#53540), fused shared experts for block-FP8 (#53097), CPU offload on ROCm 7.13+ (#43018), TheRock 7.14 preview docker (#49925), int4/int8 quantization fixes (#52112, #48998, #51632, #53110), CUDA graphs captured on the current stream (#53818), AITER metadata preserved across graph replay (#53821), and improved ROCm detection under WSL (#38434).
+* **Intel XPU**: INC int4 W4A8 linear backend (#50501), AutoRound MXFP8 MoE (#51248), EC connector KV offloading (#49532), and fixes for HunyuanOCR XD-RoPE (#52174), sparse-MLA metadata sync (#52066), Mamba state pointer overflow (#48109), oneCCL warm-up at world size 1 (#52389), and MRoPE (#53201).
+* **CPU**: AMX high-performance MLA backend for DeepSeek V2/V3/R1 (#52616) with MLA now running end-to-end (#51471), FP16/BF16 persisted GDN state on AMX (#52191), Int8 MoE through zentorch on AMD Zen (#44834), Voxtral support (#53921), C++ causal_conv1d GDN on non-AMX AVX-512BF16 (#49688), and assorted fixes (#54042).
+
+## Large Scale Serving
+* **Context parallelism**: Kimi-K3 DCP with DSpark (#52188) and partial prefix cache hits (#50493), FlashInfer native CP for MLA decode (#54012), FlashMLA sparse DCP on Hopper with MTP (#46514), NIXL P/D DCP for MLA models (#50611), PCP for DSv3.2 (#52046) and NIXL PCP producers (#52779), `--dcp-q-replicate` with query replication default-on for GLM sparse attention (#50382), DCP fused attention fix for DeepSeek-V3.2 / GLM-5.2 (#50005), sparse MLA metadata and kernel block sizes under DCP (#52377, #51031), PCP PIECEWISE cudagraph fixes (#53869, #53515), and PCP compatibility checks delegated to the PCP manager so plugins can enable GQA+PCP (#53853).
+* **Elastic EP**: reduced eager-mode reconfiguration downtime (#51885), AOT cache reuse preserved during scaling (#53378), and scale-below-minimum rejected (#52702).
+* **MoE communication**: DeepEP v2 receiver CPU overhead (#51114) and MXFP8 activation scale dispatch (#51398), FlashInfer one-sided All2All refinements (#51924), DeepEP v2 fixes for `--enforce-eager` startup (#51824) and the decode/cudagraph path (#52632), NCCL>=2.31 heap overflow fix (#53008), cross-node MNNVL all-reduce gated by capability (#53253), and MNNVL all-reduce buffers sized for DSpark (#50932).
+* **KV connectors**: Mooncake Store decode KV saving via `save_decode_cache` (#52466) and hybrid DCP prefix caching (#53324), externally transferable KV cache group identification (#53779), async KV loads deferred past forward launch (#53333), `kv_transfer_params` for `/inference/v1/generate` (#42644), MoRIIO shared KV region registration after the layout refactor (#53698), and Mamba fixes for Mooncake (#51362, #51358, #53663) and NIXL (#53523).
+* **KV offloading**: EC offloading connector driven by CUDA events (#49994), ownership in KV cache events (#52067, #52068), P2P tier request-level offload (#52912) and abort handling (#52571), `/dev/shm` leak on crash fixed (#52596), CPU->GPU loads ordered against compute stream (#50696), `store_threshold` counting fixed (#52227), in-flight primary keys cascaded (#53329), and padded GPU cache storage handled (#54021).
+* **Data/pipeline parallel**: PP silent corruption fix (#54962, #49274), DP coordinator wake handling (#51481), device sync on pause (#52914), TCPStore port fixes for Ray (#53666, #50969), DP supervisor inheriting the uvicorn config (#52473), EPD encoder round-robin fix (#52491), and producer-only EC config normalization (#53656).
+
+## Quantization
+* **New backends**: FlashInfer TRT-LLM MXFP8 linear (#52204), b12x FP4 MoE for SM120/SM121 (#52018), AutoRound block-wise FP8 (#47434), Humming MoE with MXFP4 weights + block-FP8 activations (#51332), and Humming for compressed-tensors WNA16 MoE (#48918).
+* **Fixes**: weight-only NVFP4 checkpoints routed through W4A16 (#54427), compressed-tensors block FP8 with Marlin (#52966) and int8 grouped WNA16 MoE (#52002), OCP MX mxfp6 activation emulation (#52704), MXFP8 FlashInfer path guarded on availability (#52648), and Humming activation aliasing (#54056).
+
+## API & Frontend
+* **New endpoints & options**: `/v1/messages/render` for the Anthropic Messages API (#45803), `/cohere/v2/chat/render` (#53219), SSE keep-alive comments for idle streams (#51034), per-request spec decode metrics (#48915), video embeds input (#54242), `--max-num-queued-reqs` / `--max-num-queued-tokens` (#49445), and pooling requests can set padding (#51157).
+* **Anthropic & Cohere**: `vllm_xargs` forwarded to sampling params (#53308), `stop_sequence` stop reason reported (#45807), Cohere citation/tool 500s fixed (#52175), and stop string limit applied (#53750).
+* **OpenAI compatibility**: `logprobs=-1` in Completions (#46175), streamed logprob offsets with echo (#47815), batched chat echo (#52529), all choices returned from `/inference/v1/generate` with n>1 (#52399), `cache_salt` forwarded for content parts (#54315), `stop_token_ids` validated against vocab (#54196), and 4xx for client errors in `/detokenize` (#52622), malformed namespace tools (#53763), malformed base64 audio (#53744), and unknown chat roles in DeepSeek encoders (#53071); tool-call arguments in replayed history are parsed defensively (#48922), empty `FlatLogprobs` slices are handled (#53704), and empty bad-word tokenizations are rejected (#53433).
+* **Structured output & parsers**: reasoning-end detection scoped to the current turn (#54089), terminal grammars stop under `min_tokens` (#54218), unsupported pattern+length schemas rejected (#49996), MistralCommonBackend tokenizers (#52720), XGrammar termination in batches (#52805), spurious FSM errors after speculative reasoning end (#53046), shared parser engine adapters (#52830), Gemma4 parenthesized tool calls (#53657) and `enable_thinking` default (#52430), HY-V3 parallel calls in one delta (#53965), GPT-OSS Harmony strict grammar (#52222), Kimi K3 reserved markers excluded from response text (#52889), and unused request-local reasoners skipped (#52573).
+* **Rust frontend**: HY3 unified parser with local XGrammar structural tags (#53054), gRPC audio/video inputs (#53760), gRPC LoRA lifecycle control (#52840, #52031, #53756), `--generation-config vllm` (#53044), `truncate_prompt_tokens` (#48584), OpenAI edge-case alignment (#53218), optimized SSE hot path (#51321), pure-Rust `protox` replacing `protoc` (#52892), RL world-size reporting (#53204) and routed expert prompt offsets (#52703), and fixes for GLM-5.2 template parity (#51426), Qwen parser auto-detection (#51169), Kimi K3 `reasoning_effort="none"` (#53043), `n > 1` rejection on `/inference/v1/generate` (#52844), and the `LogprobsTensors` wire schema (#53939).
+* **Pooling**: BGE-M3 throughput (+3.13%, #53464) and task validation (#51823), prompts truncated before padding (#54364), parallel arrays truncated with the prompt (#54407, #54509), and batched input throughput in `vllm bench serve` (#53213).
+* **CLI & tooling**: `vllm launch` runs the serve argument checks (#52825), `run_batch.py` moved out of the openai folder (#53500) with its upload retry fixed (#50588), `vllm bench` warns on a warm prefix cache for random runs (#53920) and restores multimodal datasets on the `vllm` throughput backend (#52168), and the vLLM recipes tool gained sweep recommendations and alias parsing (#53325, #53946).
+
+## Security
+* `cache_salt` length bounded to 1024 to prevent scheduler CPU exhaustion (#54353).
+* Oversized media rejected before full download (#51896); `VLLM_MAX_AUDIO_CLIP_FILESIZE_MB` enforced on all audio paths (#53561).
+* Decoder prompt-length validation enforced for processors that skip the check (#46588); PyNvVideoCodec decoder slot limit bypass fixed (#52126).
+* `api_key` and `hf_token` redacted from startup logs, compile cache factors, and the Rust frontend launch log (#52523, #53625, #53738).
+
+## Dependencies
+* FlashInfer 0.6.18 (#54313), huggingface-hub 1.28.0 (#52797), tpu-inference v0.28.0 (#54020), NIXL 1.3.2 (#51777).
+* InstantTensor added to CUDA dependencies; the loader is not enabled by default (#52801). CuPy constraint relaxed to exclude only 14.1.0 (#44284).
+* ROCm base image: ROCr/CLR update (#53712), rocprofiler-sdk 1.3.2 (#53182), TheRock 7.14 preview (#49925), LMCache connector packages (#51208).
+* XPU: vllm_xpu_kernels 0.1.14.1 (#54203), UCX install updated (#53817).
+* Build fails closed when the selected precompiled CUDA variant is unavailable (#52545).
+
+## Breaking Changes & Deprecations
+* Ten deprecated architectures removed: Arctic, Chameleon, Cheers, Fairseq2Llama, FireRedLID, GritLM, HCXVision, MPT, the `RWForCausalLM` and `StableLMEpochForCausalLM` aliases, and `PrithviGeoSpatialMAE` (superseded by `Terratorch`) (#53608).
+* FlexOlmo, Olmo3, Hunyuan V1 and Hunyuan VL are now served through the Transformers modeling backend (#53615).
+* PyAV video decoder backend removed; use OpenCV or Torchcodec (#54231).
+* `python -m vllm.entrypoints.openai.api_server` is deprecated; use `vllm serve` (#52131).
+* Model Runner V2 is the default runner for all models (#53183).
+* `prefix_cache_retention_interval` default changed from dense to 0 for SWA/SSM models; the env var is deprecated in favor of the argument (#52216).
+* FlashInfer all-reduce enabled by default (#52998).
+* `VLLM_TEST_FORCE_FP8_MARLIN` removed in favor of `--linear-backend` / `--moe-backend` (#52182); `VLLM_ROCM_USE_AITER_FP4_ASM_GEMM` removed (#53141); dead `--attention-config.use_prefill_decode_attention` removed (#52557); other long-deprecated parameters cleaned up (#53559).
+
+## New Contributors
+* @030611 made their first contribution in https://github.com/vllm-project/vllm/pull/51823
+* @92hyungjun made their first contribution in https://github.com/vllm-project/vllm/pull/47272
+* @ActiveSky made their first contribution in https://github.com/vllm-project/vllm/pull/52692
+* @adisivaprasad made their first contribution in https://github.com/vllm-project/vllm/pull/53854
+* @Agoni-02 made their first contribution in https://github.com/vllm-project/vllm/pull/48850
+* @AmitMY made their first contribution in https://github.com/vllm-project/vllm/pull/48608
+* @Andy365-365 made their first contribution in https://github.com/vllm-project/vllm/pull/52523
+* @andyluo7 made their first contribution in https://github.com/vllm-project/vllm/pull/53821
+* @AnkitNakhawa made their first contribution in https://github.com/vllm-project/vllm/pull/52491
+* @anmolgupt made their first contribution in https://github.com/vllm-project/vllm/pull/52874
+* @bobboli made their first contribution in https://github.com/vllm-project/vllm/pull/51924
+* @brianosaurus made their first contribution in https://github.com/vllm-project/vllm/pull/52557
+* @CalvinXKY made their first contribution in https://github.com/vllm-project/vllm/pull/50858
+* @canlahlah made their first contribution in https://github.com/vllm-project/vllm/pull/53409
+* @CherryLemon made their first contribution in https://github.com/vllm-project/vllm/pull/53877
+* @CHIPMUNK-T0T made their first contribution in https://github.com/vllm-project/vllm/pull/47625
+* @cogniera made their first contribution in https://github.com/vllm-project/vllm/pull/53839
+* @cr-zhao made their first contribution in https://github.com/vllm-project/vllm/pull/52385
+* @daviswer made their first contribution in https://github.com/vllm-project/vllm/pull/52706
+* @DCoEngine made their first contribution in https://github.com/vllm-project/vllm/pull/48682
+* @dineshchitlangia made their first contribution in https://github.com/vllm-project/vllm/pull/49688
+* @dkrisman made their first contribution in https://github.com/vllm-project/vllm/pull/54380
+* @dmvevents made their first contribution in https://github.com/vllm-project/vllm/pull/52632
+* @Edge-Explorer made their first contribution in https://github.com/vllm-project/vllm/pull/53435
+* @eilamc14 made their first contribution in https://github.com/vllm-project/vllm/pull/47640
+* @eligotts made their first contribution in https://github.com/vllm-project/vllm/pull/54315
+* @Eoin-Houstoun made their first contribution in https://github.com/vllm-project/vllm/pull/51703
+* @floatlibai made their first contribution in https://github.com/vllm-project/vllm/pull/52144
+* @fuzzifikation made their first contribution in https://github.com/vllm-project/vllm/pull/51034
+* @hagaikwa-redhat made their first contribution in https://github.com/vllm-project/vllm/pull/53230
+* @haoyangqian made their first contribution in https://github.com/vllm-project/vllm/pull/52690
+* @Hert4 made their first contribution in https://github.com/vllm-project/vllm/pull/51157
+* @ima-helikoptaaa made their first contribution in https://github.com/vllm-project/vllm/pull/54427
+* @jbyczkow made their first contribution in https://github.com/vllm-project/vllm/pull/52174
+* @JC-ut0 made their first contribution in https://github.com/vllm-project/vllm/pull/53071
+* @jiahaoliang made their first contribution in https://github.com/vllm-project/vllm/pull/51262
+* @JiataiWang made their first contribution in https://github.com/vllm-project/vllm/pull/53553
+* @jl9876 made their first contribution in https://github.com/vllm-project/vllm/pull/51248
+* @JulianZJN made their first contribution in https://github.com/vllm-project/vllm/pull/53253
+* @jungjiyu made their first contribution in https://github.com/vllm-project/vllm/pull/53939
+* @kyleliang-nv made their first contribution in https://github.com/vllm-project/vllm/pull/51203
+* @LH-and-FPGA made their first contribution in https://github.com/vllm-project/vllm/pull/52648
+* @li-ukumar made their first contribution in https://github.com/vllm-project/vllm/pull/52571
+* @LioEinaudi made their first contribution in https://github.com/vllm-project/vllm/pull/53247
+* @LironKesem made their first contribution in https://github.com/vllm-project/vllm/pull/53921
+* @Lossfull made their first contribution in https://github.com/vllm-project/vllm/pull/52948
+* @lxy-alexander made their first contribution in https://github.com/vllm-project/vllm/pull/52430
+* @lxyxinyi made their first contribution in https://github.com/vllm-project/vllm/pull/50809
+* @machero made their first contribution in https://github.com/vllm-project/vllm/pull/53531
+* @matthewkotila made their first contribution in https://github.com/vllm-project/vllm/pull/48915
+* @mhoqueanik made their first contribution in https://github.com/vllm-project/vllm/pull/49636
+* @mhuzaifa3 made their first contribution in https://github.com/vllm-project/vllm/pull/53625
+* @minjang made their first contribution in https://github.com/vllm-project/vllm/pull/53530
+* @MKQuantum made their first contribution in https://github.com/vllm-project/vllm/pull/51866
+* @new-TonyWang made their first contribution in https://github.com/vllm-project/vllm/pull/53704
+* @nicholaskh-ai made their first contribution in https://github.com/vllm-project/vllm/pull/53819
+* @oliverholworthy made their first contribution in https://github.com/vllm-project/vllm/pull/52185
+* @prakharPant made their first contribution in https://github.com/vllm-project/vllm/pull/52743
+* @Prudhvivuda made their first contribution in https://github.com/vllm-project/vllm/pull/53016
+* @rajathpi made their first contribution in https://github.com/vllm-project/vllm/pull/52622
+* @ray24777 made their first contribution in https://github.com/vllm-project/vllm/pull/53120
+* @roachsinai made their first contribution in https://github.com/vllm-project/vllm/pull/53528
+* @RookieCoder-Camera made their first contribution in https://github.com/vllm-project/vllm/pull/49274
+* @sandeep-maddipatla made their first contribution in https://github.com/vllm-project/vllm/pull/51777
+* @seonjinn made their first contribution in https://github.com/vllm-project/vllm/pull/52204
+* @ShengleiFu made their first contribution in https://github.com/vllm-project/vllm/pull/53650
+* @shepark made their first contribution in https://github.com/vllm-project/vllm/pull/51302
+* @shijuzhao made their first contribution in https://github.com/vllm-project/vllm/pull/45683
+* @shipiyouniao made their first contribution in https://github.com/vllm-project/vllm/pull/51979
+* @ShuaiShao93 made their first contribution in https://github.com/vllm-project/vllm/pull/53034
+* @simon-veitner-redhat made their first contribution in https://github.com/vllm-project/vllm/pull/52980
+* @sseanliu made their first contribution in https://github.com/vllm-project/vllm/pull/52041
+* @studioego made their first contribution in https://github.com/vllm-project/vllm/pull/52389
+* @tanchao made their first contribution in https://github.com/vllm-project/vllm/pull/50191
+* @thanhpt1110 made their first contribution in https://github.com/vllm-project/vllm/pull/52720
+* @theamalsebastian made their first contribution in https://github.com/vllm-project/vllm/pull/52588
+* @thunguo made their first contribution in https://github.com/vllm-project/vllm/pull/53101
+* @tolleybot made their first contribution in https://github.com/vllm-project/vllm/pull/51292
+* @tommy-asai-sonarsource made their first contribution in https://github.com/vllm-project/vllm/pull/51395
+* @tthakkal made their first contribution in https://github.com/vllm-project/vllm/pull/50501
+* @ukannika made their first contribution in https://github.com/vllm-project/vllm/pull/52849
+* @VBS2004 made their first contribution in https://github.com/vllm-project/vllm/pull/48922
+* @wyettzeng made their first contribution in https://github.com/vllm-project/vllm/pull/52209
+* @Xuan-1998 made their first contribution in https://github.com/vllm-project/vllm/pull/53008
+* @y0hnn made their first contribution in https://github.com/vllm-project/vllm/pull/52002
+* @Yiqin-17 made their first contribution in https://github.com/vllm-project/vllm/pull/52925
+* @YukioZzz made their first contribution in https://github.com/vllm-project/vllm/pull/51705
+* @ZHIHANCHEN03 made their first contribution in https://github.com/vllm-project/vllm/pull/53432
+* @Zhou248 made their first contribution in https://github.com/vllm-project/vllm/pull/52560
+* @zllion made their first contribution in https://github.com/vllm-project/vllm/pull/46701
+* @zwischenraum made their first contribution in https://github.com/vllm-project/vllm/pull/50272
+
+## Contributors
+@AndreasKaratzas, @khluu, @mgoin, @taneem-ibrahim, @yewentao256, @njhill, @BugenZhao, @hmellor, @GirasoleY, @DarkLight1337, @mayuyuace, @WoosukKwon, @jeejeelee, @noooop, @jperezdealgaba, @LucasWilkinson, @wzhao18, @stefankoncarevic, @gau-nernst, @okorzh-amd, @ZJY0516, @HollowMan6, @connorcarpenter15, @gcanlin, @aoshen02, @linitra24, @mhuzaifa3, @Isotr0py, @Etelis, @MatthewBonanni, @TheEpicDolphin, @zupengwang, @atalman, @NickLucche, @rasmith, @elvircrn, @JasonKeyiL, @Hotragn, @waizuichougou, @pmanczak, @divakar-amd, @he-yufeng, @xuebwang-amd, @qgallouedec, @esmeetu, @ZeldaHuang, @Prudhvivuda, @chaunceyjiang, @zxd1997066, @louie-tsai, @andyxning, @pisceskkk, @tjtanaa, @qli88, @tlrmchlsmth, @LopezCastroRoberto, @micah-wil, @hongxiayang, @BabyDrangoner, @yimdev, @mganczarenko, @SageMoore, @biswapanda, @sfeng33, @russellb, @itayalroy, @bigPYJ1151, @drakosha, @qwerqwerqwe8688-jpg, @akii96, @shen-shanshan, @meiyeh123, @reidliu41, @yma11, @frgossen, @lukealonso, @tanchao, @Fangzhou-Ai, @vllm-agent, @djramic, @andrewbcohere, @zyongye, @gty111, @ShuoleiWang, @ZHIHANCHEN03, @KurodaKanbei, @alexeldeib, @khushali9, @xiaohuguo2023, @hungnnvidia, @thisjiang, @arpera, @ShengleiFu, @zhenwei-intel, @jungjiyu, @yzong-rh, @charlifu, @hclsys, @Ronald1995, @mkhazraee, @YukioZzz, @theamalsebastian, @030611, @cr-zhao, @jbyczkow, @tommy-asai-sonarsource, @jikunshang, @bobboli, @LH-and-FPGA, @SayHelloToWorld, @kkt-cohere, @floatlibai, @rajathpi, @lxy-alexander, @gangula-karthik, @ActiveSky, @fxmarty-amd, @sstamenk, @mpashkovskii, @LiuYinfeng01, @chaojun-zhang, @Oxygen56, @daviswer, @vineethsaivs, @Agoni-02, @Andy365-365, @wangxiyuan, @haoyangqian, @Naveassaf, @eilamc14, @sseanliu, @y0hnn, @dineshchitlangia, @yiliu30, @Lossfull, @lxyxinyi, @vanshbhatia-amd, @jcotant-inferact, @chengy-sysu, @92hyungjun, @xyang16, @AmitMY, @zllion, @AnkitNakhawa, @dmvevents, @lengrongfu, @JC-ut0, @Eoin-Houstoun, @sagearc, @wjabbour, @sandeep-maddipatla, @seonjinn, @Yiqin-17, @kyleliang-nv, @thanhpt1110, @MKQuantum, @matthewkotila, @vhagor, @tthakkal, @ShuaiShao93, @hagaikwa-redhat, @shijuzhao, @elwhyjay, @Gregory-Pereira, @ErenAta16, @morrison-turnansky, @DCoEngine, @SoluMilken, @xianbaoqian, @kliuae, @nascheme, @waynehacking8, @stecasta, @vMaroon, @zwischenraum, @Rohan138, @Zhou248, @brianosaurus, @anmolgupt, @wyettzeng, @hao-aaron, @frank-suwen, @danisereb, @fuzzifikation, @KernelClint, @thunguo, @studioego, @shipiyouniao, @cjackal, @LioEinaudi, @guan404ming, @libinta, @mhoqueanik, @minjang, @Edge-Explorer, @shepark, @JiataiWang, @jiahaoliang, @therealnaveenkamal, @ColinZ22, @tolleybot, @almogtavor, @simon-veitner-redhat, @hyeongyun0916, @nicholaskh-ai, @mawong-amd, @adisivaprasad, @ray24777, @robertgshaw2-redhat, @new-TonyWang, @oliverholworthy, @fanxingran, @lucianommartins, @hallerite, @avininjamay8, @VBS2004, @omerpaz95, @Sunt-ing, @Hert4, @wangshangsam, @cogniera, @jeffreywang88, @Xarbirus, @fynnsu, @jiahanc, @zixi-qi, @prakharPant, @haic0, @maobaolong, @xinyu-intel, @CHIPMUNK-T0T, @hangy-amd, @afriedri, @canlahlah, @Alnusjaponica, @ukannika, @pranavthakur0-0, @zzaebok, @Xuan-1998, @JulianZJN, @roachsinai, @ivanium, @CalvinXKY, @yu-xin-c, @rchalamala, @QwertyJack, @Kaif10, @yudigege86, @yiz-liu, @dkrisman, @simondanielsson, @machero, @CherryLemon, @ima-helikoptaaa, @RookieCoder-Camera, @LironKesem, @peakcrosser7, @eligotts, @foraxe, @zufangzhu, @tianmu-li, @jl9876, @lucifer1004, @liranschour, @maithilijoshi20, @li-ukumar, @andyluo7, @Zhenzhong1, @faaany, @joerowell, @juhi10071998, @ganeshr10, @Priyjain-amd, @SubSir, @luyixiao95, @djw8605, @codex
+
+
+[2] huggingface/transformers v5.17.0 (2026-09-09)
+https://github.com/huggingface/transformers/releases/tag/v5.17.0
+# Release v5.17.0
+
+
+## New Model additions
+
+### HYV4
+
+<img width="1503" height="827" alt="image" src="https://github.com/user-attachments/assets/e6ed85ee-eb1d-40eb-a0d4-c649f6337ca9" />
+
+
+Hy4-Preview is a 780B-parameter mixture-of-experts language model that activates 49B parameters per
+token. Each MoE layer holds 256 routed experts plus one always-active shared expert and routes every
+token to 8 of them. The context window is 1M tokens.
+
+The architecture combines four features:
+
+- **Multi-head Latent Attention (MLA)** compresses keys and values into a low-rank latent
+  (`kv_lora_rank`) that `kv_b_proj` expands back to one key/value per query head.
+- **DeepSeek Sparse Attention (DSA)** selects `index_topk` keys per query with a lightweight indexer.
+  Following [IndexShare](https://huggingface.co/papers/2603.12201), only the layers marked `"full"`
+  in `indexer_types` run an indexer; `"shared"` layers reuse the previous full layer's selection.
+- **Gated MLA with learnable attention sinks**, where each head owns a sink logit that participates
+  in the softmax and contributes no value, as in [GPT-OSS](./gpt_oss).
+- **Independent Hyper-Connections (iHC)** replace the plain residual path with `hc_mult` parallel
+  residual streams that are collapsed before, and redistributed after, every sublayer.
+
+The implementation does not execute the multi-token prediction (MTP) layers. Released checkpoints
+keep those weights so that other runtimes can use them for speculative decoding; they are ignored
+at load time.
+
+**Links:** [Documentation](https://huggingface.co/docs/transformers/main/en/model_doc/hy_v4)
+* Add h4 (#48473) by @ArthurZucker in [#48473](https://github.com/huggingface/transformers/pull/48473)
+
+### VibeVoice
+
+<img width="2140" height="1188" alt="image" src="https://github.com/user-attachments/assets/29ccea01-a855-4d4f-a6af-61bc4fc883a4" />
+
+[VibeVoice](https://huggingface.co/papers/2508.19205) is a novel framework for synthesizing high-fidelity, long-form speech with multiple speakers by employing a next-token diffusion approach within a Large Language Model (LLM) structure. It's designed to capture the authentic conversational "vibe" and is particularly suited for generating audio content like podcasts and multi-participant audiobooks.
+
+**Links:** [Documentation](https://huggingface.co/docs/transformers/main/en/model_doc/vibevoice)
+* Implement VibeVoice  (#40546) by @pengzhiliang in [#40546](https://github.com/huggingface/transformers/pull/40546)
+
+### NeoMME
+
+NeoMME is a family of efficient 260M and 800M parameter multimodal-native multilingual foundation encoders from H Company. It processes multilingual text tokens and raw image patches in a single bidirectional Transformer encoder, without a separately pretrained vision tower or causal language model.
+
+NeoMME-Retriever is a model fine-tuned from the NeoMME backbone for visual document retrieval with joint late-interaction and dense objectives. It takes text queries and documents (text or page screenshots) and produces multi-vector embeddings for MeanMaxSim scoring (late-interaction) and mean-pooled embeddings for cosine similarity (dense).
+
+**Links:** [Documentation](https://huggingface.co/docs/transformers/main/en/model_doc/neomme)
+* Add NeoMME and NeoMME-Retriever (#47992) by @tonywu71 in [#47992](https://github.com/huggingface/transformers/pull/47992)
+
+### Fun-ASR-Nano
+
+Fun-ASR-Nano is an 800M-parameter end-to-end speech recognition model developed by Alibaba DAMO Academy's FunAudioLLM team. It achieves state-of-the-art performance on Chinese, English, and Japanese ASR benchmarks while being significantly smaller than comparable models.
+
+Key features are
+- **Chinese, English, and Japanese**, including 7 Chinese dialects and 26 regional accents
+- **Hotword customization** for domain-specific vocabulary
+- **Native punctuation** output (no separate punctuation model needed)
+
+**Links:** [Documentation](https://huggingface.co/docs/transformers/main/en/model_doc/fun_asr_nano)
+* Add Fun-ASR-Nano model (#46180) by @LauraGPT in [#46180](https://github.com/huggingface/transformers/pull/46180)
+
+### KimiLinear
+
+Kimi Linear is a hybrid linear attention architecture from Moonshot AI, introduced in
+[Kimi Linear: An Expressive, Efficient Attention Architecture](https://huggingface.co/papers/2510.26692).
+
+At its core is **Kimi Delta Attention (KDA)**, a refinement of [Gated DeltaNet](https://huggingface.co/papers/2412.06464)
+that gives each key channel its own forget gate, so the recurrent state decays per channel instead of per head. KDA is
+used in most layers; every fourth layer keeps a full-attention block that reuses DeepSeek-V3's Multi-head Latent
+Attention (MLA), and the feed-forward blocks are DeepSeek-V3-style MoE with a shared expert.
+
+**Links:** [Documentation](https://huggingface.co/docs/transformers/main/en/model_doc/kimi_linear)
+* Kimi linear (#48250) by @remi-or in [#48250](https://github.com/huggingface/transformers/pull/48250)
+
+### Canary
+
+Canary-1B-v2, a fast, robust multilingual model for Automatic Speech Recognition (ASR) and Speech-to-Text Translation (AST):
+
+Canary reuses the [Fast Conformer](https://huggingface.co/papers/2305.05084) encoder from [Parakeet](./parakeet.md) (loaded through [`ParakeetEncoder`] / [`ParakeetEncoderConfig`]) and pairs it with a Transformer decoder that uses fixed sinusoidal positional embeddings, cross-attention to the encoder outputs and tied input/output embeddings. The task is selected through a decoder prompt prefix built by [`CanaryProcessor`] of the form `<|startofcontext|> <|startoftranscript|> <|emo:undefined|> <source_lang> <target_lang> <pnc|nopnc> <|noitn|> <|notimestamp|> <|nodiarize|>`, where `source_lang == target_lang` selects transcription and otherwise selects translation.
+
+**Links:** [Documentation](https://huggingface.co/docs/transformers/main/en/model_doc/canary)
+* model: Add NVIDIA Canary-1B-v2 to Transformers (#46825) by @harshaljanjani in [#46825](https://github.com/huggingface/transformers/pull/46825)
+
+
+### NeuCodec
+
+The NeuCodec model was proposed in [Finite Scalar Quantization Enables Redundant and Transmission-Robust Neural Audio Compression at Low Bit-rates](https://huggingface.co/papers/2509.09550).
+
+NeuCodec is a neural audio codec extending on XCodec2. It takes advantage of the following features:
+
+- Finite Scalar Quantization (FSQ) quantisation resulting in a **single codebook**, making it ideal for downstream modeling with Speech Language Models.
+- Trained with CC data such that there are **no Non-Commercial data restrictions**.
+- At 50 tokens/sec and 16 bits per token, the overall bit-rate is **0.8kbps**.
+- The codec takes in 16kHz input and outputs **24kHz** using an **upsampling decoder**.
+- The FSQ encoding scheme allows for bit-level error resistance suitable for unreliable and noisy channels.
+
+**Links:** [Documentation](https://huggingface.co/docs/transformers/main/en/model_doc/neucodec)
+* Add support for NeuCodec (#47143) by @harryjulian in [#47143](https://github.com/huggingface/transformers/pull/47143)
+
+
+
+## Breaking changes
+
+Vision rotary embeddings (2D/3D) have been standardized into a unified RoPE frequency computation module, so users with custom vision models relying on attention-layer-level or model-specific RoPE grid interleaving logic must migrate to the new centralized `modeling_rope_utils.py` implementation.
+* :rotating_light: Vision (2d/3d) rotary embeddings  (#48105) by @zucchini-nlp
+
+
+
+## Generation
+
+Generation improvements include a performance optimization that avoids unnecessary accelerator synchronization on every decode step (reducing per-step overhead), and a fix to prevent unconditional downloading of remote hub files during generation. Several correctness fixes were also applied, including enforcing auto-compile cache checks for encoder-decoder models, standardizing `past_key_values` naming in AfMoE, and resolving flaky export and integration test failures.
+
+
+* [`Generate`] Avoid unconditionally downloading remote hub file (#48620) by @vasqu in [#48620]
+* [generate] stop synchronizing the accelerator on every decode step (#47975) by @SunMarc in [#47975]
+* [AfMoE] Standardize past_key_values argument naming across forward and generate (#48430) by @shenhuaqingshi in [#48430]
+* Fix MTP generation test regex gate for escaped layer ignore keys (#48003) (#48262) by @Noxtimo in [#48262]
+* fix(generation): Enforce the auto-compile cache check for encoder-decoder models (#48364) by @harshaljanjani in [#48364]
+* [serge] Fix 4 integration tests for model `generation` failing with `output_mismatch` (list output differs (4)) (#48133) by @sergereview[bot] in [#48133]
+* [VibeVoice] Skip generate export tests (flaky) (#48396) by @ydshieh in [#48396]
+
+
+## Cache
+
+Fixed several cache-related bugs, including a quantized cache issue in VibeVoice, incorrect rejection of non-static cache implementations in VoxtralRealtime, missing auto-compile cache checks for encoder-decoder models, and a silent failure when paged attention is called without a cache. Documentation was also updated to clarify `ContinuousBatchingConfig` usage and sliding window model limitations.
+
+
+* vibevoice: fix bug for quant cache (#48487) by @kaixuanliu in [#48487]
+* Fix VoxtralRealtime rejecting non-static cache implementations (#48082) by @jiqing-feng in [#48082]
+* Raise when a paged attention forward is called with no cache (#48297) by @qgallouedec in [#48297]
+* [docs] Pass ContinuousBatchingConfig and sliding window models  (#48381) by @stevhliu in [#48381]
+* Retry get_daily_ci_runs on stale GitHub API cache (#48374) by @ydshieh in [#48374]
+
+
+## Kernels
+
+Kernel support was improved with fixes for nested FLA kernel imports when only `fla-core` is installed, a warning when hub-kernel functions silently fall back to slower pure-PyTorch reference implementations, and the ability to register standalone functions (e.g., RoPE) in `KernelConfig` with optional non-inheritance of default mappings. Additional fixes include corrected repository paths for ESMFold2 kernels and updated documentation for `KernelConfig` customization.
+
+
+* Support nested FLA kernel imports for fla-core (#48221) by @DimensionSTP in [#48221]
+* Warn once when a hub-kernel function falls back to its reference PyTorch path (#48185) by @qgallouedec in [#48185]
+* [docs] Kernel updates (#48465) by @stevhliu in [#48465]
+* [`Kernels`] Enable functions into kernels registry and allow non inheritance (#48443) by @vasqu in [#48443]
+* Fix kernel commit and repo paths for ESMFold2 (#48186) by @Rocketknight1 in [#48186]
+
+
+## Quantization
+
+Fixed several quantization bugs, including a quant cache issue in VibeVoice, incorrect FP8 embedding handling for Qwen models, missing FP8 tensor parallelism layer overrides, and unnecessary MXFP4 weight dequantization on XPU devices.
+
+
+* fix qwen4exp-fp8 ple embedding (#48368) by @JJJYmmm in [#48368]
+* Keep MXFP4 weights quantized on XPU when use_kernels is set (#47923) by @jiqing-feng in [#47923]
+* Fix missing FP8 TP layer overrides (#48343) by @changwangss in [#48343]
+
+
+## Bugfixes and improvements
+
+* MRoPE continued (#48594) by @zucchini-nlp in [#48594]
+* [fix] Update stale expected strings in HunYuanVL integration tests (#48646) by @ydshieh in [#48646]
+* [Quantizaiton]support 5/6/7 bits in AutoRound (#48481) by @wenhuach21 in [#48481]
+* [fix] Update stale golden values and fix expected_logits shape in FlavaForPreTraining integration tests (#48639) by @ydshieh in [#48639]
+* Fix YOLOS device mismatch with device_map="auto" (#46886) by @swankystark in [#46886]
+* Honor `shift_labels` in decoder-only LLM/VLM losses (#48493) by @qgallouedec in [#48493]
+* [KimiLinear] Fix test_cpu_offload: set num_local_experts=4 in model tester (#48624) by @ydshieh in [#48624]
+* [docs] Per-layer config (#48601) by @stevhliu in [#48601]
+* Fix `generate_flags` parsing in `transformers chat` (#48597) by @SunMarc in [#48597]
+* [fix] Fix how we read package versions - triggered by torch 2.14+ (#48615) by @ydshieh in [#48615]
+* [Docker] Upgrade CPU torch to <=2.14.0, torchcodec to <=0.16.0 (#48614) by @ydshieh in [#48614]
+* Fix AttributeError in gradient_checkpointing_enable(offload=True) (#48590) by @tarekziade in [#48590]
+* Another day fixing CI (#48591) by @zucchini-nlp in [#48591]
+* esmfold2: keep `distogram_head` in fp32 as well (#48488) by @kaixuanliu in [#48488]
+* Add `supports_context_parallel` to `PreTrainedModel` (#48442) by @qgallouedec in [#48442]
+* [docs] mlinter reference (#48460) by @stevhliu in [#48460]
+* [docs] Add a LiteRT page under community integrations (#48540) by @john-rocky in [#48540]
+* [GLM 5.3 Flash] Fix NaN gradients in chunked KDA (#48455) by @imvladikon in [#48455]
+* [docs] Fix [[autodoc]] directives in ALBERT model documentation (#48593) by @samyuktahegde in [#48593]
+* [Fix] Fix A10 expectations for a test (#48454) by @remi-or in [#48454]
+* Add PR comment CI for AMD (MI300) (#48065) by @ydshieh in [#48065]
+* docs: fix docstring parameter names that do not match signatures (#48575) by @simpleqt in [#48575]
+* docs: remove phantom parameters from docstrings (#48576) by @simpleqt in [#48576]
+* extend some case to xpu as well (#48502) by @sywangyi in [#48502]
+* [serge] Fix 2 integration tests for model `glm4_moe` failing with `OOM` (other (2)) (#48551) by @sergereview[bot] in [#48551]
+* [serge] Fix 2 integration tests for model `nemotron` failing with `import_or_config` (other (2)) (#48582) by @sergereview[bot] in [#48582]
+* Compress the agent conventions file and document two modular pitfalls (#48586) by @tarekziade in [#48586]
+* Guard against a None video processor class when the backend is unavailable (#48557) by @caiotheodoro in [#48557]
+* [serge] Fix 2 integration tests regressed by commit 83d46aa2a2c4 (PR #47625) (#48580) by @sergereview[bot] in [#48580]
+* [nit] use requires_backends (#47576) by @eustlb in [#47576]
+* [serge] Fix 2 integration tests for model `kosmos2` failing with `import_or_config` (other (2)) (#48552) by @sergereview[bot] in [#48552]
+* Fix failing tests for cohere_compass (#48005) by @kaixuanliu in [#48005]
+* [Fix] Use dedicated helpers for DeepGEMM and SonicMoE tests (#48523) by @remi-or in [#48523]
+* CI: Point test fixtures at hf-internal-testing copies we already host (#48521) by @tarekziade in [#48521]
+* fix failed test cases for glm5_next (#48497) by @kaixuanliu in [#48497]
+* Pass kwargs to the Mamba2 mixer in Nemotron-H, Falcon-H1 and Mamba2 (#48490) by @kfastino in [#48490]
+* Retire test_multi_gpu_data_parallel_forward (#48508) by @tarekziade in [#48508]
+* Processing tests [part 2] (#47922) by @zucchini-nlp in [#47922]
+* QA: Add noisy comment checker (#48484) by @tarekziade in [#48484]
+* Allow nested rope params for tiny models (#48435) by @zucchini-nlp in [#48435]
+* Fix sliding-window mask `layer_idx` in Gemma3/Gemma4 `create_masks_for_vision_model` (#48482) by @jiqing-feng in [#48482]
+* add xpu expectations for hunyuan_vl model tests (#48504) by @kaixuanliu in [#48504]
+* [`Qwen 3.5 Moe`] Fix decorators (#48436) by @vasqu in [#48436]
+* Infinite loop in dependency search (#48393) by @zucchini-nlp in [#48393]
+* [serge] Fix 2 integration tests for model `fsmt` failing with `output_mismatch` (tensor values differ (2)) (#48496) by @sergereview[bot] in [#48496]
+* Fix some tests by removing the deprecation cycle (#48503) by @Cyrilvallez in [#48503]
+* Remove deprecation (#48500) by @Cyrilvallez in [#48500]
+* Fix Pix2StructTextAttention init using hidden_size instead of d_kv (#47558) by @<NOT FOUND> in [#47558]
+* Fix pre patch release utility (#48499) by @Cyrilvallez in [#48499]
+* Update dev version (#48498) by @Cyrilvallez in [#48498]
+* Fix Inkling inputs_embeds and add more tests (#47827) by @Cyrilvallez in [#47827]
+* Simplify and fix qwen4 tests (#48340) by @Cyrilvallez in [#48340]
+* [docs] Partial checkpointing and group_by_length (#48463) by @stevhliu in [#48463]
+* doc: fix syntax error and typos in VibeVoice documentation (#48489) by @VimalN2005 in [#48489]
+* [`Qwen4 Exp`] Use partial to avoid skipping mask more easily (#48456) by @vasqu in [#48456]
+* Add support for NeuCodec (#47143) by @harryjulian in [#47143]
+* [serge] Fix 1 integration tests regressed by commit bd9509355c8a (PR #47493) (#48426) by @sergereview[bot] in [#48426]
+* Fix rotary embedding regression (#48477) by @Cyrilvallez in [#48477]
+* Remove deprecated mask functions (#48476) by @Cyrilvallez in [#48476]
+* [MTP] Save memory by only capturing the last layer's hidden_states (#48475) by @Cyrilvallez in [#48475]
+* Allow capturing only necessary hidden_states with capture_outputs (#48081) by @sywangyi in [#48081]
+* Support per-layer MTP configuration (#48264) by @eladsegal in [#48264]
+* [docs] Fix code snippets (#47772) by @stevhliu in [#47772]
+* [Fix] Sparse TikToken tokenizers silently fail (#48446) by @remi-or in [#48446]
+* No inherit decorator for NeoMME (#48457) by @zucchini-nlp in [#48457]
+* Batch Rebalance Data Sampler (#47340) by @delock in [#47340]
+* [serge] Fix 2 integration tests for model `cwm` failing with `import_or_config` (other (2)) (#48414) by @sergereview[bot] in [#48414]
+* fix: Add DEIMv2 attribution (#48448) by @harshaljanjani in [#48448]
+* [fix] inkling: mps + cuda mel spec extraction (#47432) by @eustlb in [#47432]
+* fix: decode() batch path respects self.clean_up_tokenization_spaces (#47793) by @lorenzozanee in [#47793]
+* Grounding dino fp16 dtype [backlog] (#48438) by @molbap in [#48438]
+* Init the process group with a load-scaled timeout for sharded loading (#48228) by @qgallouedec in [#48228]
+* Raise a clear error when a token is both forced and suppressed (#47511) by @qgallouedec in [#47511]
+* Clarify device placement in pipelines (#47367) by @LysandreJik in [#47367]
+* Add offload to gradient checkpointing (#48444) by @qgallouedec in [#48444]
+* [MiniCPMV4_6] Update test_small_model_vision_generation_batch expected output (value drift) (#48406) by @ydshieh in [#48406]
+* [serge] Fix 2 integration tests for model `hyperclovax` failing with `other` (other (2)) (#48440) by @sergereview[bot] in [#48440]
+* fix(models): Drop the position-indexed token type lookup in RoPE encoders (#48407) by @harshaljanjani in [#48407]
+* Document image_hidden_states/pixel_values mutual exclusivity for SmolVLM/Idefics2/Idefics3 (#47714) by @verma8076 in [#47714]
+* Re-order a bit for easier navigation (#48434) by @zucchini-nlp in [#48434]
+* Deprecated stuff gone (#48367) by @zucchini-nlp in [#48367]
+* [serge] Fix 6 integration tests for model `seamless_m4t_v2` failing with `other` (other (6)) (#48425) by @sergereview[bot] in [#48425]
+* [Docs]: Update GLM 5.3 (#48401) by @Dovis01 in [#48401]
+* Avoid print to stdout that fails the job `check_failed_tests` job (#48391) by @ydshieh in [#48391]
+* Fix incorrect tuple return annotations on forward methods returning a Tensor (#48359) by @Gronoxx in [#48359]
+* Fix interval merge invariant in _find_disjoint (#47860) by @sharmax-vikas in [#47860]
+* skip mtp slow tests for now (#48328) (#48329) by @tarekziade in [#48329]
+* Update Tailscale action version in workflow (#48394) by @glegendre01 in [#48394]
+* fix some failure in xpu (#48252) by @sywangyi in [#48252]
+* [Improvement] Make gated delta rule more explicit  (#47625) by @remi-or in [#47625]
+* [CB] Fix wrong device scoping (#48370) by @remi-or in [#48370]
+* Bump transformers-mlinter to 0.1.5 and clear the new findings (#48259) by @tarekziade in [#48259]
+* fix: flash-attn fallback failing on torch2.13 (#48388) by @NanoCode012 in [#48388]
+* [LongcatFlash] Fix test_longcat_generation_cpu: use device_map="cpu" to avoid MoE disk offload issue (#48377) by @ydshieh in [#48377]
+* [Qwen3VLMoe] Update `test_small_model_integration_test_batch` expected output (value drift) (#48376) by @ydshieh in [#48376]
+* [ONNX] Skip affected models on torch 2.13 (two dynamo regressions) (#48191) by @ydshieh in [#48191]
+* Fix `safe_open` mmap memory exhaustion on Windows by using `pread` backend (#48341) by @eryk-roch in [#48341]
+* Fix Zamba2 construction for num_mem_blocks > 1 checkpoints (#48325) by @john-rocky in [#48325]
+* [Docs] Change 5.3 Flash pos in toc (#48366) by @Dovis01 in [#48366]
+* [conftest] Use get_cpu_ram_total_gib for psutil patch (cgroup-aware) (#48290) by @ydshieh in [#48290]
+* Fix flaky test_training_gradient_checkpointing for BigBirdPegasus (fp noise filter) (#48332) by @ydshieh in [#48332]
+* Quiet continuous batching at default verbosity (#48314) by @qgallouedec in [#48314]
+* Wait for the first request in the async continuous batching bootstrap (#48304) by @qgallouedec in [#48304]
+* Ignore a stale best checkpoint recorded in a resumed trainer state (#48319) by @VaggelisGian in [#48319]
+* [docs] Fix links and remove TokenizerFast (#47748) by @stevhliu in [#47748]
+* Fix incorrect token classification prefix for ESMC (#48348) by @Rocketknight1 in [#48348]
+* Create the continuous batching CPU group with local synchronization (#48302) by @qgallouedec in [#48302]
+* Resolve continuous batching config against the text config for composite models (#48299) by @qgallouedec in [#48299]
+* [`CI`] Unblock fast CI for now (failing tests) (#48344) by @vasqu in [#48344]
+* [qwen4_exp] disable torch/onnx export tests due to data-dependent control flow (#48345) by @ydshieh in [#48345]
+* [debug] Trace previous CI run selection in get_previous_daily_ci.py (#48338) by @ydshieh in [#48338]
+* Normalize HunYuanVL's legacy field aliases via attribute_map (#48261) by @hmellor in [#48261]
+
+## Significant community contributions
+
+The following contributors have made significant changes to the library over the last release:
+
+* @ydshieh
+    * [fix] Update stale expected strings in HunYuanVL integration tests (#48646)
+    * [fix] Update stale golden values and fix expected_logits shape in FlavaForPreTraining integration tests (#48639)
+    * [tests] Fix integration test golden values broken by fast image processor default (PR #41388) (#48637)
+    * [KimiLinear] Fix test_cpu_offload: set num_local_experts=4 in model tester (#48624)
+    * Fix GPU memory teardown in CLI serve tests (#48618)
+    * [fix] Fix how we read package versions - triggered by torch 2.14+ (#48615)
+    * [Docker] Upgrade CPU torch to <=2.14.0, torchcodec to <=0.16.0 (#48614)
+    * Add PR comment CI for AMD (MI300) (#48065)
+    * [MiniCPMV4_6] Update test_small_model_vision_generation_batch expected output (value drift) (#48406)
+    * Avoid print to stdout that fails the job `check_failed_tests` job (#48391)
+    * [VibeVoice] Skip generate export tests (flaky) (#48396)
+    * [LongcatFlash] Fix test_longcat_generation_cpu: use device_map="cpu" to avoid MoE disk offload issue (#48377)
+    * [Qwen3VLMoe] Update `test_small_model_integration_test_batch` expected output (value drift) (#48376)
+    * [ONNX] Skip affected models on torch 2.13 (two dynamo regressions) (#48191)
+    * Retry get_daily_ci_runs on stale GitHub API cache (#48374)
+    * [conftest] Use get_cpu_ram_total_gib for psutil patch (cgroup-aware) (#48290)
+    * Fix flaky test_training_gradient_checkpointing for BigBirdPegasus (fp noise filter) (#48332)
+    * [qwen4_exp] disable torch/onnx export tests due to data-dependent control flow (#48345)
+    * [debug] Trace previous CI run selection in get_previous_daily_ci.py (#48338)
+* @LauraGPT
+    * Add Fun-ASR-Nano model (#46180)
+* @tarekziade
+    * Fix AttributeError in gradient_checkpointing_enable(offload=True) (#48590)
+    * Compress the agent conventions file and document two modular pitfalls (#48586)
+    * CI: Point test fixtures at hf-internal-testing copies we already host (#48521)
+    * Retire test_multi_gpu_data_parallel_forward (#48508)
+    * QA: Add noisy comment checker (#48484)
+    * skip mtp slow tests for now (#48328) (#48329)
+    * Bump transformers-mlinter to 0.1.5 and clear the new findings (#48259)
+* @remi-or
+    * [Fix] Fix A10 expectations for a test (#48454)
+    * Kimi linear (#48250)
+    * [Fix] Use dedicated helpers for DeepGEMM and SonicMoE tests (#48523)
+    * [Fix] Sparse TikToken tokenizers silently fail (#48446)
+    * [Improvement] Make gated delta rule more explicit  (#47625)
+    * [CB] Fix wrong device scoping (#48370)
+    * [CB] Fail faster (#48334)
+* @ArthurZucker
+    * Add h4 (#48473)
+* @harryjulian
+    * Add support for NeuCodec (#47143)
+* @delock
+    * Batch Rebalance Data Sampler (#47340)
+* @harshaljanjani
+    * fix: Add DEIMv2 attribution (#48448)
+    * model: Add NVIDIA Canary-1B-v2 to Transformers (#46825)
+    * fix(generation): Enforce the auto-compile cache check for encoder-decoder models (#48364)
+    * fix(models): Drop the position-indexed token type lookup in RoPE encoders (#48407)
+* @tonywu71
+    * Add NeoMME and NeoMME-Retriever (#47992)
+* @Dovis01
+    * [Docs]: Update GLM 5.3 (#48401)
+    * [Docs] Change 5.3 Flash pos in toc (#48366)
+    * [Glm 5.3 Flash] GLM 5.3 Flash Support (#48342)
+* @pengzhiliang
+    * Implement VibeVoice  (#40546)
+
+[3] vllm-project/vllm v0.30.0 (2026-09-22)
+https://github.com/vllm-project/vllm/releases/tag/v0.30.0
+# v0.30.0
+
+## Highlights
+
+This release features 762 commits from 315 contributors (104 new)!
+
+* **New models**: DeepSeek-V4.1-Flash (#56214, #56228, #56208) with the whole KV stored in MXFP8 through the FlashMLA V4.1 record on SM100 (#56893), DeepGEMM Mega-mHC (#56962), and async Engram prefetch with Engram DP sharding (#56512); DeepSeek-V4-Flash-Vision-Exp (#54566), also on ROCm (#55107) and with LoRA (#55897); GLM-5.3-Flash (#53906) with EPLB (#55119); K2-Horizon (#55063); Cohere Compass (#54774); Bailing V3 VL (#55921); Nanbeige4.2 via the Transformers backend (#56071); and a DeepSeek-V4 CPU backend with AVX512/AMX sparse MLA, indexer, mHC and compressor kernels (#55355).
+* **Fast Start**: a persistent per-GPU weight-cache daemon holds post-quantized, TP-sharded weights in GPU memory so restarting engines map them over CUDA IPC with `--load-format ipc_cache` instead of reloading from disk (#54921), now covering FP4 checkpoints (#55465) and multi-node TP (#55468).
+* **Watermarking**: Gumbel-max watermarked generation and detection with a keyed PRF, per-request opt-out and an example detection endpoint (#54053); dual-key Gumbel-max makes it compatible with speculative decoding (#56122); the Rust frontend forwards the per-request controls (#56338).
+* **HiSparse**: a host-resident tier for sparse-MLA decode that spills KV pages to pinned host memory under GPU pressure and serves top-k misses from a per-request GPU hot buffer, enabled through `HiSparseConnector` (#53781), with Prometheus counters (#56061), a host cache shared across TP ranks (#56629), and the attention config inferred from the connector (#57041).
+* **Model Runner V2**: dual-batch overlap in eager mode (#50945) and with FULL CUDA graphs for microbatched steps (#51700); MTP (#46994) and EAGLE3/DFlash/DSpark (#50514) speculative decoding under pipeline parallelism; adaptive verification for every draft-model speculator through an online acceptance estimator (#52228); gc frozen during graph capture, cutting capture from 12s to 2s and engine init from 28.9s to 8.2s on H200 (#54646); `--return-sampling-mask` compacted on GPU, fixing an about 2x RL step-time regression (#54901).
+* **Qwen3.8-Flash-Next performance**: separate prefill and decode QSA indexer kernels (#54513), fused PLE kernels (#54517), FP8 indexer cache (#54890), padded-index skipping in sparse GQA (#54873), fused PLE residual and QSA output gate (#55309), UVA PLE offload and Engram tensor parallelism via `--engram-config` (#54371), and torch.compile removed from the NVIDIA implementation so FP8 fits on a single GB300 (#55272).
+* **Kimi K3 performance**: native CUDA AttnRes default on SM100 (#54261), KDA mixed-batch gather/scatter removed (5.2-7.7% E2E throughput, #56159), grouped FP8 MLA cache insertion (4-6x kernel speedup at small batch, #55356), DSV3 low-latency GEMM on strided tensors (12-81% kernel speedup, #54565), overlapped TP8 KDA projections (#54697), FlashInfer KDA kernels (#55364), internal prefix checkpoints with partial prefix caching and speculative decoding (#53614), and symmetric DCP disaggregation for hybrid Mamba models (#55531).
+* **Large scale serving**: PCP+DCP on sparse-MLA models (#56157), PCP with single-module MTP and replicated DSpark (#56107) and decode-only FULL CUDA graphs (#53867), Elastic EP reusing CUDA graphs across reconfiguration (#54985), an opt-in FlashInfer PCIe IPC all-reduce for NVLink-less boxes (#53576), DeepEP v2 async finalize overlapping shared experts with combine (#52781), Mooncake Store heterogeneous TP sharing (#53129), a KVCR secondary-tier adapter (#53624), and encoder-cache sharing over NIXL (#47941) and Mooncake (#41567).
+* **Quantization**: targeted online quantization through `quantization_config.targets` (#51285) and on partially pre-quantized checkpoints from any quant method (#51392), W4A16 DSA with the `nvfp4_fp8_ds_mla` KV cache (#51724), FlashInfer CuTeDSL NVFP4 W4A16 default over Marlin on SM100/103 (#53014), NVFP4 in the torch linear backend (#53319), per-quantization linear backend overrides (#51204), AutoRound 2/3/5/6/7-bit on CUDA (#52890), and DeepSelect top-k for the DSA sparse indexer (#56464).
+* **Breaking changes**: scale-out endpoints are opt-in on plain `vllm serve` via `--enable-scale-out`, replacing `VLLM_ENABLE_SCALE_OUT_ENDPOINTS` (#54579, #55176); GPTQ activation ordering (`g_idx`) removed (#54809); items deprecated for 0.29 removed, including the `VLLM_PREFIX_CACHE_RETENTION_INTERVAL` and `VLLM_MM_HASHER_ALGORITHM` env vars (#55353); the `all` Mamba cache mode deprecated (#55041); `python -m vllm.entrypoints.grpc_server` deprecated in favor of `vllm serve --grpc` (#56746); YaRN aligned with Transformers so vendor YaRN aliases no longer re-scale `max_model_len` (#56446).
+
+## Release Artifacts
+
+### Python Wheels
+
+| Platform | Install |
+|---|---|
+| PyPI (CUDA 13.0) | `pip install vllm` |
+| PyPI (CUDA 13.0, uv) | `uv pip install vllm --torch-backend=auto` |
+| ROCm | `pip install vllm --extra-index-url https://wheels.vllm.ai/rocm/0.30.0/rocm723` |
+| XPU | `uv pip install vllm --extra-index-url https://wheels.vllm.ai/0.30.0/xpu --extra-index-url https://download.pytorch.org/whl/xpu --index-strategy unsafe-best-match` |
+
+### Docker Images
+
+| Platform | Docker Image |
+|---|---|
+| CUDA 13.0 (Default) | `docker pull vllm/vllm-openai:v0.30.0` |
+| CUDA 12.9 | `docker pull vllm/vllm-openai:v0.30.0-cu129` |
+| CUDA 13.0 + Ubuntu 24.04 | `docker pull vllm/vllm-openai:v0.30.0-ubuntu2404` |
+| CUDA 12.9 + Ubuntu 24.04 | `docker pull vllm/vllm-openai:v0.30.0-cu129-ubuntu2404` |
+| ROCm | `docker pull vllm/vllm-openai-rocm:v0.30.0` |
+| CPU | `docker pull vllm/vllm-openai-cpu:v0.30.0` |
+| XPU | `docker pull vllm/vllm-openai-xpu:v0.30.0` |
+
+### Other Artifacts
+
+Pre-built release artifacts are available in the **Assets** section at the bottom of this page, including:
+- Source distribution tarball
+- CUDA 12.9 Python wheels for x86_64 and arm64
+- CUDA 13.0 Python wheels for x86_64 and arm64
+- CPU Python wheels for x86_64, arm64, and macOS
+- XPU Python wheel for x86_64
+
+## Model Support
+* **New models**: DeepSeek-V4.1-Flash (#56214, #56228, #56208), DeepSeek-V4-Flash-Vision-Exp (#54566) with ROCm support (#55107) and LoRA (#55897), GLM-5.3-Flash (#53906), K2-Horizon with its reasoning and tool parsers (#55063), Cohere Compass (#54774, #55949), Bailing V3 VL with MTP (#55921), Nanbeige4.2 via the Transformers backend (#56071), and a DeepSeek-V4 CPU backend (#55355).
+* **DeepSeek-V4.1-Flash**: whole KV in MXFP8 through the FlashMLA V4.1 record on SM100 (#56893), Mega-mHC from the DeepGEMM fork (#56962), mHC post block folded into the delayed pre projection (#56633), Triton-fused input metadata preparation (#56562), async prefetch for CPU-offloaded Engram lookups and Engram DP sharding (#56512), DSpark draft states collapsed before the SP all-gather (#56903), DSpark drafter no longer inheriting uninitialized EPLB state (#56387), XGrammar V4.1 schema constraints for strict tool parameters (#56408), Responses text parts (#56299), and image sentinel padding scoped to the Vision-Exp checkpoint (#56554).
+* **DeepSeek V4**: plain RoPE without YaRN on sparse SWA layers (#54815), `--kv-cache-dtype auto` resolving to `fp8_ds_mla` with FlashMLA (#45091), prefill sparse index workspace sentinel seeded (#55299), dequant gather grid sized by rows (#55061), optional Q-norm in the fused MLA epilogue and group_size=32 packed FP8 quant (#56215), sparse settings read from the text config for composite models (#56160), MegaMoE startup without EP fixed (#55914), and a Triton iHC pre/post fallback for HY V4 (#55059).
+* **GLM-5.3-Flash**: EPLB support (#55119), FlashKDA for KDA chunked prefill (1.7-3.8x faster than the Triton chunk path, #55737), dense and masked-MHA sparse prefill for the NoPE (256, 0, 256) layout (#55738), decode hot-path cleanups removing per-layer copies and a duplicate router GEMM (#55736), and the `glm5next` NVIDIA subtree now packaged in wheels (#55214).
+* **Qwen3.8-Flash-Next**: separate prefill and decode QSA indexer kernels with `VLLM_SPARSE_INDEXER_MAX_LOGITS_MB` (#54513), fused PLE kernels and merged K/V projections (#54517), sparse GQA skipping padded indices (#54873), FP8 indexer cache (#54890), fused PLE residual and QSA output gate (#55309), UVA PLE offload and Engram tensor parallelism via `--engram-config` (#54371), torch.compile removed from the NVIDIA path (#55272), compact indexer logits workspace (#54915), HC combine-norm reused for MTP input (#54687), PLE MTP metadata transfers (#55054), Hopper LL-GEMM tuning table (#54560), B200 FP8 MoE tuning (#55890), and fixes for FP8 PLE weight scales (#54722, #54882) and fused PLE conv strides (#55375).
+* **Kimi K3**: native CUDA AttnRes default on SM100 (#54261), ll_bf16 router weight prefetch (#53524), overlapped TP8 KDA projections (#54697), strided DSV3 GEMM (#54565), MLA decode epilogue latency (#54896), NVFP4 in_proj alignment routing to DeepGEMM (#55242), mixed-batch KDA without gather/scatter (#56159), grouped FP8 MLA cache insertion (#55356), FlashInfer KDA kernels (#55364), FlashKDA bf16 checkpoint state (#56485) and a stability bump (#54859), SiTU on the FlashInfer CuTeDSL MoE backend (#54606), internal prefix checkpoints with partial prefix caching and spec decoding (#53614), and fixes for RecoverSSM startup (#54634, #55774), GDN metadata (#54636), mixed-batch masks (#54781), checkpoint indexing (#55747, #56794), KDA illegal memory access (#55924), interleaved weight streams (#53379), NVFP4 MoE conversion OOM (#55407), and KDA projection overlap on Hopper (#55426).
+* **Transformers backend**: attention found with a fuser and vLLM's layer attached to it (#54941), generic merged-column linear fusion (#55301), QKV fuser for Gemma4 (#55690), all vocab embeddings replaced including Gemma 3n/4 per-layer tables (#54760, #55083), and attention sinks applied (#52156).
+* **Speculative decoding for models**: EAGLE3 for Sarvam MLA (#53052), Nemotron-H MTP with a separate, possibly quantized lm_head (#54574), NVFP4 DSpark gathered top-k projection for quantized Markov heads (#55713), Qwen3.5/3.6 multimodal MTP resolving `n_predict` from the text config (#55369), Qwen3 DSpark padded-vocab drafts (#55133), and GLM-OCR MTP weight loading (#49869) and position masking under CUDA graphs (#56447).
+* **Multimodal**: torchcodec audio decoding and a selectable `audio_backend` in `--media-io-kwargs` (#51826) with automatic decoding kept soundfile-first (#55642), torchaudio as the default resampler (#52598), `media_io_kwargs` in multimodal hashes (#54241), cache hash kwargs scoped by modality (#54918), empty video URLs with multimodal UUIDs (#54220), cached audio inputs with UUIDs (#56310), encoder CUDA graphs for MiniCPM-V 2.5/2.6/4.0 (#42785), Voxtral Realtime with `FULL_DECODE_ONLY` graphs (#51167), Triton/FlashInfer composite attention for multimodal prefixes (#56305), pruned sliding-window tiles for Gemma 4 multimodal prompts (up to 3-4x E2E, #53147), SDPA for BLIP-2 Q-Former (#55285), baddbmm Conformer scores (#55062), fused DeepEncoder relative bias (#55629), Gemma3n sparse GELU Triton kernel (#48498), and no duplicate text embedding in Qwen2.5-Omni (#55415).
+* **Correctness**: Gemma 4 / Gemma 3n fine-tuned checkpoints without KV projections on shared layers (#54917, #55864), Gemma4 video preprocessing without image kwargs (#56652) and unified audio profiling (#56721), MiniCPM-V 4.6 loading (#49417) and video embeds (#54633), InternVL video parser (#55779), Nano-Nemotron precomputed embeddings (#56398), OpenPangu multimodal merge (#55941) and sleep mode (#53696), Qwen3-VL and Cosmos3-Edge under CPU and PP (#53699, #43272), Qwen VL processors without a tokenizer (#54886), Molmo2 fps guard (#55893), CohereASR audio-token estimate (#53829), double BOS in `LLM.chat()` for multimodal models (#55288), decoded frame lists parsed as one video (#55326), swapped H/W in dummy video profiling (#56385), base64 video validation (#54323), Sentence Transformers 5.4+ configs (#54533), ColQwen3.5 pooler projector (#54847), torch.compile enabled for StableLM (#54969) and Sarvam MLA (#55817), and Nemotron latent-MoE skipping a redundant all-reduce at TP>1 (about 13% decode win, #52301).
+* **LoRA**: rsLoRA scaling in MoE expert packing (#55548), a log line when an adapter applies no weights (#55310), and `--lora-modules name=path` with `=` in the path (#53353).
+
+## Engine Core
+* **Model Runner V2**: DBO in eager mode (#50945) and with FULL CUDA graphs (#51700), MTP (#46994) and EAGLE3-style drafts (#50514) under pipeline parallelism, adaptive verification for all draft-model speculators (#52228), gc frozen during capture (#54646), GPU-compacted sampling masks (#54901), UVA-backed `apply_write` (#55819), fast-prefill support (#56145), DP sync skipped for all speculator uniform decodes (#54856), prompt embeddings in decoder pooling (#56639), pooling post-processing on non-final PP ranks (#56666), kernels warmed before graph capture (#55341), `CUDAGraphStat` (#52358), Proton CUDA graph attribution (#51084), platforms without pinned memory such as WSL (#56908), draft `moe_backend` (#54788) and `attention_backend` (#54826) overrides honored, DCP metadata initialized after batch partitioning (#55212), and a `record_stream` fix in the PP draft broadcast (#55745). The MRV2-specific Triton JIT warmup migration was reverted (#56654).
+* **Speculative decoding**: opt-in `disable_eagle_block_drop` (#53388), adaptive verification on `FLASHINFER_MLA_SPARSE_DSV4` (#52724) and deferred until after kernel warmup (#55455), full-vocab EAGLE3 drafters skipping vocab remapping (#53458), DSpark preserving the target DCP config (#55472), DFlash drafters dropping FlashAttention's AOT schedule (#54374), DP token padding excluded from draft metadata (#55458, #56181), fastsafetensors deadlock avoided for PP drafts (#54416), Mamba state cached at the EAGLE resume position (#53945) and preserved for padded prompt tails (#55178), resumed requests padded in P/D (#55126), and warmup device selection (#55245).
+* **Prefix caching and scheduling**: both replay boundaries retained so an EAGLE resend of a block-aligned prompt still hits (#54713), zero-progress preemption cascades stopped for deferred KV frees (#49675), SWA layers taking the primary block size to avoid inflating the KV block LCM (#53007), align-mode Mamba states retired across null gaps (#55450), the `all` Mamba cache mode deprecated with MRV1 fallback (#55041), and `vllm:request_num_preemptions` histogram (#49984).
+* **Kernels**: FlashInfer ReplaySSM backend for Mamba2 (#52506), B12X causal paged attention for SM120/SM121 via `--attention-backend B12X_ATTN` (#52017), FlashInfer XQA decode on SM90 (#50439), DeepSelect top-k with `--sparse-indexer-topk-backend` (#56464), BF16x3 router GEMM default on SM100 for FP32-router models (#55899), split-row Triton top-p for small batches (#54651), manual `ActivationQuantFusionPass` producer for Llama (#51415), fused add-RMSNorm + NVFP4 (#51925), prefix-prefill tiling independent of KV page size (#54194), FlashInfer GDN prefill on SM12x (#55715), fused GDN MTP decode for SM110 (#53835), masked MoE activation for padded layouts (#51217), cooperative `batched_moe_align_block_size` (#53280), PDL in `fusedQKNormRopeKernel` (#55755) and weight prefetch in fused q/kv RMSNorm (#55020), XD-RoPE folded into M-RoPE (#56078), and the FlashAttention pin synced with upstream (#54819).
+* **Startup and warmup**: renderer warmup overlapped with engine core init (#54557), FlashInfer autotune no longer rerun on each source change (#54794), Qwen3.5/Qwen3-Next Triton kernels (#54797) and GDN gated RMSNorm (#54251) warmed at startup, Gemma 4 de-JITified (#55768), DeepSeek V4 and shared attention, sampling, DFlash and mHC kernels migrated to the JIT warmup registry (#50175, #53564, #53565, #50176, #53566, #56323, #50178) with parallel mHC pre-norm compilation (#56683), FlashInfer deferred MoE decode kernels autotuned before capture (#55377), and supplemental BF16 autotuning isolated (#57285).
+* **Fast Start**: weight-cache daemon with `--load-format ipc_cache` (#54921), FP4 checkpoints (#55465), multi-node TP (#55468), GPU UUID socket folders (#56669), per-client IPC tensor export so a copy-mode client cannot release zero-copy weights (#56472), and a clear error on non-CUDA/ROCm platforms (#56010).
+* **Watermarking**: Gumbel-max watermarked generation and detection (#54053) and dual-key Gumbel-max for speculative decoding with `allow_target_only_watermarking` and context deduplication (#56122).
+* **Sleep and RL**: NCCL communicator memory released in sleep mode (#51485), DP state synced on the first step of a wave so pause and sleep stop burning 32 dummy forwards per rank (#52957), pre-shared `ncclUniqueId` rendezvous for torch-free trainers (#53784), stale HPC QK-norm weights after refit fixed (#56706), and `session_id` on GPU `BlockStored` events (#51381).
+* **Robustness**: attention implementations must explicitly declare DCP support (#55780), unavailable piecewise CUDA graphs raise instead of producing garbled output (#54782), non-compiled models fall back to `FULL_DECODE_ONLY` graphs (#55095), MRV1 breakable graphs scoped to the piecewise path (#56312), sync checks cover paged async copies (#53491) and torch.compile (#56904), more H2D copies pinned (#54660, #55202, #56138), GDN capture metadata built without a device sync (#55404), queued work carried over when materializing the dedicated stream (#56382), FlexAttention recompiles avoided (#55888), persistent top-k falling back on low-shared-memory GPUs (#54110), KV page size scaled for hidden-state extraction with TP (#50894), out-of-bounds access in SM90 sparse MLA mixed batches (#56969), sparse-MLA piecewise capture crash (#56825), TRT-LLM ragged prefill regression (#55499), MoE fused sum int32 overflow (#50220), odd-row per-token-group quant cliff (#56478), dummy-load re-initialization (#56682, #56688), `warning_once` retaining the LLM instance (#54098), DSpark cache-group capability under `python -O` (#55234), sparse-MLA DCP stabilized for GLM PCP configurations (#55879), DeepGEMM FP8 warmup coverage (#56452), Triton autotune inspection skipped without Triton (#56676), `mm_device_do_normalize` under encoder CUDA graphs (#55370), VidCom2 frame budgets read once (#55331), the CUDA profiler start fix (#55237), FlashInfer all-reduce workspace failures logged as errors (#55127), and backend-neutral KV cache and MFU log lines (#55650).
+
+## Hardware & Performance
+* **NVIDIA**: FlashInfer PCIe IPC all-reduce (#53576), DeepGEMM pinned to the vLLM fork 2.8.0 with SM120 and SM90 paged-MQA ports (#56876), public CUDA 13.4 Rubin build path (#54640, #56545), SM12x blockwise FP8 CTA raster swizzle for GB10/DGX Spark (#55180), W4A4 NVFP4 preferred on SM120/121 (#55170), H20 block-FP8 MoE tuning (+21%, #54668), an A100 PCIe fused-MoE config for Qwen3.5-122B TP2 (#55511), ReLU2 fused with static FP8 quant for Nemotron-H (#53793), and NVFP4 KV cache FMHA sped up (#55031).
+* **AMD ROCm**: TheRock base bumped to ROCm 10.0 (#55246) with nightly TheRock images (#55014), AITER 0.1.21.post2 (#52826, #55968), AITER custom AG/RS on the DP group (about 3% TPOT, #48247), multi-stream performance and rocprofiler fixes (#55099, #56098), bpreshuffled blockscaled FP8 GEMM (+4-8% QPS on DSv3, #51692), low-M FP32 router GEMM on gfx950 (#54845), DeepSeek V4 FHMoE shared-expert fusion (#53161), CSA multi-stream overlap (#51794), AITER OPUS for large sparse prefill (#54855), DSv4.1 mHC through AITER (#56503, #56513), MXFP8 dequant-once (#56560), strided DSA decode mask (#56628) and K=512 top-k tuning (#56743), MiniMax-M3 indexer and top-k work (#54682, #52664, #55235, #56170) with fused allreduce+GemmaRMSNorm (#54787), Kimi-K3 fused KDA prefill relanded (#54038) and fused MLA norms (#52494), GLM-5.2 kept on MRV1 (#53155), GLM-5.3-Flash MTP through ragged sparse MLA (#55239), W4A16 packed zero-points (-26% TPOT on Gemma 4 AWQ, #54965), Triton W4A16 GEMM as a custom op (#51453), split AITER CK/Triton MXFP4 backends (#50622, #54773), RDNA3 W4A16 MoE on the oracle path (#55522), Quark per-block FP8 MoE (#52263), KV connectors with `ROCM_AITER_UNIFIED_ATTN` (#53695), MoRI-IO SWA+HMA (#53721), attention sinks in AITER sparse MLA (#54404), non-causal DSpark drafts in AITER MLA decode (#55966), shared KV prefill (#55887), V-cache padding masked (#53856), elastic EP deadlock (#56610), profiler fixes (#54171, #56190), breakable CUDA graphs auto-enabled for DeepSeek-V4.1 (#56349), the AITER paged-MQA outputs guard removed for DeepSeek-V4 (#55808), DSV4 indexer gather cold-compile churn removed (#56153), PDL JIT warmup skipped where unsupported (#56035), Kimi-K3 fused prefill state_indices crash (#56526), Ray NIXL agents for sharded RDT (#56687), Qwen3-Omni audio encoder TP with non-divisible heads (#45900), Quark MXFP4 Qwen3.8-Flash-Next shared experts on gfx950 (#55213), AITER preshuffled FP8 block-scale kernel (#56433), linear biases with `requires_grad=False` (#56161), a clearer unsupported KV dtype error (#55236), Mooncake in the ROCm image (#55002), and AINIC pins (#54112, #56459).
+* **Intel XPU**: activation CustomOps on SYCL kernels (#53734), batch-invariant matmul and linear kernels (#49209), fused GemmaRMSNorm (#53678), `fused_input_norm` (#52945) and fused `grouped_topk` (#53580), LoRA for DeepSeek V4 (#53689), DP external LB device assignment (#53037), triton-xpu 3.8.0 shim (#56014), auto-round-lib 0.15.0 (#54515), and fixes for FalconH1 PP (#55913), Ernie4.5-VL RoPE (#55942), gated RMSNorm ops (#54968), Qwen DFlash context keys (#56431), INC quant selection (#47237), and `moe_wna16` loading (#52651).
+* **CPU**: DeepSeek-V4 backend (#55355), native AMX-FP8 attention for Diamond Rapids with the Docker base moved to Ubuntu 25.04 and GCC 15 (#49410), faster LM head on Arm (about 6% on Llama-3.1-8B W8A8, #55352), DeepSeek-R1 FP8 MLA + MoE correctness (#56773), profiler tables grouped by input shape (#56016), a dedicated Zen5 image (#50314), and nightly CPU images on Docker Hub (#55163).
+
+## Large Scale Serving
+* **Context parallelism**: PCP+DCP on sparse-MLA models (#56157), PCP with single-module MTP and replicated DSpark (#56107), PCP decode-only FULL CUDA graphs (#53867), FlashMLASparse MTP at CP interleave > 1 (#56722), symmetric DCP disaggregation for hybrid Mamba models (#55531), DCP empty-shard LSE mask fused into the A2A pack kernel (#54889), DCP prefill keys materialized on non-owner ranks (#54908), DCP indexer interleave guard removed (#55802) and respected in the PCP gather (#56715), PCP producer shards as NIXL transfer ranks (#56645), replicated-PCP ranks reporting done (#53903), the DCP interleave adjustment scoped to NixlConnector (#54803), PCP counted in multi-node world size (#55111), PCP-DP validation moved to the GPU manager (#54523), and one-sided EP at DP=1 (#54016).
+* **Elastic EP and MoE communication**: CUDA graphs reused across reconfiguration (#54985), routing only to surviving engines on scale-down (#55772), DeepEP v2 async finalize (#52781), FlashInfer PCIe IPC all-reduce (#53576, #54869), batched CUTLASS workspace sizing (#55579), and PP never dropping a decoding request from the sampled-token broadcast (#54436).
+* **KV connectors**: Mooncake Store heterogeneous TP sharing (#53129), heterogeneous PP completion (#56033), replicated GQA heads (#52516), physical-block transfer length (#54272), producer partial Mamba tails (#52832), hybrid-model finish-time saves (#54643), failed remote loads reported to the scheduler (#50984), QSA ring groups excluded (#55027); NIXL per-region transfer geometry (#53780), int32 indices (#51952), multi-handle race (#56104), no eviction mid-transfer (#54689), full prefix hits reported finished (#56640), notification-only requests (#57570), and double cleanup (#54518); DecodeBench HMA, DCP, prefix and circular-buffer fixes (#54647, #54679, #54878, #54879); connector block tables resolved for every scheduled request (#54853), hybrid KV load failures (#50388), and `lmcache_mp_connector` state transitions guarded (#47505); HiSparse per-layer offsets (#57027), P/D region-mapped pulls (#57077) and NIXL full-block imports (#57049); NixlPush remote-agent reads guarded (#56317).
+* **KV offloading**: KVCR secondary-tier adapter (#53624), P2P tier `unbound_store_timeout_s` and late-fetch rejection (#53453), OffloadingConnector retention interval (#51886) and offload hits under MTP/EAGLE (#52771), SimpleCPUOffload fine-grained hybrid prefix hits (#54736), eager registration and final flush (#53532), `BlockStored` metadata (#54325), mixed page sizes for DSA models (#54756), prefix-cache bypass (#54998), no-forward-step stores (#56621); UniformTypeKVCacheSpecs portability (#51690) and DCP scaling (#50883); and fixes for async lookups (#54872, #55075, #55823), SWA reachability and coverage (#54362, #55712, #56486), final-token slot (#54288), oversized offers (#54759), ARC fallback (#55461), disk alignment (#55424), DiskBackend buffer race (#51667), offload key ordering (#52923), prefetch slot ownership (#54975), load boundaries (#52807), and tiering shutdown (#52290).
+* **Encoder cache and EPD**: P2P NIXL + CPU EC connector (#47941), ECMooncakeConnector (#41567), embedding inputs auto-enabled on EC/KV consumers (#56379), GPU NVDEC for encoder-only instances (#53675), lightweight multimodal metadata from render (#54659) as JSON arrays (#56090), reduced proxy serialization overhead (#56657), media options and UUIDs preserved (#56786, #56432), per-item EC checks (#56070), ECCPUWorker backend extension points (#54033), and fixes for old kernels (#53190), remote encoding failures (#55290), and TP>1 load devices (#40416).
+
+## Quantization
+* **New capabilities**: targeted online quantization (#51285) and online quantization of partially pre-quantized checkpoints (#51392), W4A16 DSA (#51724, #55538), FlashInfer CuTeDSL NVFP4 W4A16 (#53014), NVFP4 torch backend (#53319), `linear_backend_per_quant` (#51204), AutoRound 2/3/5/6/7-bit (#52890), TRT-LLM FP8 block-scale MoE with SwiGLU clamp (#55069), and Quark per-block FP8 MoE on ROCm (#52263).
+* **Refactors**: Quark dispatch on `QuantKey` (#52958) and ModelOpt linear methods unified into one QuantKey-driven method (#49381).
+* **Fixes**: NVFP4 padding initialized in-kernel (#53568), unloaded NVFP4 scales detected with a NaN sentinel (#52501), NVFP4 fused SiLU+mul scales (#55643), Quark per-block scales registered as `weight_scale` (#54770), GPT-OSS FP8 MoE with Quark (#54824), FSE detection for Quark models (#54573), DSv4 MXFP4 backend alias selection (#53586), unset `group_size` on compressed-tensors WNA16 MoE (#53163), block FP8 MTP in ModelOpt mixed checkpoints (#55513), and unquantized MoE weight storage preserved on ROCm for RL updates (#46009).
+
+## API & Frontend
+* **New endpoints and options**: stateless `/v1/responses/render` (#50195), scale-out endpoints behind `--enable-scale-out` (#54579, #55176), `count_reasoning_tokens` so usage reports `reasoning_tokens` (#54982), prompt metadata from `/inference/v1/generate` (#53187), `vllm:request_num_preemptions` (#49984), MFU/MBU for SWA and hybrid layers (#55624), consolidated Prometheus bucket defaults (#48866), site-packages reasoning and tool parser plugins (#45241), and `max_num_queued_reqs` shared across API server processes (#54746).
+* **Structured output and parsers**: XGrammar `patternProperties`/`propertyNames`/`unevaluatedProperties` (#42904), full-history reasoning scans eliminated (#55223) with `is_reasoning_end` derived from the grammar (#56200), invalid structured-output requests no longer stopping the engine (#51450), a unified Cohere Command parser (#56392), MCP SDK 2.x schemas (#53870), incomplete tool-call markup dropped consistently (#47562), DSML tool calls without the wrapper (#55954), misspelled wrappers (#56141) and implicit parameter closes (#54838), Gemma4 malformed openers (#53444), Seed-OSS turn boundaries (#54264), Step-3.5 with structured outputs (#53174), reasoning parser plugins loaded before headless config (#53124), and a warning for removed `guided_*` fields (#54285).
+* **OpenAI, Anthropic and Cohere compatibility**: unsupported Responses input items return 400 (#55974), `browser.find` action type (#55305), Responses validation boundary restored (#55761), validation errors migrated to `VLLMValidationError` (#50254, #50257, #55701, #55735), unsupported `reasoning_effort` as a client error (#54022), content format detected through macro parameters (#53824), Anthropic `stop_sequence` in `message_delta` (#55325), Cohere priorities bounded (#56146), translation rejecting string files (#55618), tokenless chat and audio streams rejected (#54708), beam search respecting `skip_special_tokens` (#56211) and aborts (#56249), nested cancellation handlers removed (#55602, #57024), extension integers validated (#55606), routed-expert prompt offsets validated (#56844), MistralCommonBackend avoided for HF tokenizers (#54192), chat template fallbacks packaged (#53762), and the content format warning restored (#54622).
+* **Render and pooling**: `assistant_tokens_mask` (#54539) and token offsets (#54692) kept aligned with truncated prompts, `skip_decoder_start_token` honored (#54799), renderer warmup bounded (#55448), LoRA adapter names in pooling responses (#56004), `max_embed_len` for chunked embeddings (#55551), body `request_id` honored (#55665), actual input usage for scoring (#56573), STEP token pooling (#55307), offline Jina token limits (#56415), and a warning for Qwen3 rerankers without a chat template (#56017).
+* **Rust frontend**: TLS for the render server (#54999), `--lora-modules` (#54837), HTTP RL weight synchronization (#56567), HF revisions, offline mode and cache directory (#56386), `{% generation %}` chat template blocks (#56378), the `vllm-proto` crate on crates.io (#56365), `reasoning_tokens` in usage (#54883) built on token-attributed text (#52910, #54884), Mooncake/NIXL connector metrics (#52755) and `vllm:iteration_tokens_total` (#56990), gRPC preprocessed multimodal features (#55047), remote-prefill multimodal metadata (#54814) and engine errors surfaced as INTERNAL (#56405), Qwen4-exp multimodal (#54813), optional `--max-model-len` for render (#55328), per-request vocabulary counting removed (#54449), decoded chunks coalesced per update (#55012), bounded recursive parsers (#54303), tekken 0.2.0 (#53056), strict whitespace framing (#55417), consistent parser resolution (#56018), empty structured-output values rejected (#54821), selected-token logprobs (#56406), undefined token ids skipped (#55240), DeepSeek renderer fixes (#53281, #54854, #56593, #56260, #56366), and HF ShareGPT multi-turn datasets in `vllm bench serve` (#51104, #56915).
+* **CLI and benchmarks**: `vllm bench serve` accounts for client queue time (#54136) with consistent streaming TTFT/E2E accounting (#55508), non-positive `--max-concurrency` rejected (#54887), `mm-processor` crash fixed (#56300), complete pooling responses measured (#56760), explicit empty and zero arguments honored in `vllm chat`/`complete` (#55710), `vllm launch render` shutdown hang fixed (#54913), double `/stop_profile` crash fixed (#51678), and remaining non-OpenAI content moved out of the openai folder (#56369).
+
+## Security
+* Validation-error response bodies bounded, closing an about 5,300x response amplification (#54684); client-supplied sparse embeddings bounded before densification (#54632).
+* Request-controlled video sampling capped for GLMGA (#54935) and Qwen-VL (#56729) backends.
+* `cache_salt` validated before reaching LMCache so one request cannot take down the engine (#51444); scale-out multimodal features validated before engine handoff (#51898); late-interaction query caches keyed by server-generated ids instead of `X-Request-Id` (#51445).
+* Credentials redacted from benchmark logs (#56662); Rust frontend HTTP method labels normalized to prevent unbounded Prometheus series (#56058).
+
+## Dependencies
+* CUTLASS 4.7.1 (#54190) and CUTLASS DSL 4.7 (#54927), Transformers 5.16.1 (#53905), tpu-inference v0.29.0 (#56388), `openai >= 2.25.0` (#49104), `huggingface_hub >= 1.31.0` with httpx imported through it (#56460).
+* DeepGEMM pinned to the vllm-project fork 2.8.0 (#56876) with CUDA 12.9 release builds fixed (#57554); FlashMLA V4.1 record pin (#56893); FlashKDA bumps (#54859, #56485); FlashAttention synced with upstream (#54819); `_USE_MATH_DEFINES` defined for FlashMLA targets (#54007).
+* Public CUDA 13.4 Rubin build path and dependency pins (#54640, #56545).
+* ROCm: TheRock base on ROCm 10.0 (#55246), AITER 0.1.21.post2 (#52826, #55968), Mooncake from public wheels (#55002), AINIC libionic 54.0-187-1 pinned to a snapshot (#54112, #56459).
+* XPU: triton-xpu 3.8.0 shim (#56014), auto-round-lib 0.15.0 (#54515).
+* CPU: Docker base on Ubuntu 25.04 with GCC 15 (#49410), Zen5 image (#50314), nightly CPU images (#55163). Obsolete TPU Dockerfile removed (#55376).
+
+## Breaking Changes & Deprecations
+* Scale-out endpoints (`/render`, `/derender`, `/inference/v1/generate`) are no longer registered on plain `vllm serve` unless `--enable-scale-out` is passed; `VLLM_ENABLE_SCALE_OUT_ENDPOINTS` was removed. `vllm launch render` and `vllm serve --tokens-only` always register them (#54579, #55176).
+* GPTQ group/dynamic activation ordering removed: `g_idx` is ignored and the related Marlin, GPTQ, CPU and RDNA3 kernels are gone (#54809).
+* Items deprecated for 0.29 removed: `VLLM_PREFIX_CACHE_RETENTION_INTERVAL` and `VLLM_MM_HASHER_ALGORITHM` env vars (use the config fields), the `use_fp4_indexer_cache` alias (use `indexer_kv_dtype`), the `CUDA_VISIBLE_DEVICES` fallback on ROCm (use `HIP_VISIBLE_DEVICES`), and the `seq_lens_cpu` / `num_computed_tokens_cpu` attention metadata properties (#55353).
+* The `all` Mamba cache mode is deprecated and falls back to Model Runner V1 (#55041).
+* `python -m vllm.entrypoints.grpc_server` is deprecated; use `vllm serve --grpc` (#56746). `sse_keep_alive` moved to `vllm.entrypoints.serve.utils` (#56369).
+* YaRN aligned with Transformers: vendor YaRN aliases no longer multiply `max_position_embeddings` by the factor a second time, so derived `max_model_len` drops for some models (TeleChat3-36B-Thinking 131072 to 32768, sarvam-105b 5242880 to 131072); `attn_factor` and `extrapolation_factor` are ignored in favor of `mscale`/`attention_factor` (#56446).
+* Attention implementations must explicitly declare DCP support; DCP with ROCm standard attention, Triton, FlexAttention or TurboQuant now fails at backend selection (#55780).
+* MoRI-IO connector WRITE mode with hybrid KV cache groups now requires `--disable-hybrid-kv-cache-manager`; use READ mode otherwise (#53721).
+* Default audio resampler switched from PyAV to torchaudio (#52598); audio decoding is backend-selectable with soundfile first in `auto` (#51826, #55642).
+* New defaults: FlashInfer CuTeDSL NVFP4 W4A16 over Marlin on SM100/103 (#53014), W4A4 NVFP4 over weight-only kernels on SM120/121 (#55170), BF16x3 router GEMM on SM100 (#55899), DeepEP v2 combine overlap on with `VLLM_DEEPEP_V2_COMBINE_OVERLAP=0` to disable (#52781), AITER custom AG/RS on for DP attention + TP experts with `VLLM_ROCM_USE_AITER_CUSTOM_AR=0` to disable (#48247), native CUDA AttnRes for Kimi-K3 on SM100 (#54261), and `VLLM_USE_BREAKABLE_CUDAGRAPH=1` no longer overriding FULL graphs on MRV1 (#56312).
+
+## New Contributors
+* @100milliongold made their first contribution in https://github.com/vllm-project/vllm/pull/56017
+* @404mario made their first contribution in https://github.com/vllm-project/vllm/pull/52781
+* @982945902 made their first contribution in https://github.com/vllm-project/vllm/pull/52923
+* @abrahamzewoudie made their first contribution in https://github.com/vllm-project/vllm/pull/45900
+* @aijanai made their first contribution in https://github.com/vllm-project/vllm/pull/51678
+* @Aj2280 made their first contribution in https://github.com/vllm-project/vllm/pull/55728
+* @Akine-Ko made their first contribution in https://github.com/vllm-project/vllm/pull/54033
+* @akshaver made their first contribution in https://github.com/vllm-project/vllm/pull/53945
+* @alexliluz made their first contribution in https://github.com/vllm-project/vllm/pull/53124
+* @am-cohere made their first contribution in https://github.com/vllm-project/vllm/pull/54774
+* @amd-xavierwang made their first contribution in https://github.com/vllm-project/vllm/pull/56153
+* @andy-neuma made their first contribution in https://github.com/vllm-project/vllm/pull/50314
+* @AnshulDesai made their first contribution in https://github.com/vllm-project/vllm/pull/55271
+* @ArcheyChen made their first contribution in https://github.com/vllm-project/vllm/pull/54436
+* @arcusbuilds made their first contribution in https://github.com/vllm-project/vllm/pull/54007
+* @averma12 made their first contribution in https://github.com/vllm-project/vllm/pull/56721
+* @bakiburakogun made their first contribution in https://github.com/vllm-project/vllm/pull/55511
+* @BANANASJIM made their first contribution in https://github.com/vllm-project/vllm/pull/55301
+* @Big2Wheel made their first contribution in https://github.com/vllm-project/vllm/pull/54975
+* @bjf-frz made their first contribution in https://github.com/vllm-project/vllm/pull/55819
+* @bojiang3 made their first contribution in https://github.com/vllm-project/vllm/pull/54306
+* @BolinSNLHM made their first contribution in https://github.com/vllm-project/vllm/pull/54606
+* @BruceLoveDecimal made their first contribution in https://github.com/vllm-project/vllm/pull/50984
+* @byshiue made their first contribution in https://github.com/vllm-project/vllm/pull/55054
+* @cenab made their first contribution in https://github.com/vllm-project/vllm/pull/55710
+* @circlepen made their first contribution in https://github.com/vllm-project/vllm/pull/56388
+* @colinmcnamara made their first contribution in https://github.com/vllm-project/vllm/pull/55325
+* @DebugSy made their first contribution in https://github.com/vllm-project/vllm/pull/55111
+* @dharak-cohere made their first contribution in https://github.com/vllm-project/vllm/pull/53784
+* @djw8605 made their first contribution in https://github.com/vllm-project/vllm/pull/54962
+* @eastwood-c made their first contribution in https://github.com/vllm-project/vllm/pull/55745
+* @erdholion made their first contribution in https://github.com/vllm-project/vllm/pull/54285
+* @gc-fu made their first contribution in https://github.com/vllm-project/vllm/pull/55310
+* @happyyzy made their first contribution in https://github.com/vllm-project/vllm/pull/50220
+* @heliubj18 made their first contribution in https://github.com/vllm-project/vllm/pull/54756
+* @Ianniu123 made their first contribution in https://github.com/vllm-project/vllm/pull/55650
+* @ItsRoy69 made their first contribution in https://github.com/vllm-project/vllm/pull/55283
+* @jackLei0901 made their first contribution in https://github.com/vllm-project/vllm/pull/49869
+* @Jankwi made their first contribution in https://github.com/vllm-project/vllm/pull/54220
+* @JaynouOliver made their first contribution in https://github.com/vllm-project/vllm/pull/47562
+* @jcayab made their first contribution in https://github.com/vllm-project/vllm/pull/54584
+* @jorge-menjivar made their first contribution in https://github.com/vllm-project/vllm/pull/53056
+* @josiahdavis made their first contribution in https://github.com/vllm-project/vllm/pull/56286
+* @jschmied made their first contribution in https://github.com/vllm-project/vllm/pull/55180
+* @jyizheng made their first contribution in https://github.com/vllm-project/vllm/pull/54518
+* @kamb-code made their first contribution in https://github.com/vllm-project/vllm/pull/52771
+* @krsish made their first contribution in https://github.com/vllm-project/vllm/pull/55307
+* @kushaldabbe made their first contribution in https://github.com/vllm-project/vllm/pull/55548
+* @LauraGPT made their first contribution in https://github.com/vllm-project/vllm/pull/54944
+* @LearningMachine621 made their first contribution in https://github.com/vllm-project/vllm/pull/49675
+* @linamy85 made their first contribution in https://github.com/vllm-project/vllm/pull/49984
+* @lucamotz made their first contribution in https://github.com/vllm-project/vllm/pull/54110
+* @luoyuctl made their first contribution in https://github.com/vllm-project/vllm/pull/56387
+* @luyixiao95 made their first contribution in https://github.com/vllm-project/vllm/pull/52285
+* @lvliang-intel made their first contribution in https://github.com/vllm-project/vllm/pull/47237
+* @lzzzzzc made their first contribution in https://github.com/vllm-project/vllm/pull/55864
+* @maireneu made their first contribution in https://github.com/vllm-project/vllm/pull/54533
+* @mevince made their first contribution in https://github.com/vllm-project/vllm/pull/54325
+* @migarci2 made their first contribution in https://github.com/vllm-project/vllm/pull/55602
+* @mingg26 made their first contribution in https://github.com/vllm-project/vllm/pull/53524
+* @miyakido made their first contribution in https://github.com/vllm-project/vllm/pull/40416
+* @mlazos made their first contribution in https://github.com/vllm-project/vllm/pull/53319
+* @mohit-sarvam made their first contribution in https://github.com/vllm-project/vllm/pull/53052
+* @natsala13 made their first contribution in https://github.com/vllm-project/vllm/pull/55178
+* @null-Exception1 made their first contribution in https://github.com/vllm-project/vllm/pull/54265
+* @odashi made their first contribution in https://github.com/vllm-project/vllm/pull/45241
+* @Oskii made their first contribution in https://github.com/vllm-project/vllm/pull/55618
+* @pra2107tham made their first contribution in https://github.com/vllm-project/vllm/pull/54622
+* @Roderick-Wu made their first contribution in https://github.com/vllm-project/vllm/pull/54809
+* @SalikovAlex made their first contribution in https://github.com/vllm-project/vllm/pull/56414
+* @seanwestfall made their first contribution in https://github.com/vllm-project/vllm/pull/55691
+* @SherifWaly made their first contribution in https://github.com/vllm-project/vllm/pull/53379
+* @somuai made their first contribution in https://github.com/vllm-project/vllm/pull/55369
+* @specture724 made their first contribution in https://github.com/vllm-project/vllm/pull/50945
+* @StevenWang-CY made their first contribution in https://github.com/vllm-project/vllm/pull/54819
+* @stu-cao made their first contribution in https://github.com/vllm-project/vllm/pull/55802
+* @subhashpolisetti made their first contribution in https://github.com/vllm-project/vllm/pull/54633
+* @surajm20061998 made their first contribution in https://github.com/vllm-project/vllm/pull/55508
+* @Sy0307 made their first contribution in https://github.com/vllm-project/vllm/pull/55212
+* @tanyuqian made their first contribution in https://github.com/vllm-project/vllm/pull/55063
+* @TensorRaya made their first contribution in https://github.com/vllm-project/vllm/pull/55908
+* @Ubospica made their first contribution in https://github.com/vllm-project/vllm/pull/56408
+* @wei-core made their first contribution in https://github.com/vllm-project/vllm/pull/53835
+* @Whamp made their first contribution in https://github.com/vllm-project/vllm/pull/54362
+* @Woolgathererer made their first contribution in https://github.com/vllm-project/vllm/pull/56652
+* @wuhangxian made their first contribution in https://github.com/vllm-project/vllm/pull/53824
+* @xiaozhenbi made their first contribution in https://github.com/vllm-project/vllm/pull/56671
+* @xonder made their first contribution in https://github.com/vllm-project/vllm/pull/43272
+* @xuhuan51 made their first contribution in https://github.com/vllm-project/vllm/pull/51381
+* @YeonwooSung made their first contribution in https://github.com/vllm-project/vllm/pull/56593
+* @ykamiset made their first contribution in https://github.com/vllm-project/vllm/pull/52664
+* @YoavMiron made their first contribution in https://github.com/vllm-project/vllm/pull/54574
+* @yongqinwang-cmd made their first contribution in https://github.com/vllm-project/vllm/pull/50514
+* @Yuzu23 made their first contribution in https://github.com/vllm-project/vllm/pull/45091
+* @yzeyu71 made their first contribution in https://github.com/vllm-project/vllm/pull/50504
+* @z-zanez made their first contribution in https://github.com/vllm-project/vllm/pull/53129
+* @zdtsw made their first contribution in https://github.com/vllm-project/vllm/pull/54999
+* @zhang-keliang made their first contribution in https://github.com/vllm-project/vllm/pull/55288
+* @zhaoguochun1995 made their first contribution in https://github.com/vllm-project/vllm/pull/56382
+* @zhouyou9505 made their first contribution in https://github.com/vllm-project/vllm/pull/54659
+* @zigzagcai made their first contribution in https://github.com/vllm-project/vllm/pull/54560
+* @zqlcode made their first contribution in https://github.com/vllm-project/vllm/pull/56071
+* @zvier made their first contribution in https://github.com/vllm-project/vllm/pull/56103
+* @zwang86 made their first contribution in https://github.com/vllm-project/vllm/pull/54098
+
+## Contributors
+@khluu, @AndreasKaratzas, @taneem-ibrahim, @BugenZhao, @yewentao256, @njhill, @NickLucche, @aoshen02, @LopezCastroRoberto, @WoosukKwon, @LucasWilkinson, @zyongye, @hmellor, @Fangzhou-Ai, @sfeng33, @Isotr0py, @gau-nernst, @JaredforReal, @wzhao18, @fxmarty-amd, @stefankoncarevic, @Alex-ai-future, @mgoin, @micah-wil, @mayuyuace, @djramic, @ZJY0516, @mawong-amd, @Rohan138, @sychen52, @waizuichougou, @chaunceyjiang, @simondanielsson, @KernelClint, @AdaAibaby, @gty111, @zhenwei-intel, @zxd1997066, @majunze2001, @divakar-amd, @zhewenl, @giuseppegrossi, @Levius-Fubuki, @gcanlin, @jperezdealgaba, @bigPYJ1151, @stecasta, @linitra24, @chaojun-zhang, @shaohuaxi, @reidliu41, @atalman, @mfylcek, @lucifer1004, @ZeldaHuang, @askliar, @peakcrosser7, @yzeyu71, @hungnnvidia, @zupengwang, @TheEpicDolphin, @hlin99, @liusy58, @jyizheng, @jimmy-adams, @lucamotz, @jeejeelee, @shen-shanshan, @MatthewBonanni, @cjackal, @aarushjain29, @noooop, @Juntian777, @FeathBow, @Hotragn, @Jankwi, @lzhan011, @subhashpolisetti, @maithilijoshi20, @ilmarkov, @lukealonso, @mingg26, @franciscojavierarceo, @mevince, @zdtsw, @bnellnm, @omerpaz95, @jikunshang, @rbrugaro-amd, @bohnstingl, @specture724, @afierka-intel, @mohit-sarvam, @andylolu2, @pisceskkk, @starkwj, @wangyicong52, @eastwood-c, @wuhangxian, @yzong-rh, @yma11, @TQCB, @Sy0307, @jbyczkow, @itayalroy, @xiaguan, @alec-flowers, @ayush1399, @orestis-z, @mobicham, @ArcheyChen, @Zhenzhong1, @ZhengGong-amd, @jorge-menjivar, @IwakuraRein, @linamy85, @wentian-byte, @afriedri, @dharak-cohere, @DarkLight1337, @lvliang-intel, @zigzagcai, @harjothkhara, @bojiang3, @maireneu, @z-zanez, @JaynouOliver, @pra2107tham, @jdebache, @aijanai, @Dao007forever, @juhi10071998, @odashi, @Etelis, @fjosw, @jackLei0901, @tarukumar, @positive666, @tzielinski-habana, @drakosha, @iyastreb, @Harry-Chen, @sheralskumar, @ccrhx4, @aaab8b, @982945902, @tanyuqian, @DebugSy, @jasonozuzu-cohere, @byshiue, @yifjiang, @BolinSNLHM, @wseaton, @Yuzu23, @andyxning, @andy-neuma, @foraxe, @xuhuan51, @AnshulDesai, @luyixiao95, @null-Exception1, @yiz-liu, @zhang-keliang, @erdholion, @happyyzy, @GirasoleY, @SubSir, @natsala13, @yongqinwang-cmd, @StevenWang-CY, @LauraGPT, @wei-core, @zhejiangxiaomai, @bakiburakogun, @Whamp, @almogtavor, @zhouyou9505, @jschmied, @wenhuach21, @Big2Wheel, @vhagor, @frankie-ys, @zufangzhu, @stmatengss, @seanwestfall, @kamb-code, @somuai, @Josephasafg, @Aj2280, @am-cohere, @Sip4818, @liuyao0322, @heliubj18, @krsish, @Oskii, @xijiaat, @benenzhu, @tdoublep, @akshaver, @SherifWaly, @TensorRaya, @shikamd123, @Roderick-Wu, @lcskrishna, @BANANASJIM, @soodoshll, @mlazos, @Akine-Ko, @miyakido, @meena-at-work, @nikhilkulkarni1755, @jcayab, @wincent8, @abrahamzewoudie, @ronensc, @haic0, @gc-fu, @ykamiset, @Xarbirus, @zvier, @avininjamay8, @ColinZ22, @YunzhuLu, @jiacao-amd, @kliuae, @tobymao, @zexplorerhj, @ywang96, @YoavMiron, @xonder, @bjf-frz, @cenab, @josiahdavis, @juliendenize, @JiataiWang, @colinmcnamara, @tlrmchlsmth, @LearningMachine621, @jamesETsmith, @YukioZzz, @kushaldabbe, @lzzzzzc, @SalikovAlex, @pmanczak, @fadara01, @JulienDarve, @nicole-lihui, @zRzRzRzRzRzRzR, @100milliongold, @labAxiaoming, @GuyStone, @Wauplin, @SorenDreano, @chengchengpei, @circlepen, @amd-xavierwang, @tahsintunan, @biswapanda, @junuxyz, @walterbm, @arcusbuilds, @JartX, @arpera, @jcotant-inferact, @PatrykSaffer, @maeehart, @surajm20061998, @Woolgathererer, @kebe7jun, @ShengleiFu, @pavelzak, @stu-cao, @CedricHwong, @lxy-alexander, @BWAAEEEK, @Chinmay-Kulkarni-AMD, @mgehre-amd, @BruceLoveDecimal, @hickeyma, @jiangkuaixue123, @xiaozhenbi, @ganeshr10, @Ronald1995, @arkohut, @russellb, @zqlcode, @tomasruizt, @thillai-c, @samnordmann, @Ianniu123, @Luosuu, @netanel-haber, @MicheleCampi, @zhaoguochun1995, @JohnQinAMD, @liranschour, @jacklin78911-collab, @migarci2, @404mario, @ItsRoy69, @mkhazraee, @Ubospica, @Thangnguyenvn98, @YeonwooSung, @alexliluz, @ECMGit, @luoyuctl, @averma12, @drslark, @ppalanga, @zwang86, @wangshangsam, @jiahanc, @vllm-agent, @connorcarpenter15
+
+
+[4] huggingface/transformers v5.18.0 (2026-09-30)
+https://github.com/huggingface/transformers/releases/tag/v5.18.0
+## New Model additions
+
+
+### Nemotron 3 Diarization
+
+<img width="1680" height="900" alt="image" src="https://github.com/user-attachments/assets/fe735cb3-9e5b-43ad-8f60-9dec8425aec7" />
+
+Nemotron 3 Diarization is an open-weight streaming speaker diarization model designed to determine "who spoke when" in real-world audio. It supports both streaming and offline inference, handles up to eight speakers, and orders speaker outputs by each speaker's first arrival in the input audio.
+
+The model uses the Arrival-Order Speaker Cache (AOSC) [1](https://huggingface.co/papers/2507.18446) and FIFO queue introduced for Streaming Sortformer [1](https://huggingface.co/papers/2507.18446), [2](https://huggingface.co/papers/2409.06656). A single checkpoint supports configurable latency profiles, from an 80 ms input buffer to a 30.4 s offline-style buffer, and configurable output frame resolution in multiples of 10 ms. With chunked inference, the maximum audio duration is not limited.
+
+**Links:** [Documentation](https://huggingface.co/docs/transformers/main/en/model_doc/nemotron3_diarization)
+* Add Nemotron3Diarization (#49056) by @eustlb in [#49056](https://github.com/huggingface/transformers/pull/49056)
+
+### NemotronH Omni
+
+NemotronH Omni is a multimodal reasoning model from NVIDIA that pairs the [NemotronH](https://huggingface.co/docs/transformers/main/en/model_doc/nemotron_h) hybrid
+Mamba-Transformer language model with a [RADIO](https://huggingface.co/docs/transformers/main/en/model_doc/radio) vision encoder and an optional Parakeet-based sound encoder.
+Image (and video) patches are projected through a RADIO tower and a pixel-shuffle MLP into the language model's
+embedding space at the `<image>` / `<video>` context-token positions; audio clips are projected in the same way at
+`<audio>` positions. The result is a single autoregressive model that reasons jointly over text, images, video and
+sound.
+
+**Links:** [Documentation](https://huggingface.co/docs/transformers/main/en/model_doc/nemotron_h_omni)
+* Add support for Nemotron Omni (#46509) by @meatybobby in [#46509](https://github.com/huggingface/transformers/pull/46509)
+
+### HyperCLOVAX Vision V2
+
+HyperCLOVAX Vision V2 is a multimodal vision-language model developed by NAVER. It combines the [HyperClovaX](https://huggingface.co/docs/transformers/main/en/model_doc/hyperclovax) language model backbone with a [Qwen2.5-VL](https://huggingface.co/docs/transformers/main/en/model_doc/qwen2_5_vl) vision encoder. The model supports text, image, and video inputs and is capable of chain-of-thought reasoning via built-in thinking tokens (`<think>...</think>`).
+
+**Links:** [Documentation](https://huggingface.co/docs/transformers/main/en/model_doc/hyperclovax_vision_v2)
+* add HyperClovaX Vision (#44314) by @jp1924 in [#44314](https://github.com/huggingface/transformers/pull/44314)
+
+### GTE
+
+GTE was proposed in [mGTE: Generalized Long-Context Text Representation and Reranking Models for Multilingual Text Retrieval](https://huggingface.co/papers/2407.19669) by Xin Zhang, Yanzhao Zhang, Dingkun Long, Wen Xie, Ziqi Dai, Jialong Tang, Huan Lin, Baosong Yang, Pengjun Xie, Fei Huang, Meishan Zhang, Wenjie Li and Min Zhang.
+
+GTE is a BERT-style bidirectional encoder that replaces absolute position embeddings with RoPE, uses a gated MLP, and applies layer normalization after each residual connection. The same architecture backs Alibaba's `gte-*-v1.5`, `gte-multilingual-*` and `gte-en-mlm-*` checkpoints as well as Snowflake's `snowflake-arctic-embed-m-v2.0`.
+
+**Links:** [Documentation](https://huggingface.co/docs/transformers/main/en/model_doc/gte)
+* model: Add GTE to Transformers (#48416) by @harshaljanjani in [#48416](https://github.com/huggingface/transformers/pull/48416)
+
+
+## Breaking changes
+
+* 🚨 [ROCm] gpt-oss: route FA3 to aiter-flash-attn, generate ROCm fixtures (#46837) by @Abdennacer-Badaoui
+* 🚨 Speed up detr image processing (#48066) by @guarin
+* 🚨 Remap indexers layer_type (#48974) by @Cyrilvallez
+* 🚨 [vLLM] Fix video token counting for Transformers backend video inputs (Part 1) (#48894) by @harshaljanjani
+* 🚨 🚨Bring some dinos to modern standards (#46266) by @molbap
+* :rotating_light: [`Kernels`] Bump version (#48714) by @vasqu
+
+
+## Bugfixes and improvements
+
+* fix incorrect hub tokenizer class (#48641) by @itazap
+* [CI] Deduplicate Nvidia/AMD CI reply comments and add headers (#48655) by @ydshieh
+* Update dev (#48654) by @vasqu
+* [tests] Fix NougatModelIntegrationTest: pin artifact revision and update golden values (#48638) by @ydshieh
+* [fix] Fix GlmOcr integration tests: wrong token IDs and image token decode bug (#48650) by @ydshieh
+* [GLM 5.3 Flash] Preserve original names when saving text checkpoints (#48676) by @Dovis01
+* Register activation kernel layers on XPU (#47858) by @jiqing-feng
+* Mirror the registered pytree flatten when building automatic dynamic shapes (#48578) by @IlyasMoutawwakil
+* Fix `AutoImageProcessor` requiring torchvision when only Pillow is installed (#48616) by @blipbyte
+* Assert cached decode matches recomputing without a cache (#48289) by @IlyasMoutawwakil
+* [higgs_audio_v2] Fix: use config.num_codebooks in audio labels tensor (Simple Fix!) (#48560) by @b-re-w
+* [`MoE`] Fix eager EP (#48653) by @vasqu
+* [MusicgenMelody] Fix conditioning silently dropped at generation step 0 (#48679) by @ydshieh
+* Fix deepspeed ci (#48640) by @SunMarc
+* Synthetic test assets (#48589) by @tarekziade
+* Skip the expert-parallel sentinel masking when expert parallelism is off (#48201) by @qgallouedec
+* [Fix] yolos offload issue (#48688) by @molbap
+* [serge] Fix 2 integration tests for model `minimax` failing with `output_mismatch` (tensor values differ (2)) (#48515) by @sergereview[bot]
+* [serge] Fix 2 integration tests for model `mistral` failing with `other` (other (2)) (#48429) by @sergereview[bot]
+* Fix Qwen2.5-VL temporal RoPE for fractional video intervals (#48669) by @yeyeyeping
+* Fix slow integration tests on XPU (#48611) by @jiqing-feng
+* QA: Added a `MemoryCleanupMixin` class for tests (#48681) by @tarekziade
+* [serge] Fix 1 integration test for model `flex_olmo` failing with `other` (other (1)) (#48668) by @sergereview[bot]
+* Fix D-FINE / RT-DETR main loss being computed over the denoising queries (#48528) by @stefan-it
+* [CI] Replace hardcoded username allowlists with author_association check in workflow triggers (#48712) by @ydshieh
+* Add flash_attention_4 in attn_implementation AutoModel docstring (#48684) by @3manifold
+* Keep the expert-parallel sentinel slots out of the router gradient (#48689) by @qgallouedec
+* [DeepseekV3] OOM cascade root-cause investigation (generator ref leak in conversion_mapping) (#48720) by @ydshieh
+* Use huggingface_hub httpx export (#48685) by @Wauplin
+* unifying device_mesh init to enable PP + TP inference (#48155) by @3outeille
+* Enable FSDP2 + expert parallelism via a 2-D (fsdp, tp) device mesh (#48516) by @qgallouedec
+* Switch daily CI to torch 2.14 — update expected outputs (#48750) by @ydshieh
+* fix videomae load error (#48675) by @sywangyi
+* Fix silently random-initializing `RTDetrModel`/`SEWDForCTC` loads (wrong `base_model_prefix`) (#48744) by @<NOT FOUND>
+* Fix Glm4vMoeIntegrationTest: offload_folder + MemoryCleanupMixin (#48776) by @ydshieh
+* [InternVL] Normalize num_patches before np.cumsum (#48469) by @lorenzozanee
+* Kernel api doc, part 2 (#46889) by @michaelbenayoun
+* Fix hidden state selection on Gemma4 assistant's first prefill step (#48704) by @glistening
+* Fix inkling embedding norm (#48786) by @Cyrilvallez
+* Fix TextToAudioPipeline crash for tokenizer-only models (#48505) by @jiqing-feng
+* Cast pixel values to the patch embedding dtype in DeepSeek-OCR-2 (#48632) by @jiqing-feng
+* add kernel mapping entry for RMSNormGated, KDA, Conv1D on XPU (#48702) by @kaixuanliu
+* Bump `peft` version requirement (#48716) by @shniubobo
+* [serge] Fix 12 integration tests for model `edgetam` failing with `import_or_config` (other (12)) (#48322) by @sergereview[bot]
+* Restore legacy tensor-parallel initialization for compatibility (#48797) by @3outeille
+* Fix kosmos flaky test (#48800) by @IlyasMoutawwakil
+* Add integration tests for MuseGlimmerAssistantModel (#48796) by @ydshieh
+* Fix `AutoModel.from_pretrained` not restoring `modules_to_save` weights (#48595) by @shniubobo
+* [docs] mrope and axial rope (#48717) by @stevhliu
+* Fix decoder only path for older bert variants (#48785) by @Cyrilvallez
+* [Fix] Clean-up ternaries in the DeepSeek family (#48447) by @remi-or
+* [utils] Add MUSA support for Flash Attention 2 (#48612) by @XiaomingFun233
+* [generate] Drop attention mask early without padding (#48814) by @Cyrilvallez
+* Pin utf-8 in test_can_init_all_missing_weights source read (Windows non-UTF-8 locale fix) (#48819) by @dltsum
+* Relax static-cache tolerance in test_generate_with_static_cache (1e-5 → 5e-5) (#48815) by @ydshieh
+* Detect nested rope_parameters without relying on layer_types (#48798) by @hmellor
+* Support for MoE in the GGUF integration (#48529) by @SunMarc
+* [docs] gguf (#46357) by @stevhliu
+* [apply_chat_template] pass sampling_rate to call (#48794) by @eustlb
+* [CI] Add link checker (#48160) by @stevhliu
+* Qwen3.8 GGUF (#48660) by @SunMarc
+* docs: fix broken #combining-with-fsdp2 anchor in expert_parallelism.md (#48854) by @ydshieh
+* [GPTNeoXJapanese] Fix RoPE ignoring partial_rotary_factor (#48652) by @blipbyte
+* QA: deactivate rule 41 (#48852) by @tarekziade
+* Fix `reset` on the dynamic cache layers (#48809) by @jiqing-feng
+* [generate] Make all methods and logits processors agnostic to lm_head output size (#48846) by @Cyrilvallez
+* Fix kosmos (#48853) by @Cyrilvallez
+* Add test for causal only variant of some encoder-decoder models (#48760) by @nandan2003
+* Fix ESMFold2 ligand iPLDDT weighting: mol_type non-polymer code is 3, not 4 (#48831) by @faustomilletari
+* Fix flaky RfDetr test_save_load (#48869) by @ydshieh
+* fix(ci): harden GitHub Actions workflows (#48160) (#48834) by @hf-security-analysis[bot]
+* Fix Glm4MoeIntegrationTest: split into 3 tests, switch to GLM-4.5-Air (#48820) by @ydshieh
+* Fix `StaticCache` for Mllama and enable `torch.compile` (#48141) by @jiqing-feng
+* Fix Minimax M2 partial_rotary_factor by remapping legacy rotary_dim (#48486) by @dajiaohuang
+* Fix Pixtral image processor do_pad option (#48872) by @jzakrzew
+* [CB] Add pause mechanism (#48462) by @remi-or
+* Fix DFlash sampled candidates losing the batch dimension (#48281) by @VaggelisGian
+* Fix sliding window cache when assistant model calls generate (#48280) by @VaggelisGian
+* Fix GLM rope_parameters dict shared mutation across test instances (#48895) by @ydshieh
+* [`feat`] Allow untying `hidden_states[-1]` from `last_hidden_state` via the model config (#48087) by @tomaarsen
+* Fix Idefics2 padding when the first example has no image (#48753) by @Arnavsharma2
+* Don't fail model loading when the accelerator can't report free memory (#48136) by @studioego
+* [Improvement] Rework the docstring and comments of mHC (#48888) by @remi-or
+* [serge] Fix 3 integration tests for model `deepseek_vl` failing with `other` (other (3)) (#48536) by @sergereview[bot]
+* Add auto_docstring task model overrides (#47815) by @guarin
+* Make LongcatFlashConfig self-consistent without building the model (#48899) by @hmellor
+* [`DSA`] Only save latents on dsa with indexer as well (#48876) by @vasqu
+* [Chat Parsing] Coerce oneOf tool arguments (#48719) by @yonigozlan
+* Always materialize the causal mask in Doge so sdpa stays causal (#48821) by @blipbyte
+* Fix docstring argument names that don't match signatures (#48474) by @IshaanPotle
+* Mark test_generate_with_static_cache as flaky for olmo and bigbird_pegasus (#48856) by @ydshieh
+* Clean up some MoE models' integration tests (#48833) by @ydshieh
+* Fix T5 tied weights order for lm_head (#48238) by @vaibhavmashal
+* Size the device_map buffer from the largest leaf module (#47211) by @dhruv7477
+* Fix compile cache tests (#48923) by @Cyrilvallez
+* Update arXiv citation in NeoMME model doc (#48926) by @tonywu71
+* Standardise Aria's MoE onto the experts interface (#48907) by @hmellor
+* Fix possessive typo in Whisper long-form warning (#48877) by @erikdw
+* Modular conversion small fix (#48934) by @zucchini-nlp
+* fix(vibevoice-asr): use integer ceiling division for audio token count (#48864) by @ege-arhan
+* Improve lazy import error messages (#48602) by @karatarassul4-max
+* Fix tests due to dropping attn mask (#48903) by @SunMarc
+* docs: fix docstring parameters that do not match signatures (#48904) by @simpleqt
+* DOC: Improve documentation for remap_legacy_layer_types function (#48651) by @mathewOracle
+* Align special tokens on the text config (#48847) by @qgallouedec
+* docs: fix dead doc links in i18n READMEs and the xlnet docstring (#48905) by @simpleqt
+* Fix AXK2 integration test: update CUDA expected text and rename class (#48941) by @ydshieh
+* Resolve the Hub revision once per load instead of passing a private _commit_hash around (#47611) by @Wauplin
+* Keep image processor backends in sync on keys and dtypes (#48739) by @yupengtang
+* Fix infeasible cost matrix errors in hugarian matcher losses (#47730) by @guarin
+* Fix more stuff (#48979) by @zucchini-nlp
+* Skip an unnecessary image copy in the torchvision image normalization path (#48897) by @jzakrzew
+* Better attn default for gguf (#48935) by @SunMarc
+* Add pose estimation keypoint preprocessing to Sapiens2ImageProcessor (#47199) by @Sainava
+* Fix image processor class-level size mutation and min_pixels handling (#48916) by @Gracy769
+* Contract the mamba2 chunk scan with einsum instead of broadcast-then-sum (#48978) by @tarekziade
+* Fix typos in DeepseekV4 comments (#48953) by @Janiarafath
+* Reduce peak memory in examples_torch CI job (OOM fix) (#48983) by @ydshieh
+* Fix vibevoice TTS batched audio index (#48902) by @ebezzam
+* [CB] [Major] Upgrade the cache to support different attention types (#47809) by @remi-or
+* Fix SwitchTransformers Top1 router: raw logits, expert capacity accounting, and router losses (#48421) by @yurekami
+* Fix Qwen3OmniMoeIntegrationTest OOM (#48987) by @ydshieh
+* Let `prefix_allowed_tokens_fn` override model `-inf` and raise an exception on unsatisfiable generation constraints. (#48927) by @ksh108405
+* [generate] Simplify candidate generators by removing required `update_candidate_strategy` (#48982) by @Cyrilvallez
+* [generate] Always correctly restrict assisted decoding with max length/eos token  (#48981) by @Cyrilvallez
+* QA: applied ruff rule PLW1514 (#48990) by @tarekziade
+* Update tokenizer gguf support  (#48656) by @SunMarc
+* [vLLM] Fix video token counting for Transformers backend video inputs (Part 2) (#48900) by @harshaljanjani
+* Update ggml kernels path  (#48991) by @SunMarc
+* Enable compressed-tensors FP8 kernels on MPS (torch >= 2.15) (#48985) by @Isalia20
+* Fix mps autocast handling in rotary embeddings (#49006) by @Isalia20
+* Fix static cache per layer head shapes (#48619) by @dacorvo
+* Summarization examples: download NLTK punkt_tab, not punkt (#49014) by @davanstrien
+* [docs] Fix legacy hf CLI references (transformers) (#48988) by @Wauplin
+* Fix RecurrentGemma compiled generation with StaticCache (#48961) by @sywangyi
+* updated GraniteMoeHybrid expectations (CPU) (#49016) by @tarekziade
+* OpenVINO HF Exporter (#47003) by @IlyasMoutawwakil
+* fix noisy comments (#49013) by @tarekziade
+* Fix assisted decoding for VLM due to dropping attn mask  (#49019) by @SunMarc
+* Deprecate min-max pixels (#49021) by @zucchini-nlp
+* Keep special token ids the tokenizer does not define (#48708) by @albertvillanova
+* Added more usage of MemoryCleanupMixin (#49011) by @tarekziade
+* Shorten noisy OpenVINO SDPA comment (#49033) by @tarekziade
+* PEFT x Dtensor-based TP integration (#48485) by @michaelbenayoun
+* fix(zamba):  add use_associative_scan config flag to avoid torch.compile slowdown (#48331) by @msnliu
+* Scope GITHUB_TOKEN permissions per job (#49046) by @hf-security-analysis[bot]
+* Fix mask creation not being skipped under `torch.compile` (#48975) by @jiqing-feng
+* [Chat] Loading GGUF models served with the Chat CLI (#49031) by @ariG23498
+* Pin GitHub Actions to commit SHAs (#49049) by @hf-security-analysis[bot]
+* Only seed numpy in BigBird block-sparse attention during training (#49037) by @jiqing-feng
+* QA: Fix llama4 leak (#49042) by @tarekziade
+* Fix startup failures: drop permissions reusable-workflow callers cannot grant (#49055) by @paulinebm
+* Fix startup failures: drop pull-requests: read from check_failed_tests.yml (#49057) by @paulinebm
+* Register the remaining mamba-ssm kernel layers on XPU (#49035) by @jiqing-feng
+* Add workflow for building XPU CI Docker images (#49039) by @regisss
+* Fix assistant masks for processors (#48793) by @Rocketknight1
+* Add MPS maintainer (#49052) by @Rocketknight1
+* [docs] Loading behavior (#49023) by @stevhliu
+* [Nemotron3Diarization] nit: hub pr merged to main (#49065) by @eustlb
+* fix(ci): harden GitHub Actions workflows (#49057) (#49059) by @hf-security-analysis[bot]
+* Honor `config.output_router_logits` in the MoE VLM wrappers (#48885) by @qgallouedec
+* Fix XPU Docker image build (#49073) by @regisss
+* Fix assisted eos token condition (#49075) by @Cyrilvallez
+* [serge] Fix OOM in Moshi integration tests with MemoryCleanupMixin (#48839) by @sergereview[bot]
+* Fix odd head_dim validation for RoPE configurations (#48524) by @somuai
+* Keep already-decoded array arguments unchanged (#49062) by @yonigozlan
+* Fix NaN in Parakeet eager attention with padded batches (#49070) by @ArthurZucker
+* Bump huggingface_hub upper bound to <3.0 (transformers) (#49083) by @Wauplin
+* Keep `attention_mask` as `None` in OPT's causal mask creation (#49002) by @jiqing-feng
+* Add `Trainer.end` (#48875) by @qgallouedec
+* Add image processing tester init (#48829) by @guarin
+* [Executorch] Add MLX recipe (#48910) by @metascroy
+* [Zamba] Fix associative scan breaking ONNX export and OOM in integration test (#49092) by @ydshieh
+* Fix RGB early-return skipping PNG tRNS compositing (#49005) by @cs-fisha
+* Use namespaced dataset ids in docs and PyTorch examples (#49017) by @davanstrien
+* Fix MaskFormerSwin attention mask dtype to follow hidden states (#49032) by @kaixuanliu
+* [NemotronH-Omni] Fix device mismatch in test tensor creation (#49102) by @ydshieh
+* [serge] Fix 2 integration tests for model `cvt` failing with `output_mismatch` (tensor values differ (2)) (#49076) by @sergereview[bot]
+* [serge] Fix 2 integration tests for model `hy_v3` failing with `output_mismatch` (tensor values differ (2)) (#49068) by @sergereview[bot]
+* [serge] Fix 2 integration tests for model `pvt_v2` failing with `other` (#49067) by @sergereview[bot]
+* Keep the eos ids the config declares (#49082) by @albertvillanova
+* Use grouped_mm on TPU devices under torch.compile (#49097) by @salkan0
+* [serge] Fix 2 integration tests for model `jamba` failing with `other` (other (2)) (#49044) by @sergereview[bot]
+* Remap the legacy Gemma 1 hidden_act in the config post-init (#49084) by @PCfVW
+* Fix exporters import on torch < 2.9 (is_contiguous_or_false) (#49124) by @ydshieh
+* [gemma3n] fix audio test fixture: use hf_hub_download instead of load_dataset (#49128) by @ydshieh
+* qwen3 models map to wrong tokenizer class on the hub (#49116) by @itazap
+* Restore the Unicode whitespace set in the GPT-SW3 tokenizer (#48912) by @David-Wu1119
+* [AMD] Fix some integration tests (#49153) by @Abdennacer-Badaoui
+* [Gemma] Fix test_model_7b_fp16_static_cache expected value for cuda 8 after #49084 (#49133) by @ydshieh
+* Fix UMT5 decoder self-attention not being causal (#49135) by @the-cross-art
+* Skip flash tests that fall back to a hub kernel when kernels is missing (#49129) by @Abdennacer-Badaoui
+* Auto generate model inits (#47829) by @guarin
+* Fix get_json_schema dropping items/enum for unions of list/dict/Literal types (#49136) by @JoeyTan21
+* Pick the default flash implementation based on the current hardware (#49109) by @Abdennacer-Badaoui
+* Deprecate the use_mamba_kernels config flag that no longer has any effect (#49155) by @albertvillanova
+* [CI] ssh-runner: add optional cache_type input to switch between bucket and EFS runners (#49159) by @ydshieh
+* [generation] Encode multimodal data only once (#45783) by @zucchini-nlp
+* No more -hf repo names for ESMC (#49158) by @Rocketknight1
+* [MPS] Remove cu_seqlens_k clone workaround for metal-flash-sdpa (#49091) by @Isalia20
+* [PerceptionLM] Restore test_inputs_embeds overrides to fix flaky test (#49165) by @ydshieh
+* [CB] Fix failing tests discovered when using the B200 (#49171) by @remi-or
+* [imagegpt/vilt/trocr] fix cache fixture tests: use hf_hub_download instead of load_dataset (#49178) by @ydshieh
+* Fix lost call (#49163) by @molbap
+* Document image_like_kwargs (#49180) by @guarin
+* [CacheHardIntegrationTest] use dedicated safetensors repo to fix Xet bucket cache corruption (#49182) by @ydshieh
+* Document running the example scripts on Hugging Face Jobs (#49050) by @davanstrien
+* Fix backslash handling in generate flag values in transformers chat (#48709) by @JHC56
+* Finish removing the MPS autocast workaround (#49157) by @rubenG1009
+* Fix Trainer checkpoint resume crashing on CPU with multiple processes (#49123) by @neevmodh
+* Fix command syntax for optimum-cli export (#46451) by @Ahwar
+* QA: fix noisy comment checker (#49184) by @tarekziade
+* update to torch 2.14 (#49199) by @sywangyi
+* Video processors - general maintenance (#48251) by @zucchini-nlp
+* [Parakeet] Convert NeMo's stochastic depth to layerdrop (#49191) by @Deep-unlearning
+* [MPS] Let mps sdpa handle grouped query attention directly (#49187) by @Isalia20
+* Replace datasets that no longer load with maintained uploads (#49018) by @davanstrien
+* Fail fast on eval OOM under `auto_find_batch_size` (#49198) by @qgallouedec
+* Fix SequenceBiasLogitsProcessor edge cases: token id 0 and prefix equal to context (#49117) by @lucaluo925
+* Map bare list, tuple and dict annotations to the right JSON schema type in get_json_schema (#49145) by @825pranav
+* [`Kernels`] Sync mamba version (#49205) by @vasqu
+* gguf user defined tokens (#49008) by @SunMarc
+* QA: restore masking_utils export comment with a noqa (#49209) by @tarekziade
+* Fix deepstack features for mixed-input (#49177) by @zucchini-nlp
+* Fix stale _added_tokens_encoder entries in cpmant and wav2vec2 (#47440) by @ishan-1010
+* Fix additional_special_tokens data loss with extra_special_tokens (#47848) by @erichanwang
+* Fix MPS GQA version gating (#49210) by @Isalia20
+* Add Strix Halo (gfx1151) Atlas Inference Hub-kernel path for Qwen3.5/3.6/3.8 Gated DeltaNet (#49127) by @AzeezIsh
+* Fix MiniMax M3 partial 3D vision rotary embeddings (#49164) by @cuichenx
+* Fix missing router_logits in Qwen3.5-MoE and other MoE models (#49179) by @zucchini-nlp
+* [Nemotron3Diarization] fix streaming last stft frame dropped (#49167) by @eustlb
+
+
+## Significant community contributions
+
+The following contributors have made significant changes to the library over the last release:
+
+* @harshaljanjani
+    * model: Add GTE to Transformers (#48416)
+    * [vLLM] Fix video token counting for Transformers backend video inputs (Part 2) (#48900)
+    * 🚨 [vLLM] Fix video token counting for Transformers backend video inputs (Part 1) (#48894)
+* @eustlb
+    * [Nemotron3Diarization] fix streaming last stft frame dropped (#49167)
+    * [Nemotron3Diarization] nit: hub pr merged to main (#49065)
+    * Add Nemotron3Diarization (#49056)
+    * [apply_chat_template] pass sampling_rate to call (#48794)
+* @tarekziade
+    * QA: restore masking_utils export comment with a noqa (#49209)
+    * QA: fix noisy comment checker (#49184)
+    * QA: Fix llama4 leak (#49042)
+    * Shorten noisy OpenVINO SDPA comment (#49033)
+    * Added more usage of MemoryCleanupMixin (#49011)
+    * fix noisy comments (#49013)
+    * updated GraniteMoeHybrid expectations (CPU) (#49016)
+    * QA: applied ruff rule PLW1514 (#48990)
+    * Contract the mamba2 chunk scan with einsum instead of broadcast-then-sum (#48978)
+    * QA: deactivate rule 41 (#48852)
+    * QA: Added a `MemoryCleanupMixin` class for tests (#48681)
+    * Synthetic test assets (#48589)
+* @ydshieh
+    * [CacheHardIntegrationTest] use dedicated safetensors repo to fix Xet bucket cache corruption (#49182)
+    * [imagegpt/vilt/trocr] fix cache fixture tests: use hf_hub_download instead of load_dataset (#49178)
+    * [PerceptionLM] Restore test_inputs_embeds overrides to fix flaky test (#49165)
+    * [CI] ssh-runner: add optional cache_type input to switch between bucket and EFS runners (#49159)
+    * [Gemma] Fix test_model_7b_fp16_static_cache expected value for cuda 8 after #49084 (#49133)
+    * [gemma3n] fix audio test fixture: use hf_hub_download instead of load_dataset (#49128)
+    * Fix exporters import on torch < 2.9 (is_contiguous_or_false) (#49124)
+    * [NemotronH-Omni] Fix device mismatch in test tensor creation (#49102)
+    * [Zamba] Fix associative scan breaking ONNX export and OOM in integration test (#49092)
+    * Fix Qwen3OmniMoeIntegrationTest OOM (#48987)
+    * Reduce peak memory in examples_torch CI job (OOM fix) (#48983)
+    * Fix AXK2 integration test: update CUDA expected text and rename class (#48941)
+    * Clean up some MoE models' integration tests (#48833)
+    * Mark test_generate_with_static_cache as flaky for olmo and bigbird_pegasus (#48856)
+    * Fix GLM rope_parameters dict shared mutation across test instances (#48895)
+    * Fix Glm4MoeIntegrationTest: split into 3 tests, switch to GLM-4.5-Air (#48820)
+    * Fix flaky RfDetr test_save_load (#48869)
+    * docs: fix broken #combining-with-fsdp2 anchor in expert_parallelism.md (#48854)
+    * Relax static-cache tolerance in test_generate_with_static_cache (1e-5 → 5e-5) (#48815)
+    * Add integration tests for MuseGlimmerAssistantModel (#48796)
+    * Fix Glm4vMoeIntegrationTest: offload_folder + MemoryCleanupMixin (#48776)
+    * Switch daily CI to torch 2.14 — update expected outputs (#48750)
+    * [DeepseekV3] OOM cascade root-cause investigation (generator ref leak in conversion_mapping) (#48720)
+    * [CI] Replace hardcoded username allowlists with author_association check in workflow triggers (#48712)
+    * [MusicgenMelody] Fix conditioning silently dropped at generation step 0 (#48679)
+    * [fix] Fix GlmOcr integration tests: wrong token IDs and image token decode bug (#48650)
+    * [tests] Fix NougatModelIntegrationTest: pin artifact revision and update golden values (#48638)
+    * [CI] Deduplicate Nvidia/AMD CI reply comments and add headers (#48655)
+* @molbap
+    * Fix lost call (#49163)
+    * 🚨 🚨Bring some dinos to modern standards (#46266)
+    * [Fix] yolos offload issue (#48688)
+* @remi-or
+    * [CB] Fix failing tests discovered when using the B200 (#49171)
+    * [CB] [Major] Upgrade the cache to support different attention types (#47809)
+    * [Improvement] Rework the docstring and comments of mHC (#48888)
+    * [CB] Add pause mechanism (#48462)
+    * [Fix] Clean-up ternaries in the DeepSeek family (#48447)
+* @jiqing-feng
+    * Keep `attention_mask` as `None` in OPT's causal mask creation (#49002)
+    * Register the remaining mamba-ssm kernel layers on XPU (#49035)
+    * Only seed numpy in BigBird block-sparse attention during training (#49037)
+    * Fix mask creation not being skipped under `torch.compile` (#48975)
+    * Fix `StaticCache` for Mllama and enable `torch.compile` (#48141)
+    * Fix `reset` on the dynamic cache layers (#48809)
+    * Cast pixel values to the patch embedding dtype in DeepSeek-OCR-2 (#48632)
+    * Fix TextToAudioPipeline crash for tokenizer-only models (#48505)
+    * Fix slow integration tests on XPU (#48611)
+    * Register activation kernel layers on XPU (#47858)
+* @Wauplin
+    * Bump huggingface_hub upper bound to <3.0 (transformers) (#49083)
+    * [docs] Fix legacy hf CLI references (transformers) (#48988)
+    * Resolve the Hub revision once per load instead of passing a private _commit_hash around (#47611)
+    * Use huggingface_hub httpx export (#48685)
+* @meatybobby
+    * Add support for Nemotron Omni (#46509)
+* @Sainava
+    * Add pose estimation keypoint preprocessing to Sapiens2ImageProcessor (#47199)
+* @jp1924
+    * add HyperClovaX Vision (#44314)
+
+[5] vllm-project/vllm v0.31.0 (2026-10-05)
+https://github.com/vllm-project/vllm/releases/tag/v0.31.0
+# v0.31.0
+
+## Highlights
+
+This release features 717 commits from 307 contributors (96 new)!
+
+* **DeepSeek-V4.1-Flash performance**: FlashMLA mega attention with the V4.1 NVFP4 compressed KV cache is now the SM100 default (#56935); DeepGEMM sparse MQA logits for the indexer (#56254) and Mega-Gate fusing the gate GEMM with expert selection (#56266); decoder boundaries fuse the TP all-reduce, mHC input preparation (#57643) and the MoE finalize (#58586); a fused small-batch WO-A with inverse RoPE and MXFP8 quant on SM100/SM103 (#58634); the MXFP8 `wo_b` GEMM fused with the sequence-parallel reduce-scatter (#57428); Engram `wkv` sharded across TP ranks (#58678) and Engram host tables shared across co-located DP replicas by default (#57651); encoder CUDA graphs for the vision tower (#56625); and SWA bounded replay that keeps the sliding-window KV out of prefix caching (#56227).
+* **Fast restart**: the new `vllm preload` CLI launches the weight-cache daemon that keeps post-quantized weights resident in GPU memory across engine restarts (#56680), now with data parallelism (#57386), MTP draft models (#57312), a `/health` endpoint (#58552) and a readiness wait (#58370). Experimental initialized-engine snapshots (`vllm snapshot create/restore`) use CRIU to restore a fully initialized TP1 engine (#51360).
+* **Model Runner V2 and speculative decoding**: draft-model speculative decoding (#43091) and custom logits processors (#56497) on Model Runner V2; the new LiLiCorr drafter (#57934); async scheduling for DFlash (#58065) with the context K/V precompute captured in the draft CUDA graph (#57632); DSpark adaptive verification for Gemma4 (#57263) and variable-length decode for Kimi-K3 (#52988); a DCP target with a non-DCP DSpark draft (#56723); and MoE memory now counted during MRV2 profiling, avoiding OOMs on WideEP deployments (#57270, #58411).
+* **Large scale serving**: MoonEP balanced EP all2all backend via `--all2all-backend moonep` (#52101), prefill context parallelism with data parallelism (#57075), a low-SM multimem reduce-scatter for SM100/SM103 (#55072), DeepEPv2 with sequence parallelism (#57210) and EPLB with shared-expert overlap (#57236), a sharding-aware NCCL M2N weight-transfer backend for RL (#51520), and KV offloading back-pressure detection (#50045).
+* **Scheduling controls**: `--max-num-active-seqs` caps RUNNING admission independently of `max_num_seqs` (#56758), `--long-prefill-token-threshold` now adapts to the number of waiting prefills instead of chunking a lone request (#57951, #58459), the waiting queue was reworked so requests already holding KV blocks are scheduled first (#58947), and the KV connector + MTP deadlock under KV pressure was fixed (#57104).
+* **HiSparse hardening**: MTP verification rows resolved with a union residency kernel (#59235), MTP acceptance collapse under FULL graphs fixed (#59309), no GPU pages without host backing (#59036), a chunked-prefill preemption livelock fixed (#59494), KV cache sized from the groups HiSparse allocates (#59450), and host prefix publication and GPU prefix adoption fixes (#59007, #59282).
+* **Security**: per-request `mm_processor_kwargs` and `media_io_kwargs` are rejected unless `--trust-request-mm-kwargs` is set (#58830); prefix-cache extra keys are tagged by source so a LoRA name and a `cache_salt` can no longer collide (#51899), and the LoRA path is part of the block hash (#59335); stale multimodal receiver-cache entries can no longer replace fresh payloads (#57833).
+* **Breaking changes**: per-request multimodal kwargs gated (#58830); `tokenizer_mode="slow"` removed (#58545); `--enable-mamba-fine-grained-prefix-cache` renamed to `--enable-mamba-shared-prefix-checkpoint` (#57382); online quantization through `quantization="fp8"` replaced by the `fp8_per_tensor` shorthand (#53585) and Quark silent online quantization removed (#51800); the AllSpark INT8 W8A16 backend removed (#58001); `--enforce-eager` now also disables JIT kernel warmup (#58197); XPU graphs enabled by default with `VLLM_XPU_ENABLE_XPU_GRAPH` removed (#51600).
+
+## Release Artifacts
+
+### Python Wheels
+
+| Platform | Install |
+|---|---|
+| PyPI (CUDA 13.0) | `pip install vllm` |
+| PyPI (CUDA 13.0, uv) | `uv pip install vllm --torch-backend=auto` |
+| ROCm | `pip install vllm --extra-index-url https://wheels.vllm.ai/rocm/0.31.0/rocm723` |
+| XPU | `uv pip install vllm --extra-index-url https://wheels.vllm.ai/0.31.0/xpu --extra-index-url https://download.pytorch.org/whl/xpu --index-strategy unsafe-best-match` |
+
+### Docker Images
+
+| Platform | Docker Image |
+|---|---|
+| CUDA 13.0 (Default) | `docker pull vllm/vllm-openai:v0.31.0` |
+| CUDA 12.9 | `docker pull vllm/vllm-openai:v0.31.0-cu129` |
+| ROCm | `docker pull vllm/vllm-openai-rocm:v0.31.0` |
+| CPU | `docker pull vllm/vllm-openai-cpu:v0.31.0` |
+| XPU | `docker pull vllm/vllm-openai-xpu:v0.31.0` |
+
+### Other Artifacts
+
+Pre-built release artifacts are available in the **Assets** section at the bottom of this page, including:
+- Source distribution tarball
+- CUDA 12.9 Python wheels for x86_64 and arm64
+- CUDA 13.0 Python wheels for x86_64 and arm64
+- CPU Python wheels for x86_64, arm64, and macOS
+- XPU Python wheel for x86_64
+
+## Model Support
+* **New model capabilities**: DiffusionGemma structured generation mode with bounded single-token choices (#57250), MiMo V2 MXFP4 MoE, BF16 MoE router and DFlash drafts (#57784), Cohere2MoE auxiliary hidden states for EAGLE3/DFlash drafters (#49819), GLM-5.2-MXFP4 on the ROCm DeepSeek-V3.2 path (#51915), AMD-Quark mixed-precision DeepSeek-V4.1-Flash-MXFP4 (#57071) and GLM-5.3-Flash Quark MXFP4 (#56176) checkpoints, and a built-in `granite_thinking_parser` for Granite 4.2 (#55957).
+* **DeepSeek-V4.1-Flash**: FlashMLA mega attention with the NVFP4 compressed KV cache as the SM100 default (#56935), DeepGEMM sparse MQA logits in the indexer (#56254), Mega-Gate (#56266), fused TP all-reduce + mHC input preparation (#57643) with the MoE finalize folded in (#58586), fused small-batch WO-A (#58634), MXFP8 `wo_b` GEMM + reduce-scatter (#57428), overlapped mHC coefficients for small TP batches (#57603) limited to FULL CUDA graphs (#57874), Engram `wkv` sharded across TP (#58678), serialized Engram lookups with huge-page host tables (#56926), Engram tables shared across DP replicas by default (#57651, #57914, #59068), native shared-expert MegaMoE fusion without padding (#56568, #57204), faster MegaMoE staging and NVFP4 cache gathers (#57604), the fused query RMSNorm + MXFP8 path restored (#57679), KV-only DSpark context insertion (#56441), vision encoder CUDA graphs (#56625, #58499), SWA bounded replay (#56227), causal image SWA restored to match the reference (#57152), updated reasoning effort mappings (#58316), and startup fixes for NaN-scored candidate blocks (#57454), DeepSelect sentinels (#58215), DSpark non-causal attention on FlashInfer (#57432), runtime JIT of offset candidate buffers (#57667) and imports without Triton (#57654).
+* **DeepSeek V4**: FlashInfer sparse MLA with fused inverse RoPE + FP8 quant (#58621), stacked DSpark context WKV projections (#54674), fused MoE expert distribution computed from the EP group (#57465), FIM completion via `suffix` (#44229), missing `string=` in tool calls parsed (#56271), request tools attached to an existing system message (#51856), image block spacing preserved (#56882), and DSpark width separated from MTP stage validation (#54631).
+* **GLM-5.3-Flash**: opt-in FlashAttention and FlashMLA sparse backends on SM90 (#55385), NoPE sparse MLA on the FlashInfer SM120 backend (#55277), cooperative top-k for small decode batches (#57327), indexer decode workspace sized by pooled length (3 GiB saved, #57701), metadata ops 1.6-4.8x faster (#58450), fused kpool tail slot mapping (#57534), kpool top-k through the shared dispatcher (#57546), lower sparse MLA preparation overhead (#57458), no D2H sync in the SM90 sparse MLA plan under async scheduling (#58684), FlashKDA keeping the recurrent state in FP32 for long prefills (#58846), and correctness fixes for kpool corruption with speculative decoding (#58454), SM90 `index_kpool` mismatch (#58704), kpool tail strides (#57477), 500k-token prompts (#57317), dense MLP layers under sequence parallelism (#58061), indexer top-k backend selection (#58594) and varlen paged MQA launches (#55270).
+* **Qwen3.8-Flash-Next (Qwen4Exp)**: FP8 main KV cache on the QSA path (#55557), FP8 TP with FlashInfer TRTLLM MoE (#55867), SM90 QSA tuning (#57273), fused HC down projection + SiLU (#58957), lower PLE metadata overhead (#58114), QSA indexer workspace fragmentation fixed (#57105), profiling KV cache released (#58961), pinned PLE prefetch ids kept out of the CUDA graph pool (#58489), and indexed expert-mapping lookups saving about 25 s of weight loading on DGX Spark (#58720).
+* **Kimi K3 and MiniMax-M3**: Kimi-K3 vision patch embedder as a GEMM (#58527), fused KimiViT QK RoPE (up to 29x, #58651), routed expert quantization (#57430), reasoning parser (#57098) and reasoning token counting (#58372) fixes, DSpark context KV pointers refreshed after re-binding (#58814), stateless first chunks no longer classified as decodes (#51483), and Mamba block estimates that no longer stall admission on external prefix hits (#57050); MiniMax-M3 encoder CUDA graphs (#58673), `Conv3dLayer` patch embedding (about 62x, #58512), `triton_mrope` in the vision tower (#58526), fused MiniMax2 routing with non-unit scaling (#58880), and processor fixes (#58460, #59613).
+* **DiffusionGemma**: one-pass sampler statistics kernel (#58226), `diffusion_constrained` reads over `logprob_token_ids` (about 25% faster, #58216), fewer logit rows for prefill-only batches (#57416), `logprob_token_ids` support (#57417), and fixes for concurrent logprobs (#57414), eager fallback dtype (#57462), multimodal inputs (#57589), quantized LM heads (#48521) and CPU execution (#58964).
+* **Multimodal**: Triton `mm_input_norm` kernel (#56798, #56711), raw pixels kept through the DP-sharded ViT path (#56872), Qwen2.5-VL video fps honored for temporal M-RoPE (#47736), Whisper and Qwen2-Audio clips longer than 30s (#57769, #56912), Mistral3 placeholder grid (#53758), Idefics3 unsplit patches (#48760), Ovis2.5 tokens (#52623), Aria expert weights (#57487), MiMo-V2.5 fused FP8 `qkv_proj` sharding (#57508), Gemma4 `AutoWeightsLoader` (#55911) and buffer scalars (#54213), Gemma4 FP8 KV with FA4 at head dim 512 (#53175), Laguna RoPE (#57189), Mistral-Large-3 accuracy regression (#57563), malformed EXIF (#56527, #57234), JinaVL labels (#57347), Sarvam MLA routing with FP32 router logits (#56034), fused CohereASR attention scores (#55190), and fused DFlash2 grouped convolution (#55960).
+* **LoRA**: Nemotron VL language models (#56231), ModernBert (#57148), VoyageQwen3 embeddings (#57708), RoBERTa sequence classification (#58884), and `modules_to_save` sequence-classification heads (#53555) with per-adapter `num_labels` (#57766).
+
+## Engine Core
+* **Model Runner V2**: draft-model speculative decoding (#43091), custom logits processors (#56497) validated at admission (#57728), randomized dummy inputs (#58411), dummy tokens routed to MoE experts during profiling (#57270), FULL decode graphs for one-token prompt tails (#58400), token-to-request mappings shared (#57102) and Mamba/GDN metadata reused across KV cache groups (#58762), encoder-only ViT CUDA graphs (#56922), weight offloader (#57834) and pooling model (#57737) released on shutdown, and fixes for multi-layer MTP KV in P/D (#55055), fast-prefill with LoRA (#56456), stale block-table writes from dummy draft steps (#56734), padded prompt tails in hybrid models (#58434), never-proposed draft slots (#58784), auto-fit `max_model_len` (#58149) and `intermediate_tensors` during capture (#57745).
+* **Speculative decoding**: LiLiCorr drafter (#57934), DFlash async scheduling (#58065) and context K/V in the draft CUDA graph (#57632), Gemma4 DSpark adaptive verification (#57263), Kimi-K3 variable-length adaptive verification (#52988), CPU-GPU sync removed for heterogeneous vocabularies (#57396), Triton recompiles avoided in the acceptance estimator (#57107), and fixes for EAGLE/dense drafts with EP (#56930), DFlash/DSpark profiling batches (#56448), GLM MTP head memory (#55442), prompt embeddings with drafts (#57356), and TritonMLA causal multi-token decode (#51065).
+* **Scheduler**: `--max-num-active-seqs` (#56758), adaptive `--long-prefill-token-threshold` (#57951, #58459), `skipped_waiting` replaced by a KV-holding waiting queue (#58947), atomic admission of `n > 1` requests (#53936), KV connector + MTP deadlock (#57104), a throughput cliff when `max_num_seqs` is not a multiple of 8 (#57355), streaming continuations keeping logprobs and refreshing max tokens (#57447, #57676), a resumable request + async scheduling race (#58259), and a non-blocking structured-output grammar poll (#55931).
+* **Prefix caching and hybrid models**: extra keys tagged by source (#51899) and LoRA paths hashed (#59335), `--enable-mamba-shared-prefix-checkpoint` (#57382), prompt-tail hits with MTP restored (#58368), prompt-end checkpoints kept under sparse retention (#59146), align-mode checkpoint reservation (#59175), stateless GDN first chunks (#51565), MTP draft KV cache groups annotated on the hybrid grouping path (#55390), a generalized prefill checkpoint builder (#57783), batched Mamba2 prefill state saves without GPU-CPU syncs (#49371), `skip_reading_prefix_cache` honored for connector hits (#57269), incremental multimodal block hashing (#51694), a KV block size every attention backend supports (#49845) with clearer errors (#58557), and `CacheConfig.effective_attention_block_size` for DCP (#56538).
+* **Startup and memory**: parallel Triton warmup compilation (#58582), JIT warmup disabled under `--enforce-eager` (#58197) unless fault tolerance is on (#58593), DeepGEMM warmup reusing the MoE workspace (#57268), allocator fragmentation no longer shrinking the KV cache during profiling (#58430), sparse prefill buffers reserved before KV sizing (#57575), stale FlashMLA workspace views released (#56902), DeepGEMM FP8 workspace halved (#53914), shared Marlin/Humming workspaces (#57421), FlashInfer BF16 MoE weights converted in place (#54699), UniProc startup threads bounded by the CPU quota (#58946), and runtime threads set before profiling (#55891).
+* **Kernels**: sampled filtering for persistent top-k (#56346), Murmur3 RNG for Gumbel sampling (#51367), register-resident per-token-group 8-bit quant (#55330), vectorized per-tensor FP8 abs-max (#58194), a Triton kernel dispatcher for platform-specific overrides (#43048), `GateLinear` for all MoE models (#58234), non-local expert slots skipped in `TritonExperts` (#58051), deferred TRT-LLM-Gen top-k finalize on the modular path (#58635), SM120 batch-invariant matmul configs (#57456), FlashInfer prefill dequant scratch bounded (#57918), and fixes for Triton softcap NaNs (#56579), QuIP Hadamard transforms (#43462), CUTLASS FP8 linear on A100 (#55884), FlashInfer sampling on unsupported GPUs (#48956), SM100 FP8 blockwise scale padding (#57377), mixed FULL graph prefill capture (#58275) Inductor custom-op pattern matching (#58189), CuteDSL BF16 GDN prefill diverging from FLA on Qwen3.5 (#53864), SM100 `fp8_ds_mla` cache scales (#49435), ragged decode batches in the sparse indexer (#52500), stale `allowed_token_ids` masks after batch reordering (#48419, #43931), and `prompt_embeds` tensors held after requests finish (#57988).
+* **Batch invariance**: breakable CUDA graphs without torch.compile by default under `VLLM_BATCH_INVARIANT` (#57586), sequence parallelism and async TP disabled (#56377), and NCCL 2.31 collectives kept enabled (#58179).
+* **Sleep and RL**: `release_kv_cache_memory()` frees only KV cache memory (#44890), `--sleep-preserve-parameter-names` retains frozen weights across level-2 sleep (#57891), NCCL M2N weight transfer (#51520), dense DP weight updates by DP index (#56950), allocator config kept when toggling expandable segments (#57982), and cache reset failures propagated during sleep (#54581).
+* **Fast restart**: `vllm preload` (#56680), DP (#57386), MTP drafts (#57312), readiness wait (#58370), `/health` (#58552), ModelOpt MXFP8 pre-processed weights (#57316), and initialized-engine snapshots (#51360).
+* **Logging and observability**: `LoggingConfig` via `--logging-config` and `--log-level` (#57205), JSON logging fixes (#57957, #58747), startup log suppression fixed (#51366), unified platform-aware torch profiling (#57460), no 0.0% prefix cache hit rate before any query (#54990), KV transfer metrics formatting (#57068), MFU activation sizing from the model dtype (#57070), platform-overridable env var checks (#48599), `VLLM_TARGET_DEVICE=empty pip install vllm` for out-of-tree backends (#41074), and the correct vLLM version reported when installing from source (#57295, #57744).
+
+## Large Scale Serving
+* **MoE communication**: MoonEP backend (#52101), DeepEPv2 with sequence parallelism (#57210) and EPLB + shared-expert overlap (#57236), low-SM multimem reduce-scatter (#55072), EPLB load statistics during Elastic EP scaling (#58473), SP padded rows skipped in grouped routing so rank 0 is no longer a prefill straggler (#56079), hash routing rejected on unsupported monolithic backends (#57867), sampled-token broadcasts skipped under PP for requests leaving the engine (#58542), DBO with DeepEP low-latency profiling (#57502), external LB with replicas sharing nodes (#53743), and no blocking RPC during the engine handshake (#57226) or unbounded draft-token waits (#58779).
+* **Context parallelism**: PCP with DP, EP and MTP (#57075), a DCP target with non-DCP DSpark/DFlash drafts (#56723), DCP sequence lengths without a CPU-GPU sync (#58169), and NIXL DCP pulls across MLA cache regions (#57389).
+* **KV connectors**: NIXL pipeline-parallel push prefill for attention-HMA (#50494) and packed MLA layouts (#50499), transport-failure metrics split from KV expiry (#55854), dead peer state released without waiting for TTL (#50047), expired leases reaped behind a heartbeated head (#58292), push completion restored (#58188), D-side activity recorded (#52245); Mooncake `CUSTOM_MEM_POOL` (#49300), request-level load failures under HMA (#56855, #57174) and bootstrap retries (#58919); MoRIIO hybrid Mamba/KDA state in READ mode (#51052) and a multi-decode routing race (#51681); prefill cache hits in `prompt_tokens_details` (#54222); KV-event publishers bound at port 0 (#55844); KV cache metadata GET restored for external consumers (#56925); partial-block KV events keep every multimodal feature (#58288); saves finalized on steps without a forward (#57775); abort-safe `ExampleHiddenStatesConnector` (#56841); DecodeBench FP8 fills (#58472); a `KvHints` request envelope (#53423); and the AuxOutput connector for routed-expert outputs (#45635, #58150, #58205).
+* **KV offloading**: per-request `max_load_tokens` (#55885), back-pressure detection (#50045), `SimpleCPUOffloadConnector` Prometheus metrics (#57251), non-prefix-cacheable (#56810) and scratch (#57145) groups skipped, replicated layouts for multi-group MLA (#57652), regions of 512 GiB or more registered in chunks (#51081), cgroup memory checked before SHM allocation (#54014), and fixes for cache recency (#51787), MTP-retained sliding windows (#56709), canonical MLA rows (#56799), event metadata (#57453) and ROCm pinned memory (#57160).
+* **HiSparse**: union residency kernel for MTP rows (#59235), MTP acceptance under FULL graphs (#59309), host-backed allocation (#59036), preemption livelock (#59494), KV cache sizing (#59450), host prefix publication (#59007), GPU prefix adoption (#59282), and residency metrics (#58725).
+* **Encoder disaggregation (EPD)**: dynamic EPD proxy with launcher-managed registration (#54176), image requests batched per encoder (#57095), cross-encoder caching through Mooncake (#56242), metadata-only audio inputs (#57887), language-model shards skipped for `--mm-encoder-only` (#58086), EC connector metrics (#54960), and encoder-only fixes (#58490, #58287, #57696).
+
+## Hardware & Performance
+* **NVIDIA**: FlashInfer 0.7.0.post1 (#58069, #59323), DeepGEMM pin bump with SM120 fixes (#57218), Rubin CUDA 13.4 nightly images (#55953), and QuTLASS builds with PyTorch 2.13 (#58173).
+* **AMD ROCm**: AITER v0.1.23 (#56885, #58867), torch 2.13 and Triton 3.8 (#50605, #58006), `triton_kernels` 3.8 MXFP4 MoE for gpt-oss and DeepSeek-V4 (#55934), a ROCR host segfault fixed (#57328); DeepSeek-V4/V4.1 HCA dual-stream (#56853) and layer-aware CSA2 overlap (#57407), FP8 `wo_a` (#54894), inverse RoPE fused into the sparse decode reduce (#57435, #57451) which now emits MXFP8 for a grouped FP8 `wo_a` (#58456), MXFP8 GEMM on native 32x32 scales on gfx950 (#58510), reused top-k ragged metadata (#57434), faster candidate block selection (#58208), Engram tables in host memory (#57491) and Qwen3.8-Flash-Next PLE tables offloaded to host memory (#57497), an opt-in AITER ASM decode route for DCP + speculative decoding (#56861), `get_top_tokens()` on the DeepSeek V4 MTP drafter (#57568), DSpark adaptive verification (#52362), opt-in `VLLM_DSV4_LOGITS_FIX` for sparse-indexer logits on gfx950/gfx942 (#50455), an accuracy revert of #56433 and #51692 (#57132), and clear errors for FSE with DPA+ETP (#57919); Kimi-K3 a4w4 FlyDSL kernels (#53940) with `VLLM_ROCM_USE_AITER_MOE_SITUV2=a16w4|a8w4|a4w4` (#58201), low-concurrency speculative KDA (#58045), sharded latent MoE under EP (#54956) and fewer projection copies (#50592); a ROCm Hy4 path with torch.compile (13x lower decode latency, #57526); MiniMax-M3 AITER QK-norm fusion (#54535), copy-free K/V insert (#56849) and MXFP8 fixes (#53674, #58089); GLM-5.3-Flash boot fixes (#57192, #57252, #57425); AITER QuickReduce + RMSNorm (#48249), BF16 AsyncTP (#58098), static FP8 attention output fusion (#58099), QK-norm/RoPE/KV-cache fusion for MRoPE (#50212), AITER GDN decode for flat layouts (#53623), `wvSplitK` for single-output GEMMs (#53283), 69 fewer copies per decode step on the skinny GEMM path (#58566), tuned GEMM lookup through AITER (#55001), a narrower Triton prefill KV tile on RDNA3/RDNA4 (#58225), staged large pageable H2D copies (#56343), and fixes for MXFP4 MoE padding starving the KV cache (#56359), AITER MLA FP8 prefill OOM (#57923), unquantized cache descales (#56726) and AITER MoE fallbacks (#56590, #57866, #57426). `VLLM_ROCM_USE_AITER_FP4_ASM_GEMM` is restored and off by default (#57055); SWA bounded replay is disabled on ROCm (#57906).
+* **Intel XPU**: PyTorch 2.14 (#56013), XPU graphs on by default (#51600), EPLB (#44987), int8 W8A8 MoE on Triton (#53162), batch invariance (#55881), SYCL rotary embedding (#55721), fused QK RMSNorm + RoPE + gate (decode region 55% faster, #56096), Model Runner V2 sampler (#57277) and PP microbatch control (#55145), `--device-ids` honored (#56015), and device pointer overflow fixed (#54514).
+* **CPU**: FP8 W8A8 linear and MoE for Intel Diamond Rapids (#49942), Arm paged attention up to 25% faster (#56045), Zen DA8W4 int4 for dense and MoE layers (#54024), zentorch SDPA for encoder attention (#54508) and MLA prefill (#54967), FP32 attention sinks (#56252), W8A8 INT8 MoE on POWER (#55316), W4A16 Whisper (#58268), wheels built on Ubuntu 22.04 (glibc 2.34) with AMX-FP8 (#58515), AVX10.2 gated on compiler support (#58133), pre-built Triton CPU (#58140), `--device-memory-utilization` alias (#56547), vLLM Recipes in the CPU image (#58796, #57306), s390x protobuf pin (#54978) and torchcodec video (#58693), and fixes for Ministral FP8 (#56985), FP32 router weights (#56168), zentorch import failures (#54923), macOS multimodal SHM (#57142), CPU affinity per local rank (#53636) and NIXL GDN state layout (#53300).
+
+## Quantization
+* **Humming**: Hadamard transforms and NVFP4/MXFP4/MXFP8 online quantization (#56685), asymmetric wNaM through compressed-tensors (#46528), humming-kernels 0.1.16 (#58054), and Humming in the W4A8 (INT4xFP8) MoE oracle (#58427).
+* **New capabilities**: native Quark W4A16 INT4/UINT4 exports (#48606), opt-in load-time MXFP4 dequantization (#50814), explicit per-token NVFP4 MoE backends (#57176), and a canonical N-first layout for compressed-tensors WNA16 MoE (#52798).
+* **Fixes**: MXFP8 on layers below `mm_mxfp8` shape limits (#54223), online NVFP4 scales on reload (#57954), LM head linear metadata (#58444), and the fused SiLU-mul block-quant path skipped under a SwiGLU clamp (#57984).
+
+## API & Frontend
+* **New options and endpoints**: `--tool-strict-level` (#56268), `response_format` with `tool_choice=auto` (#56086), DeepSeek-V4 FIM completions (#44229), `release_kv_cache_memory()` and `POST /release_kv_cache_memory` (#44890), fixed-token prefill scoring via `prompt_logprob_token_ids` (#54335), per-request speculative decoding metrics in `/inference/v1/generate` (#43310), per-request metrics (#55084) and `cache_write_tokens` (#57222) in the Responses API, Anthropic `thinking` in `/v1/messages` (#58613), streaming reasoning and tool calls from the derender endpoint (#50550) with offloaded detokenization (#57528), `vllm chat` streaming thinking output (#57045), request body debug logging with `--enable-log-requests` (#58163), and only the summary line of config docstrings in `--help` (#57357).
+* **Structured output and parsers**: native Lark grammars in the xgrammar backend (#58321), XGrammar 0.2.7 (#57272), Granite migrated to the streaming Parser Engine (#49648), and fixes for reasoning boundaries (#56635), xgrammar choices with control characters (#48115), list-typed JSON Schema (#48416), empty `structural_tag` (#47450), outlines EOS handling (#58612, #57743), parser-suppressed streaming logprobs (#58583), Inkling tool names after reasoning (#58792), and length `finish_reason` for truncated streaming tool calls (#46303).
+* **OpenAI, Anthropic and Harmony compatibility**: reasoning token counts for Harmony, DeepSeek-V3 and Step3 (#58626) and per Responses tool round (#58927), Harmony `max_output_tokens` in the tool loop (#58551), batched chat completions using the adjusted requests (#58929, #58958), a fresh parser per choice (#58939), deferred reasoning recounts (#56067), Responses MCP cleanup (#56988) and image `detail` default (#57241), Anthropic inline system detection (#58754) and disabled thinking with P/D (#58786), stop strings rejected on `--tokens-only` servers (#57058), invalid `prompt_embeds` returning 400 (#55451, #57006), prompts bounded after multimodal expansion (#57076), `--override-generation-config` penalties (#50769), Hub revisions (#56092, #57461), full logprobs in token-in/token-out responses (#58488), generative scoring cancellation (#57729, #58788), gRPC keepalive pings (#55102), and `run-batch` diarized transcriptions (#57948).
+* **Pooling**: chunked embedding padding (#56505) and normalization (#57498), reranker tokenization with document limits (#57666), and BERT-family heads kept for raw logits (#57664).
+* **Rust frontend**: `--hf-overrides` (#56931), `--sse-keep-alive-interval` (#58306), custom chat roles (#58311), MiMo V2.5 parsers (#57933), normalized reasoning controls (#56998), parser-owned output grammars (#55269, #57340), sampling masks over gRPC (#56777), local DP size in gRPC metadata with `vllm-proto` 0.3.0 (#57116, #57233), a per-request preemption histogram (#57033), lock-free histograms (#58574), Nemotron-H vision context (#57634), model-owned vision processors (#58109), an `mm-processor` benchmark (#51922, #58084, #58378), unsupported serve args recognized (#58330), NaN logprobs no longer killing the engine client (#51026), appended `EngineCoreOutput` fields accepted (#56533), and `vllm-rs` on `PATH` in the CUDA image (#57606).
+* **Benchmarks**: an `openai-responses` backend for `vllm bench serve` (#54628) and `model_id` in latency/throughput JSON (#58112).
+
+## Security
+* Per-request `mm_processor_kwargs` and `media_io_kwargs` are rejected by default; trusted deployments opt in with `--trust-request-mm-kwargs` (#58830).
+* Prefix-cache block hashes tag extra keys by source (#51899) and include the LoRA path (#59335); multimodal hash input is framed (#54283) and incremental block hashing covers every overlapping feature (#51694).
+* Fresh multimodal payloads take precedence over a stale receiver cache (#57833), and encoder-cache hits with mismatched embedding counts are rejected (#57696).
+* `min_tokens` above the filled `max_tokens` default is rejected instead of wedging the engine (#57731); message sanitization filters upper-case memory addresses (#58832); LoRA adapters named after a served model are rejected (#59286).
+
+## Dependencies
+* FlashInfer 0.7.0.post1 (#58069, #59323), Transformers 5.17.0 (#56108) with an upper bound in requirements (#59614), XGrammar 0.2.7 (#57272), `oss-harmony` replacing `openai-harmony` (#55128), DeepGEMM fork pin bump (#57218), FlashKDA bump (#58846), and humming-kernels 0.1.16 (#58054).
+* CUDA 12 images use LMCache 0.4.4 and CuPy CUDA 12 (#57945); a separately tagged zstd Docker Hub image (`-x86_64-zstd`) is published (#55608); Rubin CUDA 13.4 nightly images (#55953).
+* ROCm: AITER v0.1.23 (#58867), torch 2.13, Triton 3.8 (#50605, #58006), patched ROCR (#57328), LMCache OpenTelemetry pins (#59056).
+* XPU: PyTorch 2.14 (#56013). CPU: wheels built on Ubuntu 22.04 (#58515), pre-built Triton CPU (#58140).
+
+## Breaking Changes & Deprecations
+* Per-request `mm_processor_kwargs` and `media_io_kwargs` now return an error unless the server is started with `--trust-request-mm-kwargs`; server-level `--mm-processor-kwargs` / `--media-io-kwargs` and offline `LLM` are unchanged (#58830).
+* `tokenizer_mode="slow"` was removed; it already behaved like `"hf"` under Transformers v5 (#58545).
+* `--enable-mamba-fine-grained-prefix-cache` was renamed to `--enable-mamba-shared-prefix-checkpoint` (#57382).
+* Online quantization through `quantization="fp8"` now redirects to the `fp8_per_tensor` online shorthand (#53585); Quark-specific silent online MXFP4 quantization was removed in favor of the online quantization API (#51800).
+* The AllSpark INT8 W8A16 GEMM backend was removed (#58001). The `return_assistant_tokens_mask` option of `/render` and the `assistant_tokens_mask` response field were removed (#57520).
+* `VLLM_PLE_CPU_OFFLOAD` was removed; use `--engram-config` (#57937). `VLLM_XPU_ENABLE_XPU_GRAPH` was removed and XPU graphs are on by default (#51600).
+* The comma-separated form of `--collect-detailed-traces` was removed; use the list syntax (#55702).
+* New defaults: `--enforce-eager` also disables JIT kernel warmup unless fault tolerance is enabled (#58197, #58593); `VLLM_BATCH_INVARIANT=1` uses breakable CUDA graphs without torch.compile (#57586) and disables sequence parallelism and async TP (#56377); DeepSeek-V4.1 SWA bounded replay is on (#56227) except on ROCm (#57906); Engram host tables are shared across co-located DP replicas when possible (#57651); FlashMLA mega attention is the DeepSeek-V4.1 default on SM100 (#56935); the AITER w4a4 ASM GEMM is off by default on ROCm (#57055).
+* Model Runner V1 + PP > 1 + async scheduling + structured output is now rejected at startup (#56250); `json_object` is rejected at validation with the outlines backend (#57743).
+* `transformers` now has an upper bound in requirements (#59614).
+
+## New Contributors
+* @0z5a made their first contribution in https://github.com/vllm-project/vllm/pull/56441
+* @200lz made their first contribution in https://github.com/vllm-project/vllm/pull/55528
+* @AARONKANG04 made their first contribution in https://github.com/vllm-project/vllm/pull/48521
+* @acsoto made their first contribution in https://github.com/vllm-project/vllm/pull/57314
+* @adenzhou1350 made their first contribution in https://github.com/vllm-project/vllm/pull/56882
+* @adtygan made their first contribution in https://github.com/vllm-project/vllm/pull/56325
+* @amasen02 made their first contribution in https://github.com/vllm-project/vllm/pull/56576
+* @amd-sriram made their first contribution in https://github.com/vllm-project/vllm/pull/53792
+* @andrewor14 made their first contribution in https://github.com/vllm-project/vllm/pull/52956
+* @Ankit-Jaiswal-AMD made their first contribution in https://github.com/vllm-project/vllm/pull/56252
+* @baljinderhothi-cohere made their first contribution in https://github.com/vllm-project/vllm/pull/58792
+* @BaoYunkai made their first contribution in https://github.com/vllm-project/vllm/pull/57568
+* @blipbyte made their first contribution in https://github.com/vllm-project/vllm/pull/55612
+* @BPbruce made their first contribution in https://github.com/vllm-project/vllm/pull/46466
+* @chuan932 made their first contribution in https://github.com/vllm-project/vllm/pull/55330
+* @coderfornow made their first contribution in https://github.com/vllm-project/vllm/pull/54978
+* @CZT0 made their first contribution in https://github.com/vllm-project/vllm/pull/51694
+* @devtyagi3909 made their first contribution in https://github.com/vllm-project/vllm/pull/56635
+* @dilberx made their first contribution in https://github.com/vllm-project/vllm/pull/57076
+* @divyvasal made their first contribution in https://github.com/vllm-project/vllm/pull/49845
+* @equiluxe made their first contribution in https://github.com/vllm-project/vllm/pull/48115
+* @errmakov made their first contribution in https://github.com/vllm-project/vllm/pull/58583
+* @farzad-elastix made their first contribution in https://github.com/vllm-project/vllm/pull/56168
+* @freyfwt made their first contribution in https://github.com/vllm-project/vllm/pull/51367
+* @garrett361 made their first contribution in https://github.com/vllm-project/vllm/pull/57984
+* @git-jxj made their first contribution in https://github.com/vllm-project/vllm/pull/55702
+* @gokay-ai made their first contribution in https://github.com/vllm-project/vllm/pull/58292
+* @gongwei-130 made their first contribution in https://github.com/vllm-project/vllm/pull/55102
+* @haosenwang1018 made their first contribution in https://github.com/vllm-project/vllm/pull/58288
+* @harshit-sarvam made their first contribution in https://github.com/vllm-project/vllm/pull/56034
+* @HieDean made their first contribution in https://github.com/vllm-project/vllm/pull/57356
+* @huthvincent made their first contribution in https://github.com/vllm-project/vllm/pull/48419
+* @i-m-aditya made their first contribution in https://github.com/vllm-project/vllm/pull/57447
+* @jayzuccarelli made their first contribution in https://github.com/vllm-project/vllm/pull/58557
+* @jiakangkangfuzhe made their first contribution in https://github.com/vllm-project/vllm/pull/55146
+* @jiangLLM made their first contribution in https://github.com/vllm-project/vllm/pull/57487
+* @jiaran-king made their first contribution in https://github.com/vllm-project/vllm/pull/56242
+* @jz-yolo made their first contribution in https://github.com/vllm-project/vllm/pull/58884
+* @kaijunli-infr made their first contribution in https://github.com/vllm-project/vllm/pull/52101
+* @karya0 made their first contribution in https://github.com/vllm-project/vllm/pull/57453
+* @KEYS-A15 made their first contribution in https://github.com/vllm-project/vllm/pull/57528
+* @kwen2501 made their first contribution in https://github.com/vllm-project/vllm/pull/51520
+* @laulopezreal made their first contribution in https://github.com/vllm-project/vllm/pull/57189
+* @lijipeng787 made their first contribution in https://github.com/vllm-project/vllm/pull/58225
+* @limitmhw made their first contribution in https://github.com/vllm-project/vllm/pull/48606
+* @linnea-lin-00638949 made their first contribution in https://github.com/vllm-project/vllm/pull/47450
+* @LinzeShi made their first contribution in https://github.com/vllm-project/vllm/pull/57347
+* @mahird3 made their first contribution in https://github.com/vllm-project/vllm/pull/57708
+* @melcheikh made their first contribution in https://github.com/vllm-project/vllm/pull/48956
+* @MichaelLapshin made their first contribution in https://github.com/vllm-project/vllm/pull/57396
+* @mjkvaak-amd made their first contribution in https://github.com/vllm-project/vllm/pull/48249
+* @mkunredd made their first contribution in https://github.com/vllm-project/vllm/pull/58244
+* @mmastrac made their first contribution in https://github.com/vllm-project/vllm/pull/57414
+* @mustafayildirim made their first contribution in https://github.com/vllm-project/vllm/pull/57252
+* @Navjot10 made their first contribution in https://github.com/vllm-project/vllm/pull/55390
+* @olka-amd made their first contribution in https://github.com/vllm-project/vllm/pull/51065
+* @PeganovAnton made their first contribution in https://github.com/vllm-project/vllm/pull/55128
+* @Rakul-Chauhan made their first contribution in https://github.com/vllm-project/vllm/pull/54967
+* @Ricardo-M-L made their first contribution in https://github.com/vllm-project/vllm/pull/52580
+* @Ronnie-Rui made their first contribution in https://github.com/vllm-project/vllm/pull/54581
+* @RyanMa29 made their first contribution in https://github.com/vllm-project/vllm/pull/57295
+* @sammaji made their first contribution in https://github.com/vllm-project/vllm/pull/58626
+* @sawsa307 made their first contribution in https://github.com/vllm-project/vllm/pull/56497
+* @ScarWar made their first contribution in https://github.com/vllm-project/vllm/pull/49435
+* @sdougbrown made their first contribution in https://github.com/vllm-project/vllm/pull/49819
+* @semerandre made their first contribution in https://github.com/vllm-project/vllm/pull/55557
+* @sergiofigueras made their first contribution in https://github.com/vllm-project/vllm/pull/57948
+* @shallow10 made their first contribution in https://github.com/vllm-project/vllm/pull/58336
+* @SIDDARTHAREDDY8 made their first contribution in https://github.com/vllm-project/vllm/pull/57743
+* @simpleqt made their first contribution in https://github.com/vllm-project/vllm/pull/55936
+* @tangzzycc made their first contribution in https://github.com/vllm-project/vllm/pull/53283
+* @touch869 made their first contribution in https://github.com/vllm-project/vllm/pull/55844
+* @tripathiarpan20 made their first contribution in https://github.com/vllm-project/vllm/pull/57140
+* @twu3202 made their first contribution in https://github.com/vllm-project/vllm/pull/57769
+* @ubwzwd made their first contribution in https://github.com/vllm-project/vllm/pull/55931
+* @UNIDY2002 made their first contribution in https://github.com/vllm-project/vllm/pull/58370
+* @valarLip made their first contribution in https://github.com/vllm-project/vllm/pull/58659
+* @vcave made their first contribution in https://github.com/vllm-project/vllm/pull/51681
+* @voidxb made their first contribution in https://github.com/vllm-project/vllm/pull/49300
+* @vorapolsiloai made their first contribution in https://github.com/vllm-project/vllm/pull/50212
+* @vschandramourya made their first contribution in https://github.com/vllm-project/vllm/pull/58779
+* @weitliao made their first contribution in https://github.com/vllm-project/vllm/pull/54535
+* @wenjinhust made their first contribution in https://github.com/vllm-project/vllm/pull/51366
+* @Willian-Zhang made their first contribution in https://github.com/vllm-project/vllm/pull/58720
+* @wtdcode made their first contribution in https://github.com/vllm-project/vllm/pull/56268
+* @xinnywinne made their first contribution in https://github.com/vllm-project/vllm/pull/55084
+* @YannikHinteregger made their first contribution in https://github.com/vllm-project/vllm/pull/50047
+* @YashasviChaurasia made their first contribution in https://github.com/vllm-project/vllm/pull/58112
+* @Yatimai made their first contribution in https://github.com/vllm-project/vllm/pull/43462
+* @YCH188 made their first contribution in https://github.com/vllm-project/vllm/pull/57190
+* @yousafshah made their first contribution in https://github.com/vllm-project/vllm/pull/55957
+* @ys2025-AI made their first contribution in https://github.com/vllm-project/vllm/pull/56841
+* @yuchenwang3 made their first contribution in https://github.com/vllm-project/vllm/pull/54699
+* @zhecfy made their first contribution in https://github.com/vllm-project/vllm/pull/58316
+* @Zoe923 made their first contribution in https://github.com/vllm-project/vllm/pull/53864
+* @Zyann7 made their first contribution in https://github.com/vllm-project/vllm/pull/57784
+
+## Contributors
+@AndreasKaratzas, @khluu, @mgoin, @njhill, @BugenZhao, @stefankoncarevic, @robertgshaw2-redhat, @taneem-ibrahim, @Thangnguyenvn98, @hmellor, @Juntian777, @WoosukKwon, @yewentao256, @gau-nernst, @mmastrac, @LucasWilkinson, @Fangzhou-Ai, @NickLucche, @aoshen02, @JaredforReal, @mawong-amd, @DarkLight1337, @zyongye, @sfeng33, @vllm-agent, @okorzh-amd, @ZJY0516, @shen-shanshan, @gty111, @Isotr0py, @djramic, @zixi-qi, @wzhao18, @alec-flowers, @aarushjain29, @Rohan138, @yma11, @mjkvaak-amd, @ivanium, @yisustc, @MatthewBonanni, @wangxiyuan, @reidliu41, @chaojun-zhang, @shaohuaxi, @gcanlin, @ganeshr10, @linitra24, @yzong-rh, @divakar-amd, @atalman, @ShuoleiWang, @simondanielsson, @rasmith, @chaunceyjiang, @micah-wil, @liusy58, @LioEinaudi, @louie-tsai, @LiuYinfeng01, @jeejeelee, @zhenwei-intel, @jperezdealgaba, @hlin99, @zxd1997066, @lucamotz, @lucifer1004, @eopXD, @ashraf-bhuiyan, @TheEpicDolphin, @JulienDarve, @mayuyuace, @danisereb, @bigPYJ1151, @Etelis, @JohnQinAMD, @jiangkuaixue123, @tianmu-li, @akii96, @vllmellm, @RyanMa29, @afriedri, @elvircrn, @mustafayildirim, @yuzhouo7, @wtdcode, @biswapanda, @adtygan, @hickeyma, @itayalroy, @jiangLLM, @Hotragn, @faaany, @xhx1022, @jinzhen-lin, @sheralskumar, @Wauplin, @matteso1, @wjabbour, @Sunt-ing, @arpera, @hclsys, @S1ro1, @HDCharles, @fxmarty-amd, @liuzijing2014, @UNIDY2002, @samuelkim7, @markmc, @errmakov, @zhejiangxiaomai, @KernelClint, @i-m-aditya, @ColinZ22, @ppalanga, @franciscojavierarceo, @maithilijoshi20, @mfylcek, @almersawi, @albertoperdomo2, @0z5a, @jacklin78911-collab, @lzhan011, @Alex-ai-future, @freyfwt, @ZhengGong-amd, @mindungil, @amasen02, @devtyagi3909, @wenjinhust, @jbyczkow, @AdaAibaby, @harshit-sarvam, @vineethsaivs, @tripathiarpan20, @sashko-zakharchuk, @semerandre, @rebklee, @git-jxj, @cjackal, @xinnywinne, @andrewor14, @kyleliang-nv, @thillai-c, @dongluw, @ChuanLi1101, @omerpaz95, @jiaran-king, @liuyao0322, @coderfornow, @drakosha, @laulopezreal, @melcheikh, @shantipriya-amd, @Rukhaiya2004, @yuchenwang3, @lxy-alexander, @tlrmchlsmth, @HieDean, @Zoe923, @YCH188, @amd-sriram, @andylolu2, @MicheleCampi, @sdougbrown, @vMaroon, @shimib, @andakai, @thegoldenflow, @Levius-Fubuki, @olka-amd, @limitmhw, @yuwenzho, @adenzhou1350, @Josephasafg, @kylesayrs, @jdebache, @kaijunli-infr, @afierka-intel, @frida-andersson, @bnellnm, @ys2025-AI, @waizuichougou, @touch869, @rjrock, @sawsa307, @pavelzak, @ScarWar, @fadara01, @Mi-Jiazhi, @dilberx, @mahird3, @Zyann7, @roikoren755, @YukioZzz, @Ronnie-Rui, @acsoto, @czhu-cohere, @twu3202, @oliverholworthy, @weitliao, @sergiofigueras, @tuukkjs, @Sip4818, @karen-sy, @garrett361, @GirasoleY, @Navjot10, @taking-lying-flat, @wangyicong52, @majunze2001, @gangula-karthik, @ubwzwd, @linnea-lin-00638949, @kushaldabbe, @Yatimai, @guanxingithub, @jiakangkangfuzhe, @MichaelLapshin, @jhu960213, @tpopp, @mganczarenko, @qiching, @tangzzycc, @lijipeng787, @nikhilkulkarni1755, @QwertyJack, @Ankit-Jaiswal-AMD, @vorapolsiloai, @Dao007forever, @BPbruce, @divyvasal, @simpleqt, @blipbyte, @jhaotingc, @karya0, @farzad-elastix, @grYe99, @talorabr, @jackLei0901, @Yejing-Lai, @Priyjain-amd, @KEYS-A15, @LinzeShi, @bohnstingl, @nightcityblade, @vcave, @AARONKANG04, @CZT0, @snadampal, @microslaw, @haosenwang1018, @netanel-haber, @khushali9, @sammaji, @SIDDARTHAREDDY8, @100milliongold, @gongwei-130, @fululi12, @mkunredd, @mrodden, @noooop, @valarLip, @shallow10, @200lz, @askliar, @chuan932, @Monishver11, @YashasviChaurasia, @gokay-ai, @jiacao-amd, @yousafshah, @positive666, @TQCB, @lk-chen, @Ricardo-M-L, @huthvincent, @baljinderhothi-cohere, @vschandramourya, @kwen2501, @xiao-llm, @zhecfy, @Willian-Zhang, @simon-veitner-redhat, @mevince, @voidxb, @hongxiayang, @YannikHinteregger, @V-3604, @Rakul-Chauhan, @frankwang28, @LCAIZJ, @PeganovAnton, @jz-yolo, @QHarshil, @R3hankhan123, @jayzuccarelli, @yannicks1, @BaoYunkai, @xaguilar-amd, @xiaohuguo2023, @wxsIcey, @harshaladhav-amd, @varun-sundar-rabindranath, @kliuae, @LostFox11
+
+
+[6] huggingface/transformers v5.19.0 (2026-10-06)
+https://github.com/huggingface/transformers/releases/tag/v5.19.0
+# Release v5.19.0
+
+
+## New Model additions
+
+### EmbeddingGemma2
+
+<img width="2716" height="2308" alt="image" src="https://github.com/user-attachments/assets/84734e74-163d-4d12-b166-ffcf6749d563" />
+
+EmbeddingGemma 2 is a multimodal embedding model from Google built on the Gemma 4 architecture. It encodes text, images, audio, and video, individually or combined in one input, into a shared 768-dimensional vector space for cross-modal retrieval, semantic similarity, clustering, and classification. It uses Matryoshka Representation Learning, so embeddings can be truncated to 512, 256, or 128 dimensions. It also offers configurable visual and video token budgets, and unused vision or audio towers can be disabled at load time to save memory.
+
+**Links:** [Documentation](https://huggingface.co/docs/transformers/main/en/model_doc/embedding_gemma2)
+* Smthn smthn (#49364) by @vasqu in [#49364](https://github.com/huggingface/transformers/pull/49364)
+
+
+
+## Breaking changes
+
+All MoE models whose routers compute logits now return them when `output_router_logits=True`, following the Qwen3-MoE pattern (a `router_logits` recorder on the base model, `MoeModelOutputWithPast` from the backbone, and a MoE causal LM output from the head), so code that relied on the previous outputs or their absence should read the router logits from these output classes.
+* 🚨 Return router logits from every MoE model that computes them (#48920) by @qgallouedec
+
+`Owlv2ForObjectDetection.embed_image_query` now selects the query box with the highest objectness score, as in the original OWLv2 notebook, instead of the OWL-ViT heuristic, so image-guided query embeddings and detections may differ from earlier releases.
+* 🚨 Select the OWLv2 image query by objectness (#49200) by @qgallouedec
+
+The `"paged|"` prefix for SDPA and flash attention implementations is deprecated, so users should set the regular attention implementation (e.g. `sdpa` or `flash_attention_2`) for continuous batching instead of `paged|sdpa` or `paged|flash_attention_2`.
+* 🚨 Attention 🚨 Deprecate "paged|" prefix for SDPA and flash  (#49112) by @remi-or
+
+The regular flash and SDPA attention functions (`flash_attention.py`, `sdpa_attention.py`) now support continuous batching directly, and `"paged|..."` implementations for these are redirected to them, while eager still requires the `"paged|eager"` prefix.
+* 🚨 Attention 🚨 Make regular attention support CB (#49101) by @remi-or
+
+In continuous batching, the cache update for the index-based and block-table paths is now fused into a single call, which slightly changes the cache update function's behavior and affects any custom code that calls the separate update paths.
+* 🚨 [CB] 🚨 Fuse update for index and block table path (#49088) by @remi-or
+
+Continuous batching internals changed in preparation for removing `"paged"`: `max
+* 🚨 [CB] 🚨 Little fixes before removing "paged" (#49069) by @remi-or
+
+
+
+## Parallelization
+
+Expert parallelism gains a token-dispatch implementation, selected via the new `ep_dispatch_experts` plan rule and now the default for Qwen3 MoE and Mellum, which removes the requirement that EP size equal TP size. The `Trainer` was also adapted to work with expert parallelism, and the docs now note that PEFT adapters support tensor parallelism. A CI-related fix for pipeline-parallel chart2table inference was also included.
+
+
+* [`distributed`]: adapt Trainer to work Expert Parallel (#48873) by @3outeille in [#48873]
+* [`distributed`] Add expert-parallel token dispatch, default for Qwen3 MoE (#48865) by @3outeille in [#48865]
+* Fix pp chart2table inference (#49225) by @zucchini-nlp in [#49225]
+* [docs] TP for PEFT adapters (#49060) by @stevhliu in [#49060]
+
+
+## Cache
+
+This release fixes quantized cache handling: `generate` no longer mutates the user's `cache_config`, and `QuantizedLayer.reorder_cache` is repaired. It also adds per-layer cache configuration, so `DynamicCache` and `StaticCache` initialize each layer from its own config (sliding window, attention chunk size, conv states, and attention head counts) to better support heterogeneous models. Separately, the deprecation cycle on mask and cache
+
+
+* Fix quantized cache (#48700) by @jiqing-feng in [#48700]
+* [CI] check_bad_commit: use EFS cache to avoid Xet FUSE OOM (exit 137) (#49273) by @ydshieh in [#49273]
+* Support per-layer cache configuration (#48178) by @eladsegal in [#48178]
+* Remove deprecation cycle on mask and cache (#49231) by @Cyrilvallez in [#49231]
+
+
+## Bugfixes and improvements
+
+* Revert "[CI] Temporarily disable AMD scheduled CI trigger" (#49271) (#49362) by @ydshieh in [#49362]
+* ALM testx fIxing... (#49355) by @zucchini-nlp in [#49355]
+* Fix DataCollatorForLanguageModeling ignoring seed=0 (#49349) by @akanyaani in [#49349]
+* Fix explicit kernelization modes for evaluation models (#49339) by @DimensionSTP in [#49339]
+* fix(cohere_compass): add video to input_modalities (#49320) (#49323) by @destopianpirate in [#49323]
+* GPT-OSS: read the clamped SwiGLU's alpha and limit from the config (#49346) by @IlyasMoutawwakil in [#49346]
+* [`distributed`] Default MoE `ep_plans` to token dispatch (#49160) by @3outeille in [#49160]
+* Move CI to Python 3.11, with the version set in `.python-version` (#49311) by @tarekziade in [#49311]
+* Bump doc-builder main docs workflow pin (#49350) by @paulinebm in [#49350]
+* [`distributed`] decoupled tp_plan and ep_plan (#48859) by @3outeille in [#48859]
+* [`distributed`] Add dense and expert device mesh (#48857) by @3outeille in [#48857]
+* Bump doc-builder workflow pin (#49342) by @paulinebm in [#49342]
+* Allow registering new processing backends (#48984) by @zucchini-nlp in [#48984]
+* Fix WatermarkDetector repeated-ngram counting (#49315) by @LE0-Lin in [#49315]
+* Fix minicpm 4.6V video batching and CI (#49259) by @zucchini-nlp in [#49259]
+* remove colwise_gather_output for lm_head for DeepseekV4  (#49314) by @3outeille in [#49314]
+* Fix the `labels` docstring of CLIPSegForImageSegmentation (#49001) by @qgallouedec in [#49001]
+* [CI] Temporarily disable AMD scheduled CI trigger (#49271) by @ydshieh in [#49271]
+* Remove the unused pandas entry from setup.py deps (#49329) by @tarekziade in [#49329]
+* Fix run_glue.py label ids becoming strings with pandas>=3 (#49326) by @tarekziade in [#49326]
+* [Fix] Remove old test file with two ancient tests (#49280) by @remi-or in [#49280]
+* Fix chunked prefill with multi-axis position ids (Qwen3-VL) (#49319) by @dacorvo in [#49319]
+* Why override when you can fix in `Mixin` (#49105) by @zucchini-nlp in [#49105]
+* Do RoPE with mul instead of matmul (#49265) by @Rocketknight1 in [#49265]
+* Deprecated pipelines should redirect; removed pipelines should raise (#49308) by @LysandreJik in [#49308]
+* Enable model test on upcoming `torch_tpu` backend (#49207) by @tengomucho in [#49207]
+* Fix encoder repetition penalty source rows after batch expansion (#49262) by @gitedmond in [#49262]
+* Preserve masked EOS scores in exponential decay length penalty (#49260) by @gitedmond in [#49260]
+* [CI] Avoid fetching all artifacts when only specific ones are needed (#49282) by @ydshieh in [#49282]
+* Revert "[CI] ssh-runner: add optional cache_type input to switch between bucket and EFS runners (#49159)" (#49270) by @ydshieh in [#49270]
+* Add Trainer.loss_is_scaled_for_ga to declare whether compute_loss already scales for gradient accumulation (#49240) by @qgallouedec in [#49240]
+* fix precomputed flash kwargs clashing (#47928) by @IlyasMoutawwakil in [#47928]
+* Reapply modular examples (#49230) by @Cyrilvallez in [#49230]
+* Remove some stuff that does not exist (#49232) by @Cyrilvallez in [#49232]
+* Remove rotaries deprecation cycle (#49228) by @Cyrilvallez in [#49228]
+* [`GTE`] Add memory mixin (#49234) by @vasqu in [#49234]
+* [CB] Make CB more device agnostic and add support for XPU (#49156) by @remi-or in [#49156]
+* correct final metrics due to resuming from checkpoint (#49208) by @SunMarc in [#49208]
+* [ESM/Persimmon/NllbMoe/ESMFold] use safetensors repos to fix Xet FUSE SIGBUS/IOError on bucket CI runners (#49194) by @ydshieh in [#49194]
+* Dev update (#49212) by @vasqu in [#49212]
+
+## Significant community contributions
+
+The following contributors have made significant changes to the library over the last release:
+
+* @vasqu
+    * Smthn smthn (#49364)
+    * [`GTE`] Add memory mixin (#49234)
+    * Dev update (#49212)
+* @remi-or
+    * [Fix] Remove old test file with two ancient tests (#49280)
+    * [CB] Make CB more device agnostic and add support for XPU (#49156)
+    * 🚨 Attention 🚨 Deprecate "paged|" prefix for SDPA and flash  (#49112)
+    * 🚨 Attention 🚨 Make regular attention support CB (#49101)
+    * 🚨 [CB] 🚨 Fuse update for index and block table path (#49088)
+    * [Refactor] Make some flash-attention utils more readable (#49071)
+    * 🚨 [CB] 🚨 Little fixes before removing "paged" (#49069)
