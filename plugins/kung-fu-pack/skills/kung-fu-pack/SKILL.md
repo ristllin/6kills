@@ -95,7 +95,8 @@ Create the pack workspace. Fan out exploration, one worker per source or subtopi
 remit and instructed to return a findings file saved into `research/` with a `SOURCES` section
 (URLs, IDs, file:line). If your harness supports subagents, run them in parallel (Claude Code: the
 Agent tool in a single message; Vibe/Codex: their subagent mechanism); otherwise do focused
-sequential passes, one source at a time. Typical lanes:
+sequential passes, one source at a time. Either way, each pass ends with its findings file written
+to `research/`: the cache is what later runs reuse and what the Verify step spot-checks. Typical lanes:
 - **Notion**: open the authoritative pages deeply (not just titles); capture IDs and last-edited
   dates; mark authoritative vs stale/draft/stub.
 - **Linear / tracker**: pull live initiatives, projects, milestones, key issues; record IDs and
@@ -165,7 +166,7 @@ with relative links; **preview server** = serve the directory so the index and s
 Verify every inter-page link resolves.
 
 ### 7. Verify
-Re-open or fetch the result: diagrams render, sections hold, tables intact. Confirm `plan.md` exists. **Count
+Re-open or fetch the result: diagrams render, sections hold, tables intact. Confirm `plan.md` exists and `research/` holds a findings file per source. **Count
 the words of every page: a single page over ~1500 words (3 A4 pages) is out of bounds**; cut it, or
 nest it if the material is genuinely broad. For a nested pack, the index stays within that budget.
 For a show-it target, confirm the main page (the index, not the usage sub-page) has a section titled
