@@ -2,7 +2,7 @@
 
 A public [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) **plugin marketplace**.
 
-Seven plugins:
+Eight plugins:
 
 | Plugin | What it is |
 |--------|------------|
@@ -13,6 +13,7 @@ Seven plugins:
 | 🌀 [**collapse**](plugins/collapse) | Closing bracket to a fan-out of autonomous work. Converges many parallel lanes (worktrees, branches, sessions) into one clean `main`: waits out lanes that are still moving, excludes stalled ones, merges every finished lane with a green check after each merge, refracts the combined diff through prism, then either holds with a decision report or ships a staged clean-slate release and QAs the live deployment. Exposes `/collapse`. |
 | 📥 [**linkedin-triage**](plugins/linkedin-triage) | Auto-triage your unread LinkedIn DMs, sandboxed in a throwaway Docker container. Reads DMs through the [Beeper](https://beeper.com) Desktop app, categorizes each one, replies from templates you control, and leaves personal/strategic chats unread. The AI sees only the Beeper tools and your rules file. Exposes `/linkedin-triage`. |
 | 🥋 [**kung-fu-pack**](plugins/kung-fu-pack) | Turns a target (a system, codebase, account, set of engagements, or topic) into a tight briefing page. A one-time interview detects which sources you can reach (Notion, Linear, local code, web) and saves your defaults. Each run then fans out parallel research into a cached workspace, pulls live data, generates real diagrams, shows products in action (a carefully chosen example plus real screenshots or output), and publishes to Notion, HTML, Markdown, or a local server. Large topics become an index plus linked sub-pages. Every claim carries a lead. Also installs on Mistral Vibe and OpenAI Codex. Exposes `/kung-fu-pack` and `/kung-fu-pack-init`. |
+| 📷 [**camera-shoot**](plugins/camera-shoot) | Give your agent eyes: it takes photos with your machine's cameras and looks at them. Ships with an empty config: on first use the agent discovers the cameras and capture tool, sorts out camera permissions, asks you two setup questions (default camera, what it'll be looking at), verifies a test shot, and saves the answers for later runs. Works in Claude Code and other skill-loading harnesses like Mistral Vibe. Exposes `/camera-shoot`. |
 
 ## Install
 
@@ -25,6 +26,7 @@ Seven plugins:
 /plugin install collapse@6kills
 /plugin install linkedin-triage@6kills
 /plugin install kung-fu-pack@6kills
+/plugin install camera-shoot@6kills
 ```
 
 Or point at a local clone during development:
@@ -164,11 +166,24 @@ On Mistral Vibe or OpenAI Codex, install the portable skill with
 `bench/` directory holds the synthesis benchmark used to hill-climb the skill. Full guide:
 [plugins/kung-fu-pack](plugins/kung-fu-pack).
 
+## camera-shoot: quick start
+
+```
+/camera-shoot                 # first run: discovers cameras, asks setup questions, saves config
+/camera-shoot the bench cam   # later runs: shoot straight away, pick a camera by name or label
+/camera-shoot setup           # rerun setup
+```
+
+Or just ask: "take a photo of my desk". Setup answers live in the skill's `config.json`, with a
+backup at `~/.config/camera-shoot/config.json`. On macOS, if your agent host can't get a camera
+grant, the skill builds a small helper app and asks you to click OK once. Details:
+[plugins/camera-shoot](plugins/camera-shoot).
+
 ## Repo layout
 
 ```
 6kills/
-├── .claude-plugin/marketplace.json   # marketplace manifest (lists all seven plugins)
+├── .claude-plugin/marketplace.json   # marketplace manifest (lists all eight plugins)
 └── plugins/
     ├── prism/                        # orchestrator command + skill, 5 lens skills, 7 sec agents
     ├── deep-research/                # /research command + deep-researcher agent + Tavily MCP
@@ -176,7 +191,8 @@ On Mistral Vibe or OpenAI Codex, install the portable skill with
     ├── orchestrate/                  # /orchestrate command + orchestrate program skill (opening bracket)
     ├── collapse/                     # /collapse command + collapse convergence/release skill (closing bracket)
     ├── linkedin-triage/              # /linkedin-triage command + Docker sandbox (Beeper DM triage)
-    └── kung-fu-pack/                 # /kung-fu-pack + init, portable skill, Vibe/Codex installer, bench/
+    ├── kung-fu-pack/                 # /kung-fu-pack + init, portable skill, Vibe/Codex installer, bench/
+    └── camera-shoot/                 # /camera-shoot command + self-configuring camera skill + macOS helper
 ```
 
 ## Authoring notes
