@@ -24,7 +24,9 @@ If you cannot write this sentence, the research is not done; go back to the sour
 List 2 or 3 candidate examples under `## Example choice` in `plan.md` and score each:
 - **Load-bearing:** remove the mechanism and the example's outcome changes. If it would look the
   same on a competitor or a toy, reject it.
-- **Readable:** a peer gets it in under a minute: about 15 lines of code or output, or one screen.
+- **Readable:** a peer gets it in under a minute: about 15 lines of code or output, and never more
+  than 25 lines in one block. A real file that runs longer gets trimmed (imports, blank lines, the
+  `__main__` guard, repeated cases), marked "trimmed", with the full file behind its lead.
 - **Honest:** real (from docs, a public repo, a demo, captured output) with a lead, or crafted from
   documented behavior and labelled as such.
 - **Not category noise:** no setup, install, login, or hello-world that every tool in the category shares.
@@ -72,6 +74,16 @@ contrast shows what the mechanism buys, which a single happy-path run does not.
   wide and about 500 KB (`sips -Z 1600` on macOS, ImageMagick `convert -resize 1600x`, or Pillow;
   or open it in headless Chrome at a fixed window size and screenshot that), Read only the small
   PNG, and delete the raw download. Large images also bloat the self-contained HTML.
+- **Pick a settled frame, not the first one.** A demo GIF or video spends many frames in motion: a
+  loading spinner, a panel sliding in, a zoom or magnifier overlay, a cursor mid-click, an empty
+  pane before the results arrive. Sample about six frames (evenly spaced, the last one included)
+  into one small contact sheet, look at the sheet, and keep the frame that shows the result itself:
+  findings listed, the detail pane filled, the fix diff visible. Reject any frame with a spinner,
+  a "loading" or empty state, a transition, or an overlay covering the content. Recipe:
+  `render-and-publish.md`.
+- **The visual matches the page.** Prefer the frame or image that shows the same kind of result as
+  the chosen example (a taint-flow example wants a finding with its data flow, not a settings
+  screen). The lead is the exact image or page URL it came from, not the repo or the docs home.
 - If the product UI is gated and no public image exists, say so in one line and use real output or a
   clearly labelled illustrative example instead. Never draw a fake UI.
 

@@ -95,7 +95,8 @@ Create the pack workspace. Fan out exploration, one worker per source or subtopi
 remit and instructed to return a findings file saved into `research/` with a `SOURCES` section
 (URLs, IDs, file:line). If your harness supports subagents, run them in parallel (Claude Code: the
 Agent tool in a single message; Vibe/Codex: their subagent mechanism); otherwise do focused
-sequential passes, one source at a time. Typical lanes:
+sequential passes, one source at a time. Either way, each pass ends with its findings file written
+to `research/`: the cache is what later runs reuse and what the Verify step spot-checks. Typical lanes:
 - **Notion**: open the authoritative pages deeply (not just titles); capture IDs and last-edited
   dates; mark authoritative vs stale/draft/stub.
 - **Linear / tracker**: pull live initiatives, projects, milestones, key issues; record IDs and
@@ -138,12 +139,14 @@ dark-mode palette, `node gen.js`, then render each to PNG with headless Chrome (
 `references/render-and-publish.md`) and **Read the PNG to eyeball it** before using it. No em dashes
 in diagram text either. Diagrams explain; screenshots prove. A show-it target also gets at
 least one real view of the thing (UI screenshot, results view, captured output), saved in `assets/`
-with its source URL as the lead and read back before use. Never draw a fake UI. Choose and place the
+with its exact image or page URL as the lead and read back before use. From a GIF or video, pick a
+settled frame that shows the result (a contact sheet of sampled frames first; no spinner, loading
+or empty pane, transition, or overlay). Never draw a fake UI. Choose and place the
 example and visuals per `references/examples-and-visuals.md`.
 
 ### 6. Publish
 Follow the house page style in `references/page-style.md` (framing callout, tight sections, tables,
-a "See it in action" example for show-it targets, every claim with a lead, a sources/leads section at
+a "See it in action" section on the main page for show-it targets, every claim with a lead, a sources/leads section at
 the end). Apply the configured
 `writing_standard`: `default` (dense peer-level prose) or `asd-ste100` (Simplified Technical English
 per `references/asd-ste100.md`; short single-idea sentences, active voice, one term per concept, no
@@ -163,12 +166,15 @@ with relative links; **preview server** = serve the directory so the index and s
 Verify every inter-page link resolves.
 
 ### 7. Verify
-Re-open or fetch the result: diagrams render, sections hold, tables intact. Confirm `plan.md` exists. **Count
-the words of every page: a single page over ~1500 words (3 A4 pages) is out of bounds**; cut it, or
+Re-open or fetch the result: diagrams render, sections hold, tables intact. Confirm `plan.md` exists and `research/` holds a findings file per source. **Count
+the words of every page with a tool (`wc -w`), not by estimate: a single page over 1500 words (3 A4 pages) is out of bounds, a hard limit, so leave margin**; cut it, or
 nest it if the material is genuinely broad. For a nested pack, the index stays within that budget.
-For a show-it target, confirm the example passes its own tests (shows the mechanism, about 15 lines
-or one screen, lead or `Illustrative` label) and at least one real visual is embedded (an image in `assets/` or a pasted output block; a description
-or a path to a screenshot does not count). A missing
+For a show-it target, confirm the main page (the index, not the usage sub-page) has a section titled
+"See it in action" holding the example and one real visual, and that the example passes its own tests (shows the mechanism, about 15 lines
+and no block over 25, lead or `Illustrative` label) and at least one real visual is embedded (an image in `assets/` or a pasted output block; a description
+or a path to a screenshot does not count). Look at each embedded screenshot once more: it must show
+the product's result (findings, a filled detail pane, output), not a loading state, a transition,
+an overlay, or an empty panel; otherwise pick another frame or image. A missing
 real visual is a gap to close, not to report: go back, fetch a docs or README image (or run the code
 if you are already in a container or sandbox), then publish; for a product
 target, also that the usage sub-page exists and is linked. **Grep the final text

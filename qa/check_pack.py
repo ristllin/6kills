@@ -29,6 +29,8 @@ LINK_RE = re.compile(r"\]\((?![A-Za-z][\w+.-]*:|/)([^)#\s]+\.(?:md|html))(?:#[^)
 PATH_LEAD_RE = re.compile(r"`?([\w./-]+/[\w.-]+\.[A-Za-z]\w*)(?::\d+(?:-\d+)?)?`?")
 IMG_RE = re.compile(r"!\[[^\]]*\]\(([^)\s]+)\)")
 FENCE_RE = re.compile(r"```([^\n]*)\n(.*?)```", re.S)
+# a fenced block as a Markdown reader sees it: fences open and close at a line start
+BLOCK_FENCE_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})[^\n]*\n.*?^ {0,3}\1", re.S | re.M)
 # Captured output: an untagged or text/console/shell-style fence, or any fence whose body starts
 # with a shell prompt (a python or mermaid block is not output).
 OUTPUT_LANGS = {"", "text", "txt", "console", "shell", "shell-session", "output", "terminal", "http"}
@@ -61,12 +63,17 @@ def newest_pack(root: Path) -> Path | None:
 
 def section(text: str, title: str) -> str | None:
     """The body of the first heading named `title` (optionally numbered), up to the next heading
-    of the same or a higher level."""
-    m = re.search(rf"^(#+)\s*(?:\d+[.)]\s*)?{title}.*$", text, re.I | re.M)
+    of the same or a higher level. A "#" line inside a fenced block is a code comment, not a heading."""
+    fences = [f.span() for f in BLOCK_FENCE_RE.finditer(text)]
+
+    def headings(pattern: str, start: int = 0):
+        return (h for h in re.finditer(pattern, text[start:], re.I | re.M)
+                if not any(a <= start + h.start() < b for a, b in fences))
+    m = next(headings(rf"^(#+)\s*(?:\d+[.)]\s*)?{title}.*$"), None)
     if not m:
         return None
-    end = re.compile(rf"^#{{1,{len(m.group(1))}}}\s", re.M).search(text, m.end())
-    return text[m.start():end.start() if end else len(text)]
+    end = next(headings(rf"^#{{1,{len(m.group(1))}}}\s", m.end()), None)
+    return text[m.start():m.end() + end.start() if end else len(text)]
 
 
 def show_checks(pack: Path, texts: dict, main: Path, links: list,
@@ -84,11 +91,27 @@ def show_checks(pack: Path, texts: dict, main: Path, links: list,
     # A screenshot is raster; an SVG is a drawn diagram even without an .html source.
     real_imgs = [i for i in imgs if Path(i).stem not in diagrams and not i.startswith("file-upload:")
                  and Path(i).suffix.lower() in (".png", ".jpg", ".jpeg", ".gif", ".webp")]
-    # a block labelled "Illustrative" just above or below it is crafted, not captured
-    output = [m for t in texts.values() for m in FENCE_RE.finditer(t)
-              if (m.group(1).strip().lower() in OUTPUT_LANGS or m.group(2).startswith("$ "))
-              and "illustrative" not in (t[max(0, m.start() - 300):m.start()]
-                                         + t[m.end():m.end() + 200]).lower()]
+    # a block labelled "Illustrative" just above or below it is crafted, not captured. The window
+    # stops at the neighbouring fences, but a label over a code block also covers the output
+    # block right after it ("Illustrative example and output"), unless it calls that output real
+    # or captured.
+    def labelled(t: str, fences: list, i: int) -> bool:
+        m = fences[i]
+        lo = max(m.start() - 300, fences[i - 1].end() if i else 0)
+        hi = min(m.end() + 200, fences[i + 1].start() if i + 1 < len(fences) else len(t))
+        if "illustrative" in (t[lo:m.start()] + t[m.end():hi]).lower():
+            return True
+        if not i or t[fences[i - 1].end():m.start()].strip():
+            return False
+        prev = fences[i - 1]
+        label = t[max(prev.start() - 300, fences[i - 2].end() if i > 1 else 0):prev.start()].lower()
+        return "illustrative" in label and not re.search(r"\b(real|captured)\b", label)
+    output = []
+    for t in texts.values():
+        fences = list(FENCE_RE.finditer(t))
+        output += [m for i, m in enumerate(fences)
+                   if (m.group(1).strip().lower() in OUTPUT_LANGS or m.group(2).startswith("$ "))
+                   and not labelled(t, fences, i)]
     checks = {
         "example_choice_planned": bool(re.search(r"example choice", plan, re.I)),
         "see_it_in_action": sect is not None and (bool(blocks) or bool(IMG_RE.search(sect))),
@@ -152,9 +175,13 @@ def check(root: Path, repo: Path, show: bool = False, product: bool = False,
     c["leads_present"] = res["lead_ratio"] >= 0.6
 
     # Version strings like 3.10/3.12 are not paths; pack-relative leads (research/, plan.md) are
-    # valid and resolve against the pack itself.
+    # valid and resolve against the pack itself. A path inside a longer code span (a command such
+    # as `http --download host/file.zip`, an item such as `cv@./cv.pdf`) is example content, not a
+    # lead; a lead is a span holding just the path (and line).
+    def example_spans(ln: str) -> str:
+        return re.sub(r"`([^`]*)`", lambda m: m.group(0) if PATH_LEAD_RE.fullmatch(m.group(1)) else "", ln)
     paths = {m.group(1).removeprefix("./") for ln in with_lead
-             for m in PATH_LEAD_RE.finditer(re.sub(r"(https?://|(?<![\w/.])[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}/)\S+", "", ln))
+             for m in PATH_LEAD_RE.finditer(re.sub(r"(https?://|(?<![\w/.])[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}/)\S+", "", example_spans(ln)))
              if not m.group(1).startswith(("http", "www.")) and not m.group(1)[0].isdigit()}
 
     def resolves(p: str) -> bool:

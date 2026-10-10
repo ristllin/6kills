@@ -30,7 +30,9 @@ dig. Dense, technical, lead-backed, and free of filler.
 - **Every claim carries a lead:** `path/file.py:120`, a Notion page ID, a Linear issue ID, or a URL.
   Write URLs in full (`https://...`, or a Markdown link) so they are clickable; a bare domain path is not.
   The rule holds on every sub-page too: "press releases", "platform page", or "see research" is not a
-  lead; name the exact URL, or mark the row as a gap.
+  lead; name the exact URL, or mark the row as a gap. Every table row is a claim: give the table
+  a lead column (a file, a URL, or the capture each row came from); one link in the sentence above
+  the table does not cover its rows.
   If you cannot back it, soften it or drop it.
 - **Corrections are gold.** When the research overturns a prior belief (deprecated, renamed, moved,
   blocker cleared), say so explicitly; that is the highest-value content for a new owner.
